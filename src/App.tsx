@@ -3,7 +3,17 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
+import PublicLayout from "./components/layout/PublicLayout";
+import DashboardLayout from "./components/layout/DashboardLayout";
+import Home from "./pages/Home";
+import Documentacao from "./pages/Documentacao";
+import Planos from "./pages/Planos";
+import Login from "./pages/Login";
+import Registro from "./pages/Registro";
+import Dashboard from "./pages/Dashboard";
+import Assinaturas from "./pages/Assinaturas";
+import Licencas from "./pages/Licencas";
+import Downloads from "./pages/Downloads";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -15,8 +25,24 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          {/* Public Routes */}
+          <Route element={<PublicLayout />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/documentacao" element={<Documentacao />} />
+            <Route path="/planos" element={<Planos />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/registro" element={<Registro />} />
+          </Route>
+
+          {/* Authenticated Routes */}
+          <Route path="/dashboard" element={<DashboardLayout />}>
+            <Route index element={<Dashboard />} />
+            <Route path="assinaturas" element={<Assinaturas />} />
+            <Route path="licencas" element={<Licencas />} />
+            <Route path="downloads" element={<Downloads />} />
+          </Route>
+
+          {/* Catch-all */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
