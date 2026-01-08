@@ -4,7 +4,6 @@ import {
   FileText,
   LayoutDashboard,
   CreditCard,
-  Key,
   Download,
   LogOut,
   Menu,
@@ -21,7 +20,6 @@ const DashboardLayout = () => {
   const navLinks = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/dashboard/assinaturas", label: "Minhas Assinaturas", icon: CreditCard },
-    { href: "/dashboard/licencas", label: "Minhas Licenças", icon: Key },
     { href: "/dashboard/downloads", label: "Downloads", icon: Download },
   ];
 

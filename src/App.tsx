@@ -12,7 +12,6 @@ import Login from "./pages/Login";
 import Registro from "./pages/Registro";
 import Dashboard from "./pages/Dashboard";
 import Assinaturas from "./pages/Assinaturas";
-import Licencas from "./pages/Licencas";
 import Downloads from "./pages/Downloads";
 import NotFound from "./pages/NotFound";
 
@@ -38,7 +37,6 @@ const App = () => (
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<Dashboard />} />
             <Route path="assinaturas" element={<Assinaturas />} />
-            <Route path="licencas" element={<Licencas />} />
             <Route path="downloads" element={<Downloads />} />
           </Route>
 
