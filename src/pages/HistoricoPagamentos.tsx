@@ -533,7 +533,12 @@ const HistoricoPagamentos = () => {
                         )}
                         {selectedPayment.paymentDetails.boletoUrl && (
                           <div className="pt-2">
-                            <Button variant="outline" size="sm" className="w-full gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full gap-2"
+                              onClick={() => window.open(selectedPayment.paymentDetails?.boletoUrl, '_blank')}
+                            >
                               <Download className="h-4 w-4" />
                               Baixar Boleto (PDF)
                             </Button>
