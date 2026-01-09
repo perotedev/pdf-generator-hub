@@ -34,8 +34,16 @@ interface Payment {
   amount: string;
   status: "Pago" | "Pendente" | "Cancelado" | "Reembolsado";
   paymentMethod: string;
-  invoiceUrl?: string;
   subscriptionId: string;
+  paymentDetails?: {
+    type: "credit" | "debit" | "pix" | "boleto";
+    installments?: number;
+    pixKey?: string;
+    pixQrCode?: string;
+    boletoCode?: string;
+    boletoUrl?: string;
+    dueDate?: string;
+  };
 }
 
 const HistoricoPagamentos = () => {
@@ -53,8 +61,11 @@ const HistoricoPagamentos = () => {
       amount: "R$ 119,00",
       status: "Pago",
       paymentMethod: "Cartão de Crédito",
-      invoiceUrl: "#",
       subscriptionId: "SUB-001",
+      paymentDetails: {
+        type: "credit",
+        installments: 1,
+      },
     },
     {
       id: "PAY-002",
@@ -63,9 +74,11 @@ const HistoricoPagamentos = () => {
       plan: "Pro",
       amount: "R$ 119,00",
       status: "Pago",
-      paymentMethod: "Cartão de Crédito",
-      invoiceUrl: "#",
+      paymentMethod: "Cartão de Débito",
       subscriptionId: "SUB-001",
+      paymentDetails: {
+        type: "debit",
+      },
     },
     {
       id: "PAY-003",
@@ -75,8 +88,11 @@ const HistoricoPagamentos = () => {
       amount: "R$ 468,00",
       status: "Pago",
       paymentMethod: "PIX",
-      invoiceUrl: "#",
       subscriptionId: "SUB-002",
+      paymentDetails: {
+        type: "pix",
+        pixKey: "pix@pdfgenerator.com.br",
+      },
     },
     {
       id: "PAY-004",
@@ -86,8 +102,11 @@ const HistoricoPagamentos = () => {
       amount: "R$ 119,00",
       status: "Pago",
       paymentMethod: "Cartão de Crédito",
-      invoiceUrl: "#",
       subscriptionId: "SUB-001",
+      paymentDetails: {
+        type: "credit",
+        installments: 3,
+      },
     },
     {
       id: "PAY-005",
@@ -97,8 +116,11 @@ const HistoricoPagamentos = () => {
       amount: "R$ 70,00",
       status: "Pago",
       paymentMethod: "Cartão de Crédito",
-      invoiceUrl: "#",
       subscriptionId: "SUB-001",
+      paymentDetails: {
+        type: "credit",
+        installments: 1,
+      },
     },
     {
       id: "PAY-006",
@@ -108,8 +130,13 @@ const HistoricoPagamentos = () => {
       amount: "R$ 468,00",
       status: "Pago",
       paymentMethod: "Boleto Bancário",
-      invoiceUrl: "#",
       subscriptionId: "SUB-003",
+      paymentDetails: {
+        type: "boleto",
+        boletoCode: "34191.79001 01043.510047 91020.150008 8 96610000046800",
+        boletoUrl: "https://eppge.fgv.br/sites/default/files/teste.pdf",
+        dueDate: "20/01/2025",
+      },
     },
     {
       id: "PAY-007",
@@ -417,21 +444,106 @@ const HistoricoPagamentos = () => {
               {/* Separator */}
               <div className="border-t border-border"></div>
 
-              {/* Actions */}
-              <div className="flex flex-wrap gap-3">
-                {selectedPayment.invoiceUrl && selectedPayment.status === "Pago" && (
-                  <Button variant="outline" className="gap-2">
-                    <Download className="h-4 w-4" />
-                    Baixar Nota Fiscal
-                  </Button>
-                )}
-                {selectedPayment.status === "Pago" && (
-                  <Button variant="outline" className="gap-2">
-                    <FileText className="h-4 w-4" />
-                    Baixar Comprovante
-                  </Button>
-                )}
-              </div>
+              {/* Payment Method Details */}
+              {selectedPayment.paymentDetails && (
+                <div className="space-y-3">
+                  <h4 className="font-semibold text-foreground">Detalhes do Pagamento</h4>
+
+                  {selectedPayment.paymentDetails.type === "credit" && (
+                    <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <CreditCard className="h-5 w-5 text-primary" />
+                        <p className="font-medium">Cartão de Crédito</p>
+                      </div>
+                      <div className="grid gap-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Parcelas:</span>
+                          <span className="font-medium">
+                            {selectedPayment.paymentDetails.installments}x de{" "}
+                            {selectedPayment.paymentDetails.installments && selectedPayment.paymentDetails.installments > 1
+                              ? `R$ ${(parseFloat(selectedPayment.amount.replace("R$ ", "").replace(",", ".")) / selectedPayment.paymentDetails.installments).toFixed(2).replace(".", ",")}`
+                              : selectedPayment.amount
+                            }
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Forma de pagamento:</span>
+                          <span className="font-medium">
+                            {selectedPayment.paymentDetails.installments === 1 ? "À vista" : "Parcelado"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedPayment.paymentDetails.type === "debit" && (
+                    <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <CreditCard className="h-5 w-5 text-primary" />
+                        <p className="font-medium">Cartão de Débito</p>
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        Pagamento processado instantaneamente via débito bancário.
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedPayment.paymentDetails.type === "pix" && (
+                    <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-5 w-5 text-primary" />
+                        <p className="font-medium">PIX</p>
+                      </div>
+                      <div className="space-y-2">
+                        {selectedPayment.paymentDetails.pixKey && (
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Chave PIX:</span>
+                            <code className="font-mono text-xs bg-background px-2 py-1 rounded">
+                              {selectedPayment.paymentDetails.pixKey}
+                            </code>
+                          </div>
+                        )}
+                        <div className="text-sm text-muted-foreground">
+                          Pagamento aprovado instantaneamente via PIX.
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedPayment.paymentDetails.type === "boleto" && (
+                    <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-5 w-5 text-primary" />
+                        <p className="font-medium">Boleto Bancário</p>
+                      </div>
+                      <div className="space-y-3">
+                        {selectedPayment.paymentDetails.dueDate && (
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Vencimento:</span>
+                            <span className="font-medium">{selectedPayment.paymentDetails.dueDate}</span>
+                          </div>
+                        )}
+                        {selectedPayment.paymentDetails.boletoCode && (
+                          <div>
+                            <p className="text-sm text-muted-foreground mb-1">Código de barras:</p>
+                            <code className="font-mono text-xs bg-background px-2 py-1 rounded block break-all">
+                              {selectedPayment.paymentDetails.boletoCode}
+                            </code>
+                          </div>
+                        )}
+                        {selectedPayment.paymentDetails.boletoUrl && (
+                          <div className="pt-2">
+                            <Button variant="outline" size="sm" className="w-full gap-2">
+                              <Download className="h-4 w-4" />
+                              Baixar Boleto (PDF)
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Additional Info */}
               {selectedPayment.status === "Reembolsado" && (
