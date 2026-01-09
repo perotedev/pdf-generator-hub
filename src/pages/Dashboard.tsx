@@ -6,6 +6,7 @@ import {
   Calendar,
   FileText,
   TrendingUp,
+  RefreshCw,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -37,10 +38,10 @@ const Dashboard = () => {
       bgColor: "bg-chart-2/10",
     },
     {
-      title: "PDFs Gerados",
-      value: "2.847",
-      description: "Este mês",
-      icon: FileText,
+      title: "Renovações Automáticas",
+      value: "2",
+      description: "Ativas no momento",
+      icon: RefreshCw,
       color: "text-chart-3",
       bgColor: "bg-chart-3/10",
     },
@@ -48,19 +49,19 @@ const Dashboard = () => {
 
   const recentActivity = [
     {
-      action: "PDF gerado",
-      description: "Relatório Financeiro Q4",
-      time: "Há 5 minutos",
-    },
-    {
       action: "Licença ativada",
-      description: "Computador Desktop",
+      description: "Computador Desktop - Windows",
       time: "Há 2 horas",
     },
     {
-      action: "PDF gerado",
-      description: "Contrato de Serviços",
-      time: "Há 4 horas",
+      action: "Download realizado",
+      description: "PDF Generator v2.5.3",
+      time: "Há 5 horas",
+    },
+    {
+      action: "Plano alterado",
+      description: "De Mensal para Anual",
+      time: "Há 1 dia",
     },
     {
       action: "Pagamento confirmado",
