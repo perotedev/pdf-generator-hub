@@ -9,6 +9,7 @@ import {
   Menu,
   X,
   User,
+  Receipt,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -20,6 +21,7 @@ const DashboardLayout = () => {
   const navLinks = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/dashboard/assinaturas", label: "Minhas Assinaturas", icon: CreditCard },
+    { href: "/dashboard/pagamentos", label: "Pagamentos", icon: Receipt },
     { href: "/dashboard/downloads", label: "Downloads", icon: Download },
   ];
 

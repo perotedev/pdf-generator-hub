@@ -235,8 +235,12 @@ const Assinaturas = () => {
         </CardHeader>
         <CardContent>
           <Accordion type="single" collapsible className="w-full">
-            {subscriptions.map((sub) => (
-              <AccordionItem key={sub.id} value={sub.id} className="border-border">
+            {subscriptions.map((sub, index) => (
+              <AccordionItem
+                key={sub.id}
+                value={sub.id}
+                className={`border-border ${index === subscriptions.length - 1 ? 'border-b-0' : ''}`}
+              >
                 <AccordionTrigger className="hover:no-underline">
                   <div className="flex flex-1 items-center justify-between pr-4">
                     <div className="flex items-center gap-4">
