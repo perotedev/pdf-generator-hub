@@ -129,7 +129,7 @@ const Dashboard = () => {
           <CardHeader>
             <CardTitle className="text-lg">Ações Rápidas</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="flex flex-col gap-3">
             <Link to="/dashboard/assinaturas">
               <Button variant="outline" className="w-full justify-start gap-2">
                 <CreditCard className="h-4 w-4" />
