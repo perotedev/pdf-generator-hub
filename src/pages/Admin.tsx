@@ -55,6 +55,11 @@ const Admin = () => {
   const [annualPrice, setAnnualPrice] = useState("39");
   const [maxInstallments, setMaxInstallments] = useState("12");
 
+  // Valores iniciais dos preços (para restaurar ao cancelar)
+  const [initialMonthlyPrice, setInitialMonthlyPrice] = useState("49");
+  const [initialAnnualPrice, setInitialAnnualPrice] = useState("39");
+  const [initialMaxInstallments, setInitialMaxInstallments] = useState("12");
+
   // Versões do sistema
   const [versions, setVersions] = useState<SystemVersion[]>([
     {
@@ -112,11 +117,25 @@ const Admin = () => {
     url: "",
   });
 
+  const handleStartEditingPrices = () => {
+    setInitialMonthlyPrice(monthlyPrice);
+    setInitialAnnualPrice(annualPrice);
+    setInitialMaxInstallments(maxInstallments);
+    setEditingPrices(true);
+  };
+
   const handleSavePrices = () => {
     toast({
       title: "Preços atualizados!",
       description: "Os novos valores foram salvos com sucesso.",
     });
+    setEditingPrices(false);
+  };
+
+  const handleCancelPricesEdit = () => {
+    setMonthlyPrice(initialMonthlyPrice);
+    setAnnualPrice(initialAnnualPrice);
+    setMaxInstallments(initialMaxInstallments);
     setEditingPrices(false);
   };
 
@@ -246,23 +265,34 @@ const Admin = () => {
               <DollarSign className="h-5 w-5 text-primary" />
               <CardTitle className="text-lg">Preços dos Planos</CardTitle>
             </div>
-            <Button
-              variant={editingPrices ? "default" : "outline"}
-              size="sm"
-              onClick={() => (editingPrices ? handleSavePrices() : setEditingPrices(true))}
-            >
-              {editingPrices ? (
-                <>
-                  <Save className="h-4 w-4 mr-2" />
-                  Salvar
-                </>
-              ) : (
-                <>
-                  <Edit2 className="h-4 w-4 mr-2" />
-                  Editar
-                </>
+            <div className="flex gap-2">
+              {editingPrices && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCancelPricesEdit}
+                >
+                  Cancelar
+                </Button>
               )}
-            </Button>
+              <Button
+                variant={editingPrices ? "default" : "outline"}
+                size="sm"
+                onClick={() => (editingPrices ? handleSavePrices() : handleStartEditingPrices())}
+              >
+                {editingPrices ? (
+                  <>
+                    <Save className="h-4 w-4 mr-2" />
+                    Salvar
+                  </>
+                ) : (
+                  <>
+                    <Edit2 className="h-4 w-4 mr-2" />
+                    Editar
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
