@@ -32,7 +32,7 @@ const DashboardLayout = () => {
   return (
     <div className="flex min-h-screen">
       {/* Sidebar Desktop */}
-      <aside className="hidden lg:flex w-64 flex-col border-r border-border bg-card">
+      <aside className="hidden lg:flex w-64 flex-col border-r border-border bg-card sticky top-0 h-screen">
         <div className="flex h-16 items-center gap-2 border-b border-border px-6">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
             <FileText className="h-5 w-5 text-primary-foreground" />
@@ -82,7 +82,7 @@ const DashboardLayout = () => {
 
       {/* Sidebar Mobile */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 flex-col border-r border-border bg-card transition-transform lg:hidden ${
+        className={`fixed inset-y-0 left-0 z-50 w-64 flex flex-col border-r border-border bg-card transition-transform lg:hidden ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >

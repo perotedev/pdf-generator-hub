@@ -33,11 +33,6 @@ const PublicFooter = () => {
                   Documentação
                 </Link>
               </li>
-              <li>
-                <Link to="/dashboard/downloads" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                  Downloads
-                </Link>
-              </li>
             </ul>
           </div>
 

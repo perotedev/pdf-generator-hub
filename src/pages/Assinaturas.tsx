@@ -27,9 +27,10 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { CreditCard, Calendar, Check, Copy, RefreshCw, Key, Monitor, Trash2 } from "lucide-react";
+import { CreditCard, Calendar, Check, Copy, RefreshCw, Key, Monitor, Trash2, Edit2 } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { Input } from "@/components/ui/input";
 
 interface Subscription {
   id: string;
@@ -41,6 +42,7 @@ interface Subscription {
   autoRenew: boolean;
   license: {
     code: string;
+    nickname: string;
     status: "Ativa" | "Expirada" | "Disponível";
     computerUid: string | null;
     deviceName: string | null;
@@ -52,6 +54,8 @@ interface Subscription {
 const Assinaturas = () => {
   const { toast } = useToast();
   const [cancelDialogOpen, setCancelDialogOpen] = useState<string | null>(null);
+  const [editingNickname, setEditingNickname] = useState<string | null>(null);
+  const [nicknameValue, setNicknameValue] = useState("");
 
   const subscriptions: Subscription[] = [
     {
@@ -64,6 +68,7 @@ const Assinaturas = () => {
       autoRenew: true,
       license: {
         code: "PDFG-PRO-X8K2-M9P4-L3N7",
+        nickname: "Computador Principal",
         status: "Ativa",
         computerUid: "PC-DESKTOP-4A7B2C",
         deviceName: "Desktop Windows",
@@ -81,6 +86,7 @@ const Assinaturas = () => {
       autoRenew: true,
       license: {
         code: "PDFG-STR-Z3J8-K7F2-W5M9",
+        nickname: "Licença Disponível",
         status: "Disponível",
         computerUid: null,
         deviceName: null,
@@ -98,6 +104,7 @@ const Assinaturas = () => {
       autoRenew: false,
       license: {
         code: "PDFG-STR-Y5H3-N2Q8-R9T6",
+        nickname: "Notebook Trabalho",
         status: "Expirada",
         computerUid: "PC-OFFICE-7X9K2L",
         deviceName: "Notebook Trabalho",
@@ -129,6 +136,19 @@ const Assinaturas = () => {
     toast({
       title: "Licença desativada",
       description: "O dispositivo foi desvinculado e a licença está disponível novamente.",
+    });
+  };
+
+  const handleEditNickname = (subId: string, currentNickname: string) => {
+    setEditingNickname(subId);
+    setNicknameValue(currentNickname);
+  };
+
+  const handleSaveNickname = (subId: string) => {
+    setEditingNickname(null);
+    toast({
+      title: "Apelido atualizado",
+      description: "O apelido da licença foi atualizado com sucesso.",
     });
   };
 
@@ -275,8 +295,41 @@ const Assinaturas = () => {
                         <Key className="h-5 w-5 text-primary" />
                         <h4 className="font-semibold text-foreground">Licença da Assinatura</h4>
                       </div>
-                      
+
                       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                        <div>
+                          <p className="text-sm text-muted-foreground mb-1">Apelido da Licença</p>
+                          {editingNickname === sub.id ? (
+                            <div className="flex items-center gap-2">
+                              <Input
+                                value={nicknameValue}
+                                onChange={(e) => setNicknameValue(e.target.value)}
+                                className="h-8 text-sm"
+                                placeholder="Ex: Computador Principal"
+                              />
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 px-2"
+                                onClick={() => handleSaveNickname(sub.id)}
+                              >
+                                <Check className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium">{sub.license.nickname}</span>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                                onClick={() => handleEditNickname(sub.id, sub.license.nickname)}
+                              >
+                                <Edit2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          )}
+                        </div>
                         <div>
                           <p className="text-sm text-muted-foreground mb-1">Código da Licença</p>
                           <div className="flex items-center gap-2">

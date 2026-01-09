@@ -3,61 +3,43 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Check, X } from "lucide-react";
-import { useState } from "react";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 
 const Planos = () => {
-  const [isAnnual, setIsAnnual] = useState(true);
 
   const plans = [
     {
-      name: "Starter",
-      description: "Para projetos pequenos e testes",
+      name: "Mensal",
+      description: "Assinatura mensal do PDF Generator",
       monthlyPrice: 49,
+      annualPrice: 49,
+      features: [
+        { text: "Geração ilimitada de PDFs", included: true },
+        { text: "Perfis ilimitados", included: true },
+        { text: "Templates ilimitados", included: true },
+        { text: "Assinaturas digitais", included: true },
+        { text: "Suporte por email", included: true },
+        { text: "Novas versões durante a validade", included: true },
+        { text: "Sem desconto", included: true, isDisadvantage: true },
+      ],
+      popular: false,
+      isMonthly: true,
+    },
+    {
+      name: "Anual",
+      description: "Assinatura anual com desconto",
+      monthlyPrice: 39,
       annualPrice: 39,
       features: [
-        { text: "1.000 PDFs/mês", included: true },
-        { text: "5 templates", included: true },
-        { text: "Suporte por email", included: true },
-        { text: "API básica", included: true },
-        { text: "Webhooks", included: false },
-        { text: "Assinaturas digitais", included: false },
-        { text: "Prioridade na fila", included: false },
-      ],
-      popular: false,
-    },
-    {
-      name: "Pro",
-      description: "Para empresas em crescimento",
-      monthlyPrice: 149,
-      annualPrice: 119,
-      features: [
-        { text: "PDFs ilimitados", included: true },
+        { text: "Geração ilimitada de PDFs", included: true },
+        { text: "Perfis ilimitados", included: true },
         { text: "Templates ilimitados", included: true },
-        { text: "Suporte prioritário", included: true },
-        { text: "API completa", included: true },
-        { text: "Webhooks", included: true },
         { text: "Assinaturas digitais", included: true },
-        { text: "Prioridade na fila", included: false },
+        { text: "Suporte prioritário", included: true },
+        { text: "Novas versões durante a validade", included: true },
+        { text: "Economia de 20%", included: true },
       ],
       popular: true,
-    },
-    {
-      name: "Enterprise",
-      description: "Para grandes organizações",
-      monthlyPrice: 399,
-      annualPrice: 329,
-      features: [
-        { text: "PDFs ilimitados", included: true },
-        { text: "Templates ilimitados", included: true },
-        { text: "Suporte 24/7 dedicado", included: true },
-        { text: "API completa + SDK", included: true },
-        { text: "Webhooks", included: true },
-        { text: "Assinaturas digitais", included: true },
-        { text: "Prioridade na fila", included: true },
-      ],
-      popular: false,
+      isMonthly: false,
     },
   ];
 
@@ -70,35 +52,11 @@ const Planos = () => {
           </h1>
           <p className="text-lg text-muted-foreground">
             Escolha o plano ideal para suas necessidades. Todos os planos incluem
-            7 dias de teste grátis.
+            geração ilimitada de PDFs e perfis.
           </p>
-
-          {/* Billing Toggle */}
-          <div className="mt-8 flex items-center justify-center gap-4">
-            <Label
-              htmlFor="billing"
-              className={`text-sm ${!isAnnual ? "text-foreground" : "text-muted-foreground"}`}
-            >
-              Mensal
-            </Label>
-            <Switch
-              id="billing"
-              checked={isAnnual}
-              onCheckedChange={setIsAnnual}
-            />
-            <Label
-              htmlFor="billing"
-              className={`text-sm ${isAnnual ? "text-foreground" : "text-muted-foreground"}`}
-            >
-              Anual
-              <Badge variant="secondary" className="ml-2">
-                -20%
-              </Badge>
-            </Label>
-          </div>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div className="grid gap-6 lg:grid-cols-2 max-w-4xl mx-auto">
           {plans.map((plan) => (
             <Card
               key={plan.name}
@@ -123,32 +81,27 @@ const Planos = () => {
                 <div className="text-center">
                   <div className="flex items-baseline justify-center gap-1">
                     <span className="text-4xl font-bold text-foreground">
-                      R${isAnnual ? plan.annualPrice : plan.monthlyPrice}
+                      R${plan.monthlyPrice}
                     </span>
                     <span className="text-muted-foreground">/mês</span>
                   </div>
-                  {isAnnual && (
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      Cobrado anualmente
-                    </p>
-                  )}
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {plan.isMonthly
+                      ? "Cobrado mensalmente"
+                      : `Cobrado anualmente (R${plan.monthlyPrice * 12})`
+                    }
+                  </p>
                 </div>
 
                 <ul className="space-y-3">
                   {plan.features.map((feature) => (
                     <li key={feature.text} className="flex items-center gap-2">
-                      {feature.included ? (
-                        <Check className="h-4 w-4 text-primary shrink-0" />
+                      {feature.isDisadvantage ? (
+                        <X className="h-4 w-4 shrink-0 text-muted-foreground" />
                       ) : (
-                        <X className="h-4 w-4 text-muted shrink-0" />
+                        <Check className="h-4 w-4 shrink-0 text-primary" />
                       )}
-                      <span
-                        className={`text-sm ${
-                          feature.included
-                            ? "text-foreground"
-                            : "text-muted-foreground"
-                        }`}
-                      >
+                      <span className={`text-sm ${feature.isDisadvantage ? 'text-muted-foreground' : 'text-foreground'}`}>
                         {feature.text}
                       </span>
                     </li>
@@ -160,7 +113,7 @@ const Planos = () => {
                     className="w-full"
                     variant={plan.popular ? "default" : "outline"}
                   >
-                    Começar Teste Grátis
+                    Assinar Agora
                   </Button>
                 </Link>
               </CardContent>
@@ -188,12 +141,12 @@ const Planos = () => {
             <Card className="border-border">
               <CardContent className="p-4">
                 <h3 className="font-semibold text-foreground">
-                  Como funciona o período de teste?
+                  Como recebo minha licença?
                 </h3>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  Todos os planos incluem 7 dias de teste grátis com acesso
-                  completo a todas as funcionalidades. Você não será cobrado
-                  durante o período de teste.
+                  Após a confirmação do pagamento, você receberá imediatamente
+                  sua chave de licença e o link para download do instalador
+                  do PDF Generator.
                 </p>
               </CardContent>
             </Card>

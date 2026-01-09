@@ -4,10 +4,11 @@ import { Badge } from "@/components/ui/badge";
 import {
   Download,
   Monitor,
-  Apple,
   FileText,
   Calendar,
   HardDrive,
+  BookOpen,
+  Video,
 } from "lucide-react";
 
 const Downloads = () => {
@@ -124,22 +125,39 @@ const Downloads = () => {
             </ul>
           </div>
 
-          <div className="flex flex-wrap gap-3">
-            <Button className="gap-2">
-              <Monitor className="h-4 w-4" />
-              Windows (64-bit)
-              <Download className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" className="gap-2">
-              <Apple className="h-4 w-4" />
-              macOS (Intel)
-              <Download className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" className="gap-2">
-              <Apple className="h-4 w-4" />
-              macOS (Apple Silicon)
-              <Download className="h-4 w-4" />
-            </Button>
+          <div className="space-y-4">
+            <div>
+              <h4 className="text-sm font-semibold text-foreground mb-3">
+                Instalador:
+              </h4>
+              <Button className="gap-2">
+                <Monitor className="h-4 w-4" />
+                Windows (64-bit)
+                <Download className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <div>
+              <h4 className="text-sm font-semibold text-foreground mb-3">
+                Recursos Adicionais:
+              </h4>
+              <div className="flex flex-wrap gap-3">
+                <Button variant="outline" className="gap-2">
+                  <BookOpen className="h-4 w-4" />
+                  Manual do Usuário (PDF)
+                  <Download className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" className="gap-2">
+                  <FileText className="h-4 w-4" />
+                  Documentação Técnica (PDF)
+                  <Download className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" className="gap-2">
+                  <Video className="h-4 w-4" />
+                  Vídeo Instrutivo
+                </Button>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -169,16 +187,11 @@ const Downloads = () => {
                     </span>
                   </div>
                 </div>
-                <div className="flex gap-2">
-                  <Button variant="ghost" size="sm" className="gap-1">
-                    <Monitor className="h-4 w-4" />
-                    Windows
-                  </Button>
-                  <Button variant="ghost" size="sm" className="gap-1">
-                    <Apple className="h-4 w-4" />
-                    macOS
-                  </Button>
-                </div>
+                <Button variant="ghost" size="sm" className="gap-1">
+                  <Monitor className="h-4 w-4" />
+                  Windows
+                  <Download className="h-3 w-3" />
+                </Button>
               </div>
             ))}
           </div>
@@ -191,31 +204,17 @@ const Downloads = () => {
           <CardTitle>Requisitos do Sistema</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-6 md:grid-cols-2">
-            <div>
-              <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2">
-                <Monitor className="h-5 w-5" />
-                Windows
-              </h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>• Windows 10 (64-bit) ou superior</li>
-                <li>• 4 GB de RAM (8 GB recomendado)</li>
-                <li>• 500 MB de espaço em disco</li>
-                <li>• Processador Intel Core i3 ou equivalente</li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2">
-                <Apple className="h-5 w-5" />
-                macOS
-              </h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>• macOS 11 (Big Sur) ou superior</li>
-                <li>• 4 GB de RAM (8 GB recomendado)</li>
-                <li>• 500 MB de espaço em disco</li>
-                <li>• Apple Silicon ou Intel Core i3</li>
-              </ul>
-            </div>
+          <div className="max-w-md">
+            <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+              <Monitor className="h-5 w-5" />
+              Windows
+            </h4>
+            <ul className="space-y-2 text-sm text-muted-foreground">
+              <li>• Windows 10 (64-bit) ou superior</li>
+              <li>• 4 GB de RAM (8 GB recomendado)</li>
+              <li>• 500 MB de espaço em disco</li>
+              <li>• Processador Intel Core i3 ou equivalente</li>
+            </ul>
           </div>
         </CardContent>
       </Card>

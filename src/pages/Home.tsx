@@ -15,27 +15,27 @@ const Home = () => {
   const features = [
     {
       icon: Zap,
-      title: "Geração Rápida",
+      title: "Automação Inteligente",
       description:
-        "Gere PDFs em milissegundos com nossa API otimizada para alta performance.",
+        "Gere centenas de documentos em segundos a partir de planilhas Excel e templates PDF.",
     },
     {
       icon: Shield,
-      title: "Segurança Total",
+      title: "Segurança Local",
       description:
-        "Seus dados são criptografados e protegidos com os mais altos padrões de segurança.",
+        "Sistema desktop que processa seus documentos localmente, garantindo privacidade total.",
     },
     {
       icon: Layers,
-      title: "Templates Prontos",
+      title: "Perfis Reutilizáveis",
       description:
-        "Utilize templates profissionais ou crie seus próprios modelos personalizados.",
+        "Configure uma vez e reutilize. Seus perfis de planilha e documento ficam salvos.",
     },
     {
       icon: FileText,
-      title: "Formatos Diversos",
+      title: "Visual e Simples",
       description:
-        "Suporte a múltiplos formatos de entrada: HTML, Markdown, JSON e muito mais.",
+        "Interface visual intuitiva. Clique nos campos do PDF e vincule às colunas do Excel.",
     },
   ];
 
@@ -75,17 +75,17 @@ const Home = () => {
               <span className="text-muted-foreground">Nova versão 2.0 disponível</span>
             </div>
             <h1 className="mb-6 text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-              Gere PDFs profissionais{" "}
+              Automatize documentos{" "}
               <span className="text-primary">em segundos</span>
             </h1>
             <p className="mb-8 text-lg text-muted-foreground sm:text-xl">
-              A plataforma mais completa para geração de documentos PDF. API
-              simples, templates prontos e integração em minutos.
+              Sistema desktop para automação de documentos PDF. Transforme
+              planilhas Excel em centenas de PDFs personalizados com apenas um clique.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link to="/registro">
+              <Link to="/planos">
                 <Button size="lg" className="gap-2">
-                  Começar Gratuitamente
+                  Ver Planos e Preços
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
@@ -99,11 +99,11 @@ const Home = () => {
             <div className="mt-12 flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
                 <CheckCircle className="h-4 w-4 text-primary" />
-                <span>7 dias grátis</span>
+                <span>Ativação imediata</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle className="h-4 w-4 text-primary" />
-                <span>Sem cartão de crédito</span>
+                <span>Instalação simples</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle className="h-4 w-4 text-primary" />
@@ -119,11 +119,11 @@ const Home = () => {
         <div className="container">
           <div className="mx-auto mb-12 max-w-2xl text-center">
             <h2 className="mb-4 text-3xl font-bold text-foreground">
-              Tudo que você precisa para gerar PDFs
+              Tudo que você precisa para automatizar documentos
             </h2>
             <p className="text-muted-foreground">
-              Uma solução completa com todas as funcionalidades para atender
-              suas necessidades de geração de documentos.
+              Uma solução desktop completa para eliminar tarefas repetitivas
+              e economizar horas de trabalho manual.
             </p>
           </div>
 
@@ -204,15 +204,15 @@ const Home = () => {
               Pronto para começar?
             </h2>
             <p className="mb-8 text-primary-foreground/80">
-              Crie sua conta gratuitamente e comece a gerar PDFs em minutos.
+              Escolha seu plano e comece a automatizar a criação de documentos hoje mesmo.
             </p>
-            <Link to="/registro">
+            <Link to="/planos">
               <Button
                 size="lg"
                 variant="secondary"
                 className="gap-2"
               >
-                Criar Conta Grátis
+                Ver Planos
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
