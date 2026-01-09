@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { CreditCard, Calendar, Check, Copy, RefreshCw, Key, Monitor, Trash2, Edit2 } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 
@@ -52,6 +53,7 @@ interface Subscription {
 }
 
 const Assinaturas = () => {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [cancelDialogOpen, setCancelDialogOpen] = useState<string | null>(null);
   const [editingNickname, setEditingNickname] = useState<string | null>(null);
@@ -422,7 +424,15 @@ const Assinaturas = () => {
                     {/* Subscription Actions */}
                     {sub.status === "Ativa" && (
                       <div className="flex flex-wrap gap-2 pt-2">
-                        <Button variant="outline" size="sm">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            navigate(
+                              `/dashboard/assinaturas/mudar-plano?subscriptionId=${sub.id}&currentPlan=${sub.plan}`
+                            )
+                          }
+                        >
                           Mudar Plano
                         </Button>
                         {sub.autoRenew && (

@@ -13,6 +13,7 @@ import Registro from "./pages/Registro";
 import Dashboard from "./pages/Dashboard";
 import Assinaturas from "./pages/Assinaturas";
 import Downloads from "./pages/Downloads";
+import MudarPlano from "./pages/MudarPlano";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,6 +38,7 @@ const App = () => (
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<Dashboard />} />
             <Route path="assinaturas" element={<Assinaturas />} />
+            <Route path="assinaturas/mudar-plano" element={<MudarPlano />} />
             <Route path="downloads" element={<Downloads />} />
           </Route>
 
