@@ -10,6 +10,7 @@ import {
   X,
   User,
   Receipt,
+  Settings,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -23,6 +24,7 @@ const DashboardLayout = () => {
     { href: "/dashboard/assinaturas", label: "Minhas Assinaturas", icon: CreditCard },
     { href: "/dashboard/pagamentos", label: "Pagamentos", icon: Receipt },
     { href: "/dashboard/downloads", label: "Downloads", icon: Download },
+    { href: "/dashboard/admin", label: "Administração", icon: Settings },
   ];
 
   const isActive = (path: string) => location.pathname === path;

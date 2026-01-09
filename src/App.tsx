@@ -15,6 +15,7 @@ import Assinaturas from "./pages/Assinaturas";
 import Downloads from "./pages/Downloads";
 import MudarPlano from "./pages/MudarPlano";
 import HistoricoPagamentos from "./pages/HistoricoPagamentos";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -42,6 +43,7 @@ const App = () => (
             <Route path="assinaturas/mudar-plano" element={<MudarPlano />} />
             <Route path="pagamentos" element={<HistoricoPagamentos />} />
             <Route path="downloads" element={<Downloads />} />
+            <Route path="admin" element={<Admin />} />
           </Route>
 
           {/* Catch-all */}
