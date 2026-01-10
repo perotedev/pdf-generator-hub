@@ -11,12 +11,15 @@ import {
   User,
   Receipt,
   Settings,
+  Users,
 } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const DashboardLayout = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user, logout, isAdmin } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const navLinks = [
@@ -24,12 +27,14 @@ const DashboardLayout = () => {
     { href: "/dashboard/assinaturas", label: "Minhas Assinaturas", icon: CreditCard },
     { href: "/dashboard/pagamentos", label: "Pagamentos", icon: Receipt },
     { href: "/dashboard/downloads", label: "Downloads", icon: Download },
-    { href: "/dashboard/admin", label: "Administração", icon: Settings },
+    { href: "/dashboard/admin", label: "Configurações", icon: Settings },
+    { href: "/dashboard/admin/usuarios", label: "Gerenciar Usuários", icon: Users },
   ];
 
   const isActive = (path: string) => location.pathname === path;
 
   const handleLogout = () => {
+    logout();
     navigate("/");
   };
 
@@ -153,9 +158,16 @@ const DashboardLayout = () => {
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary">
                 <User className="h-5 w-5 text-primary-foreground" />
               </div>
-              <span className="hidden sm:inline text-sm font-medium text-foreground">
-                João Silva
-              </span>
+              <div className="hidden sm:block">
+                <div className="text-sm font-medium text-foreground">
+                  {user?.name || 'Usuário'}
+                </div>
+                {isAdmin && (
+                  <div className="text-xs text-muted-foreground">
+                    Administrador
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </header>

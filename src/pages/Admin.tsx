@@ -21,8 +21,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Settings, DollarSign, Package, Link as LinkIcon, Trash2, Edit2, Plus, Save } from "lucide-react";
+import { Settings, DollarSign, Package, Link as LinkIcon, Trash2, Edit2, Plus, Save, Users, ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Link } from "react-router-dom";
 
 interface SystemVersion {
   id: string;
@@ -255,6 +256,46 @@ const Admin = () => {
         <p className="text-muted-foreground">
           Gerencie configurações do sistema, preços e versões
         </p>
+      </div>
+
+      {/* Acesso Rápido */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <Link to="/dashboard/admin/usuarios">
+          <Card className="border-border hover:border-primary transition-colors cursor-pointer h-full">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-100 text-purple-600">
+                    <Users className="h-5 w-5" />
+                  </div>
+                  <CardTitle className="text-base">Gerenciar Usuários</CardTitle>
+                </div>
+                <ArrowRight className="h-5 w-5 text-muted-foreground" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Gerencie usuários, permissões, licenças e dispositivos vinculados
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Card className="border-border">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-100 text-green-600">
+                <Settings className="h-5 w-5" />
+              </div>
+              <CardTitle className="text-base">Configurações</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              Configure preços, versões do sistema e recursos
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Configuração de Preços */}

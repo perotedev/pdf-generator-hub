@@ -7,10 +7,12 @@ import { Separator } from "@/components/ui/separator";
 import { FileText } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -19,29 +21,48 @@ const Login = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulated login
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      await login(email, password);
 
-    toast({
-      title: "Login realizado com sucesso!",
-      description: "Redirecionando para o dashboard...",
-    });
+      toast({
+        title: "Login realizado com sucesso!",
+        description: "Redirecionando para o dashboard...",
+      });
 
-    setIsLoading(false);
-    navigate("/dashboard");
+      navigate("/dashboard");
+    } catch (error) {
+      toast({
+        title: "Erro ao fazer login",
+        description: "Verifique suas credenciais e tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleGoogleLogin = async () => {
     setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    
-    toast({
-      title: "Login com Google realizado!",
-      description: "Redirecionando para o dashboard...",
-    });
-    
-    setIsLoading(false);
-    navigate("/dashboard");
+
+    try {
+      // Simula login com Google usando um email padrão
+      await login("usuario@gmail.com", "");
+
+      toast({
+        title: "Login com Google realizado!",
+        description: "Redirecionando para o dashboard...",
+      });
+
+      navigate("/dashboard");
+    } catch (error) {
+      toast({
+        title: "Erro ao fazer login",
+        description: "Tente novamente mais tarde.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
