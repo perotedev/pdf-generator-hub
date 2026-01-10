@@ -27,11 +27,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { CreditCard, Calendar, Check, Copy, RefreshCw, Key, Monitor, Trash2, Edit2 } from "lucide-react";
+import { CreditCard, Calendar, Check, Copy, RefreshCw, Key, Monitor, Trash2, Edit2, RotateCcw } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 interface Subscription {
   id: string;
@@ -58,6 +60,8 @@ const Assinaturas = () => {
   const [cancelDialogOpen, setCancelDialogOpen] = useState<string | null>(null);
   const [editingNickname, setEditingNickname] = useState<string | null>(null);
   const [nicknameValue, setNicknameValue] = useState("");
+  const [reactivateDialogOpen, setReactivateDialogOpen] = useState<string | null>(null);
+  const [reactivatePlan, setReactivatePlan] = useState<'monthly' | 'annual'>('monthly');
 
   const subscriptions: Subscription[] = [
     {
@@ -152,6 +156,20 @@ const Assinaturas = () => {
       title: "Apelido atualizado",
       description: "O apelido da licença foi atualizado com sucesso.",
     });
+  };
+
+  const handleReactivateSubscription = (subId: string, plan: string) => {
+    setReactivateDialogOpen(null);
+    const planType = reactivatePlan === 'monthly' ? 'Mensal' : 'Anual';
+    const price = reactivatePlan === 'monthly' ? 'R$49/mês' : 'R$468/ano';
+
+    toast({
+      title: "Assinatura reativada com sucesso!",
+      description: `Sua assinatura ${plan} (${planType}) foi reativada. ${price}`,
+    });
+
+    // Em produção, aqui seria feita uma chamada à API para processar o pagamento
+    // e reativar a assinatura
   };
 
   const maskLicenseCode = (code: string) => {
@@ -426,63 +444,165 @@ const Assinaturas = () => {
                     </div>
 
                     {/* Subscription Actions */}
-                    {sub.status === "Ativa" && (
-                      <div className="flex flex-wrap gap-2 pt-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() =>
-                            navigate(
-                              `/dashboard/assinaturas/mudar-plano?subscriptionId=${sub.id}&currentPlan=${sub.plan}`
-                            )
-                          }
-                        >
-                          Mudar Plano
-                        </Button>
-                        {sub.autoRenew && (
-                          <Dialog
-                            open={cancelDialogOpen === sub.id}
-                            onOpenChange={(open) =>
-                              setCancelDialogOpen(open ? sub.id : null)
+                    <div className="flex flex-wrap gap-2 pt-2">
+                      {sub.status === "Ativa" ? (
+                        <>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              navigate(
+                                `/dashboard/assinaturas/mudar-plano?subscriptionId=${sub.id}&currentPlan=${sub.plan}`
+                              )
                             }
                           >
-                            <DialogTrigger asChild>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="text-destructive hover:text-destructive"
-                              >
-                                Cancelar Renovação
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Cancelar Renovação Automática</DialogTitle>
-                                <DialogDescription>
-                                  Sua assinatura continuará ativa até {sub.endDate}. Após
-                                  essa data, você perderá acesso às funcionalidades do plano{" "}
-                                  {sub.plan}.
-                                </DialogDescription>
-                              </DialogHeader>
-                              <DialogFooter>
+                            Mudar Plano
+                          </Button>
+                          {sub.autoRenew && (
+                            <Dialog
+                              open={cancelDialogOpen === sub.id}
+                              onOpenChange={(open) =>
+                                setCancelDialogOpen(open ? sub.id : null)
+                              }
+                            >
+                              <DialogTrigger asChild>
                                 <Button
                                   variant="outline"
-                                  onClick={() => setCancelDialogOpen(null)}
+                                  size="sm"
+                                  className="text-destructive hover:text-destructive"
                                 >
-                                  Voltar
+                                  Cancelar Renovação
                                 </Button>
-                                <Button
-                                  variant="destructive"
-                                  onClick={() => handleCancelRenewal(sub.id)}
+                              </DialogTrigger>
+                              <DialogContent>
+                                <DialogHeader>
+                                  <DialogTitle>Cancelar Renovação Automática</DialogTitle>
+                                  <DialogDescription>
+                                    Sua assinatura continuará ativa até {sub.endDate}. Após
+                                    essa data, você perderá acesso às funcionalidades do plano{" "}
+                                    {sub.plan}.
+                                  </DialogDescription>
+                                </DialogHeader>
+                                <DialogFooter>
+                                  <Button
+                                    variant="outline"
+                                    onClick={() => setCancelDialogOpen(null)}
+                                  >
+                                    Voltar
+                                  </Button>
+                                  <Button
+                                    variant="destructive"
+                                    onClick={() => handleCancelRenewal(sub.id)}
+                                  >
+                                    Confirmar Cancelamento
+                                  </Button>
+                                </DialogFooter>
+                              </DialogContent>
+                            </Dialog>
+                          )}
+                        </>
+                      ) : (
+                        <Dialog
+                          open={reactivateDialogOpen === sub.id}
+                          onOpenChange={(open) => {
+                            setReactivateDialogOpen(open ? sub.id : null);
+                            if (open) setReactivatePlan('monthly');
+                          }}
+                        >
+                          <DialogTrigger asChild>
+                            <Button
+                              variant="default"
+                              size="sm"
+                              className="bg-primary hover:bg-primary/90"
+                            >
+                              <RotateCcw className="h-4 w-4 mr-2" />
+                              Reativar Assinatura
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="sm:max-w-[500px]">
+                            <DialogHeader>
+                              <DialogTitle>Reativar Assinatura</DialogTitle>
+                              <DialogDescription>
+                                Reative sua assinatura do plano {sub.plan} e volte a usar todas as funcionalidades.
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="space-y-4 py-4">
+                              <div className="space-y-3">
+                                <Label className="text-base font-medium">
+                                  Escolha o tipo de plano:
+                                </Label>
+                                <RadioGroup
+                                  value={reactivatePlan}
+                                  onValueChange={(value: 'monthly' | 'annual') => setReactivatePlan(value)}
+                                  className="space-y-3"
                                 >
-                                  Confirmar Cancelamento
-                                </Button>
-                              </DialogFooter>
-                            </DialogContent>
-                          </Dialog>
-                        )}
-                      </div>
-                    )}
+                                  <div className="flex items-start space-x-3 space-y-0 rounded-lg border border-border p-4 hover:bg-muted/50 transition-colors">
+                                    <RadioGroupItem value="monthly" id="monthly" className="mt-1" />
+                                    <Label
+                                      htmlFor="monthly"
+                                      className="flex-1 cursor-pointer space-y-1 leading-normal"
+                                    >
+                                      <div className="flex items-center justify-between">
+                                        <span className="font-medium">Plano Mensal</span>
+                                        <span className="text-lg font-bold">R$49/mês</span>
+                                      </div>
+                                      <p className="text-sm text-muted-foreground">
+                                        Renovação automática mensal. Cancele quando quiser.
+                                      </p>
+                                    </Label>
+                                  </div>
+                                  <div className="flex items-start space-x-3 space-y-0 rounded-lg border border-border p-4 hover:bg-muted/50 transition-colors">
+                                    <RadioGroupItem value="annual" id="annual" className="mt-1" />
+                                    <Label
+                                      htmlFor="annual"
+                                      className="flex-1 cursor-pointer space-y-1 leading-normal"
+                                    >
+                                      <div className="flex items-center justify-between">
+                                        <span className="font-medium">Plano Anual</span>
+                                        <div className="text-right">
+                                          <span className="text-lg font-bold">R$468/ano</span>
+                                          <Badge variant="secondary" className="ml-2 bg-green-100 text-green-700">
+                                            Economize 20%
+                                          </Badge>
+                                        </div>
+                                      </div>
+                                      <p className="text-sm text-muted-foreground">
+                                        R$39/mês • Pagamento anual • Melhor custo-benefício
+                                      </p>
+                                    </Label>
+                                  </div>
+                                </RadioGroup>
+                              </div>
+                              <div className="rounded-lg bg-muted/50 p-4 space-y-2">
+                                <div className="flex items-center gap-2">
+                                  <Key className="h-4 w-4 text-primary" />
+                                  <span className="text-sm font-medium">O que você receberá:</span>
+                                </div>
+                                <ul className="text-sm text-muted-foreground space-y-1 ml-6">
+                                  <li>• Sua licença será reativada imediatamente</li>
+                                  <li>• Acesso completo a todas as funcionalidades do plano {sub.plan}</li>
+                                  <li>• Renovação automática para garantir acesso contínuo</li>
+                                  <li>• Suporte técnico prioritário</li>
+                                </ul>
+                              </div>
+                            </div>
+                            <DialogFooter>
+                              <Button
+                                variant="outline"
+                                onClick={() => setReactivateDialogOpen(null)}
+                              >
+                                Cancelar
+                              </Button>
+                              <Button
+                                onClick={() => handleReactivateSubscription(sub.id, sub.plan)}
+                              >
+                                Confirmar Reativação
+                              </Button>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
+                      )}
+                    </div>
                   </div>
                 </AccordionContent>
               </AccordionItem>
