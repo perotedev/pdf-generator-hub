@@ -20,6 +20,7 @@ import MudarPlano from "./pages/MudarPlano";
 import HistoricoPagamentos from "./pages/HistoricoPagamentos";
 import Admin from "./pages/Admin";
 import AdminUsers from "./pages/AdminUsers";
+import AdminLicenses from "./pages/AdminLicenses";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -69,6 +70,14 @@ const App = () => (
                 element={
                   <ProtectedRoute requireManager>
                     <AdminUsers />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="admin/licencas"
+                element={
+                  <ProtectedRoute requireAdmin>
+                    <AdminLicenses />
                   </ProtectedRoute>
                 }
               />
