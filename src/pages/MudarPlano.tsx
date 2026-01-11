@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, X, ArrowLeft, CreditCard } from "lucide-react";
+import { Check, X, ArrowLeft, CreditCard, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase, type Plan as DbPlan } from "@/lib/supabase";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,55 +17,113 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+interface PlanDisplay {
+  id: string;
+  name: string;
+  description: string;
+  monthlyPrice: number;
+  annualPrice: number;
+  features: { text: string; included: boolean; isDisadvantage?: boolean }[];
+  popular: boolean;
+  isMonthly: boolean;
+  billingCycle: 'MONTHLY' | 'YEARLY';
+}
+
 const MudarPlano = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [plans, setPlans] = useState<PlanDisplay[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // ID da assinatura atual passado via query params
   const currentSubscriptionId = searchParams.get("subscriptionId");
   const currentPlan = searchParams.get("currentPlan") || "Mensal";
 
-  const plans = [
-    {
-      id: "monthly",
-      name: "Mensal",
-      description: "Assinatura mensal do PDF Generator",
-      monthlyPrice: 49,
-      annualPrice: 49,
-      features: [
-        { text: "Geração ilimitada de PDFs", included: true },
-        { text: "Perfis ilimitados", included: true },
-        { text: "Templates ilimitados", included: true },
-        { text: "Assinaturas digitais", included: true },
-        { text: "Suporte por email", included: true },
-        { text: "Novas versões durante a validade", included: true },
-        { text: "Sem desconto", included: true, isDisadvantage: true },
-      ],
-      popular: false,
-      isMonthly: true,
-    },
-    {
-      id: "annual",
-      name: "Anual",
-      description: "Assinatura anual com desconto",
-      monthlyPrice: 39,
-      annualPrice: 39,
-      features: [
-        { text: "Geração ilimitada de PDFs", included: true },
-        { text: "Perfis ilimitados", included: true },
-        { text: "Templates ilimitados", included: true },
-        { text: "Assinaturas digitais", included: true },
-        { text: "Suporte prioritário", included: true },
-        { text: "Novas versões durante a validade", included: true },
-        { text: "Economia de 20%", included: true },
-      ],
-      popular: true,
-      isMonthly: false,
-    },
-  ];
+  useEffect(() => {
+    fetchPlans();
+  }, []);
+
+  const fetchPlans = async () => {
+    try {
+      setLoading(true);
+
+      const { data: dbPlans, error } = await supabase
+        .from('plans')
+        .select('*')
+        .eq('is_active', true)
+        .order('billing_cycle');
+
+      if (error) throw error;
+
+      if (dbPlans && dbPlans.length > 0) {
+        const monthlyPlan = dbPlans.find((p: DbPlan) => p.billing_cycle === 'MONTHLY');
+        const yearlyPlan = dbPlans.find((p: DbPlan) => p.billing_cycle === 'YEARLY');
+
+        const formattedPlans: PlanDisplay[] = [];
+
+        if (monthlyPlan) {
+          formattedPlans.push({
+            id: monthlyPlan.id,
+            name: "Mensal",
+            description: monthlyPlan.description || "Assinatura mensal do PDF Generator",
+            monthlyPrice: monthlyPlan.price,
+            annualPrice: monthlyPlan.price,
+            features: [
+              { text: "Geração ilimitada de PDFs", included: true },
+              { text: "Perfis ilimitados", included: true },
+              { text: "Templates ilimitados", included: true },
+              { text: "Assinaturas digitais", included: true },
+              { text: "Suporte por email", included: true },
+              { text: "Novas versões durante a validade", included: true },
+              { text: "Sem desconto", included: true, isDisadvantage: true },
+            ],
+            popular: false,
+            isMonthly: true,
+            billingCycle: 'MONTHLY',
+          });
+        }
+
+        if (yearlyPlan) {
+          const monthlyEquivalent = yearlyPlan.price / 12;
+          const monthlySavings = monthlyPlan ? ((monthlyPlan.price - monthlyEquivalent) / monthlyPlan.price * 100).toFixed(0) : "20";
+
+          formattedPlans.push({
+            id: yearlyPlan.id,
+            name: "Anual",
+            description: yearlyPlan.description || "Assinatura anual com desconto",
+            monthlyPrice: Number(monthlyEquivalent.toFixed(2)),
+            annualPrice: yearlyPlan.price,
+            features: [
+              { text: "Geração ilimitada de PDFs", included: true },
+              { text: "Perfis ilimitados", included: true },
+              { text: "Templates ilimitados", included: true },
+              { text: "Assinaturas digitais", included: true },
+              { text: "Suporte prioritário", included: true },
+              { text: "Novas versões durante a validade", included: true },
+              { text: `Economia de ${monthlySavings}%`, included: true },
+            ],
+            popular: true,
+            isMonthly: false,
+            billingCycle: 'YEARLY',
+          });
+        }
+
+        setPlans(formattedPlans);
+      }
+    } catch (error) {
+      console.error('Error fetching plans:', error);
+      toast({
+        title: "Erro ao carregar planos",
+        description: "Não foi possível carregar os planos disponíveis.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSelectPlan = (planId: string) => {
     setSelectedPlan(planId);
@@ -89,6 +148,30 @@ const MudarPlano = () => {
   const getSelectedPlanInfo = () => {
     return plans.find((p) => p.id === selectedPlan);
   };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate("/dashboard/assinaturas")}
+            className="gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Voltar
+          </Button>
+        </div>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <RefreshCw className="h-8 w-8 animate-spin mx-auto text-primary" />
+            <p className="mt-2 text-muted-foreground">Carregando planos...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
