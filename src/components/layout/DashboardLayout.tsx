@@ -43,10 +43,15 @@ const DashboardLayout = () => {
       {/* Sidebar Desktop */}
       <aside className="hidden lg:flex w-64 flex-col border-r border-border bg-card sticky top-0 h-screen">
         <div className="flex h-16 items-center gap-2 border-b border-border px-6">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-            <FileText className="h-5 w-5 text-primary-foreground" />
-          </div>
-          <span className="text-lg font-bold text-foreground">PDF Generator</span>
+          <img 
+            src="/imgs/pdf_generator.png" 
+            alt="PDF Generator" 
+            className="h-9 w-9"
+          />
+          <span className="text-lg font-bold">
+            <span style={{ color: "#FD8216" }}>PDF</span>
+            <span style={{ color: "#1470BB" }}> GENERATOR</span>
+          </span>
         </div>
 
         <nav className="flex-1 p-4 space-y-1">
@@ -96,11 +101,16 @@ const DashboardLayout = () => {
         }`}
       >
         <div className="flex h-16 items-center justify-between border-b border-border px-6">
-          <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-              <FileText className="h-5 w-5 text-primary-foreground" />
-            </div>
-            <span className="text-lg font-bold text-foreground">PDF Generator</span>
+          <div className="flex h-16 items-center gap-2 border-b border-border">
+            <img 
+              src="/imgs/pdf_generator.png" 
+              alt="PDF Generator" 
+              className="h-7 w-7"
+            />
+            <span className="font-bold">
+              <span style={{ color: "#FD8216" }}>PDF</span>
+              <span style={{ color: "#1470BB" }}> GENERATOR</span>
+            </span>
           </div>
           <button onClick={() => setSidebarOpen(false)}>
             <X className="h-6 w-6" />
