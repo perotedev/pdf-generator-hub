@@ -23,39 +23,24 @@ const Planos = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log('Planos: useEffect triggered, calling fetchPlans');
-    fetchPlans();
-  }, []);
+    let isMounted = true;
 
-  const fetchPlans = async () => {
-    console.log('Planos: fetchPlans called, loading=', loading);
-    try {
-      setLoading(true);
-      console.log('Planos: calling supabase.from(plans)...');
+    const fetchPlans = async () => {
+      try {
+        const { data: dbPlans, error } = await supabase
+          .from('plans')
+          .select('*')
+          .eq('is_active', true)
+          .order('billing_cycle');
 
-      // Adicionar timeout de 5 segundos
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Timeout: Query took too long')), 5000)
-      );
+        if (!isMounted) return;
 
-      const queryPromise = supabase
-        .from('plans')
-        .select('*')
-        .eq('is_active', true)
-        .order('billing_cycle');
+        if (error) {
+          console.error('Error fetching plans:', error);
+          throw error;
+        }
 
-      const { data: dbPlans, error } = await Promise.race([queryPromise, timeoutPromise]) as any;
-
-      if (error) {
-        console.error('Supabase RLS error fetching plans:', error);
-        console.error('Error code:', error.code);
-        console.error('Error message:', error.message);
-        throw error;
-      }
-
-      console.log('Plans fetched from database:', dbPlans);
-
-      if (dbPlans && dbPlans.length > 0) {
+        if (dbPlans && dbPlans.length > 0) {
         const monthlyPlan = dbPlans.find((p: DbPlan) => p.billing_cycle === 'MONTHLY');
         const yearlyPlan = dbPlans.find((p: DbPlan) => p.billing_cycle === 'YEARLY');
 
@@ -108,7 +93,9 @@ const Planos = () => {
           });
         }
 
-        setPlans(formattedPlans);
+        if (isMounted) {
+          setPlans(formattedPlans);
+        }
       }
     } catch (error) {
       console.error('Error fetching plans:', error);
@@ -154,12 +141,18 @@ const Planos = () => {
         },
       ]);
     } finally {
-      console.log('Planos: finally block - setting loading to false');
-      setLoading(false);
+      if (isMounted) {
+        setLoading(false);
+      }
     }
   };
 
-  console.log('Planos: render - loading=', loading, 'plans.length=', plans.length);
+    fetchPlans();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   if (loading) {
     return (
