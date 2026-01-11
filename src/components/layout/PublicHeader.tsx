@@ -10,7 +10,7 @@ const PublicHeader = () => {
   const navLinks = [
     { href: "/", label: "Home" },
     { href: "/documentacao", label: "Documentação" },
-    { href: "/planos", label: "Planos" },
+    { href: "/planos", label: "Preços" },
   ];
 
   const isActive = (path: string) => location.pathname === path;
