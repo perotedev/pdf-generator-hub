@@ -125,9 +125,6 @@ const Registro = () => {
               />
             </div>
           <CardTitle className="text-2xl">Criar sua conta</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Comece seu teste grátis de 7 dias
-          </p>
         </CardHeader>
         <CardContent className="space-y-6">
           <Button
