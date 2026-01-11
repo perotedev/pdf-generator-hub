@@ -20,7 +20,7 @@ begin
 end $$;
 
 -- 3. Criar o servidor Stripe
--- IMPORTANTE: Configure a secret key 'stripe_secret_key' no Vault do Supabase antes de executar
+-- IMPORTANTE: Configure a secret key 'stripe_secret_key' no Vault do Supabase antes de executar (substitua pelo id da secret)
 
 do $$
 begin
@@ -139,7 +139,9 @@ options (
 -- 5. Criar views para facilitar consultas
 
 -- View combinando dados locais com Stripe
-create or replace view public.subscriptions_with_stripe as
+-- NOTA: Esta view herda as permissões RLS das tabelas base (subscriptions e plans)
+create or replace view public.subscriptions_with_stripe
+with (security_invoker=true) as
 select
   s.id,
   s.user_id,
@@ -159,7 +161,9 @@ left join public.plans p on s.plan_id = p.id
 left join stripe_subscriptions ss on s.stripe_subscription_id = ss.id;
 
 -- View de pagamentos com dados do Stripe
-create or replace view public.payments_with_stripe as
+-- NOTA: Esta view herda as permissões RLS das tabelas base (payments)
+create or replace view public.payments_with_stripe
+with (security_invoker=true) as
 select
   p.id,
   p.user_id,
