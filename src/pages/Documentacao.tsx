@@ -16,6 +16,11 @@ import {
 const Documentacao = () => {
   const [activeSection, setActiveSection] = useState("introducao");
 
+  const handleSectionChange = (sectionId: string) => {
+    setActiveSection(sectionId);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   const sections = [
     { id: "introducao", label: "Introdução", icon: Book },
     { id: "como-funciona", label: "Como Funciona", icon: Zap },
@@ -841,7 +846,7 @@ const Documentacao = () => {
                   return (
                     <button
                       key={section.id}
-                      onClick={() => setActiveSection(section.id)}
+                      onClick={() => handleSectionChange(section.id)}
                       className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                         activeSection === section.id
                           ? "bg-primary text-primary-foreground"
@@ -866,7 +871,7 @@ const Documentacao = () => {
               return (
                 <button
                   key={section.id}
-                  onClick={() => setActiveSection(section.id)}
+                  onClick={() => handleSectionChange(section.id)}
                   className={`flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition-colors whitespace-nowrap ${
                     activeSection === section.id
                       ? "bg-primary text-primary-foreground"
