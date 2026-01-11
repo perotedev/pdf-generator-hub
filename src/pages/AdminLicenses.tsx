@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,66 +30,58 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Search, Key, Plus, Edit2, Trash2, Laptop, CheckCircle, XCircle } from 'lucide-react';
+import { Search, Key, Plus, Edit2, Trash2, Laptop, CheckCircle, XCircle, RefreshCw, Shield } from 'lucide-react';
 import { toast } from 'sonner';
-
-interface StandaloneLicense {
-  id: string;
-  code: string;
-  client: string | null;
-  company: string;
-  plan_type: string | null;
-  is_used: boolean;
-  sold: boolean;
-  device_id: string | null;
-  device_type: string | null;
-  expire_date: string | null;
-  activated_at: string | null;
-  created_at: string;
-}
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase, licenseApi, type License } from '@/lib/supabase';
 
 export default function AdminLicenses() {
+  const { isAdmin } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
-  const [licenses, setLicenses] = useState<StandaloneLicense[]>([
-    {
-      id: '1',
-      code: 'ABCD1-2EFG3-4HIJ5-6KLM7-8NOP9',
-      client: 'João Silva',
-      company: 'Empresa XYZ',
-      plan_type: 'Profissional',
-      is_used: true,
-      sold: true,
-      device_id: 'WIN-ABC123',
-      device_type: 'windows',
-      expire_date: '2026-12-31',
-      activated_at: '2026-01-01T10:00:00Z',
-      created_at: '2025-12-01T10:00:00Z',
-    },
-    {
-      id: '2',
-      code: 'QRST1-2UVW3-4XYZ5-6ABC7-8DEF9',
-      client: null,
-      company: 'TechCorp LTDA',
-      plan_type: 'Empresarial',
-      is_used: false,
-      sold: false,
-      device_id: null,
-      device_type: null,
-      expire_date: '2027-06-30',
-      activated_at: null,
-      created_at: '2026-01-10T15:30:00Z',
-    },
-  ]);
-
+  const [licenses, setLicenses] = useState<License[]>([]);
+  const [loading, setLoading] = useState(true);
   const [addDialog, setAddDialog] = useState(false);
-  const [editingLicense, setEditingLicense] = useState<StandaloneLicense | null>(null);
-  const [deletingLicense, setDeletingLicense] = useState<StandaloneLicense | null>(null);
+  const [editingLicense, setEditingLicense] = useState<License | null>(null);
+  const [deletingLicense, setDeletingLicense] = useState<License | null>(null);
   const [newLicense, setNewLicense] = useState({
     client: '',
     company: '',
     plan_type: '',
     expire_days: '183',
   });
+
+  useEffect(() => {
+    fetchLicenses();
+  }, []);
+
+  const fetchLicenses = async () => {
+    try {
+      setLoading(true);
+
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        toast.error('Sessão expirada', {
+          description: 'Por favor, faça login novamente.',
+        });
+        return;
+      }
+
+      const licensesData = await licenseApi.getLicenses(session.access_token);
+
+      // Filter only standalone licenses
+      const standaloneLicenses = licensesData.filter((l: License) => l.is_standalone);
+
+      setLicenses(standaloneLicenses);
+    } catch (error: any) {
+      console.error('Error fetching licenses:', error);
+      toast.error('Erro ao carregar licenças', {
+        description: error.message || 'Tente novamente mais tarde.',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredLicenses = licenses.filter(
     (license) =>
@@ -98,105 +90,191 @@ export default function AdminLicenses() {
       (license.client && license.client.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  const handleCreateLicense = () => {
-    // TODO: Integrar com Supabase
-    const generatedCode = generateLicenseCode();
-
-    const license: StandaloneLicense = {
-      id: Date.now().toString(),
-      code: generatedCode,
-      client: newLicense.client || null,
-      company: newLicense.company,
-      plan_type: newLicense.plan_type || null,
-      is_used: false,
-      sold: false,
-      device_id: null,
-      device_type: null,
-      expire_date: calculateExpireDate(parseInt(newLicense.expire_days)),
-      activated_at: null,
-      created_at: new Date().toISOString(),
-    };
-
-    setLicenses([...licenses, license]);
-    toast.success('Licença criada', {
-      description: `Código: ${generatedCode}`,
-    });
-    setAddDialog(false);
-    setNewLicense({ client: '', company: '', plan_type: '', expire_days: '183' });
-  };
-
-  const handleUpdateLicense = () => {
-    if (!editingLicense) return;
-
-    setLicenses(
-      licenses.map((l) => (l.id === editingLicense.id ? editingLicense : l))
-    );
-    toast.success('Licença atualizada');
-    setEditingLicense(null);
-  };
-
-  const handleDeleteLicense = () => {
-    if (!deletingLicense) return;
-
-    setLicenses(licenses.filter((l) => l.id !== deletingLicense.id));
-    toast.success('Licença removida');
-    setDeletingLicense(null);
-  };
-
-  const handleUnbindDevice = (license: StandaloneLicense) => {
-    setLicenses(
-      licenses.map((l) =>
-        l.id === license.id
-          ? { ...l, is_used: false, device_id: null, device_type: null, activated_at: null }
-          : l
-      )
-    );
-    toast.success('Dispositivo desvinculado');
-  };
-
-  const handleToggleSold = (license: StandaloneLicense) => {
-    setLicenses(
-      licenses.map((l) => (l.id === license.id ? { ...l, sold: !l.sold } : l))
-    );
-    toast.success(license.sold ? 'Licença marcada como não vendida' : 'Licença marcada como vendida');
-  };
-
   const generateLicenseCode = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    const groups = [];
-    for (let i = 0; i < 5; i++) {
-      let group = '';
-      for (let j = 0; j < 5; j++) {
-        group += chars.charAt(Math.floor(Math.random() * chars.length));
+    const segments = 5;
+    const segmentLength = 5;
+
+    let code = '';
+    for (let i = 0; i < segments; i++) {
+      if (i > 0) code += '-';
+      for (let j = 0; j < segmentLength; j++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
       }
-      groups.push(group);
     }
-    return groups.join('-');
+
+    return code;
   };
 
-  const calculateExpireDate = (days: number) => {
-    const date = new Date();
-    date.setDate(date.getDate() + days);
-    return date.toISOString().split('T')[0];
+  const handleCreateLicense = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        toast.error('Sessão expirada');
+        return;
+      }
+
+      const generatedCode = generateLicenseCode();
+      const expireDate = new Date();
+      expireDate.setDate(expireDate.getDate() + parseInt(newLicense.expire_days));
+
+      await licenseApi.createLicense(session.access_token, {
+        code: generatedCode,
+        client: newLicense.client || null,
+        company: newLicense.company,
+        plan_type: newLicense.plan_type || null,
+        expire_date: expireDate.toISOString().split('T')[0],
+        is_standalone: true,
+        sold: false,
+        is_used: false,
+      });
+
+      await fetchLicenses();
+
+      toast.success('Licença criada com sucesso!', {
+        description: `Código: ${generatedCode}`,
+      });
+
+      setAddDialog(false);
+      setNewLicense({
+        client: '',
+        company: '',
+        plan_type: '',
+        expire_days: '183',
+      });
+    } catch (error: any) {
+      toast.error('Erro ao criar licença', {
+        description: error.message || 'Tente novamente.',
+      });
+    }
   };
 
-  const getStatusBadge = (license: StandaloneLicense) => {
-    if (!license.sold) {
-      return <Badge variant="secondary">Não Vendida</Badge>;
+  const handleEditLicense = async () => {
+    if (!editingLicense) return;
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        toast.error('Sessão expirada');
+        return;
+      }
+
+      await licenseApi.updateLicense(session.access_token, editingLicense.id, {
+        client: editingLicense.client,
+        company: editingLicense.company,
+        plan_type: editingLicense.plan_type,
+        expire_date: editingLicense.expire_date,
+        sold: editingLicense.sold,
+      });
+
+      await fetchLicenses();
+
+      toast.success('Licença atualizada!', {
+        description: 'As alterações foram salvas com sucesso.',
+      });
+
+      setEditingLicense(null);
+    } catch (error: any) {
+      toast.error('Erro ao atualizar licença', {
+        description: error.message || 'Tente novamente.',
+      });
     }
-    if (license.is_used) {
-      return <Badge className="bg-green-100 text-green-700">Ativa</Badge>;
-    }
-    return <Badge className="bg-blue-100 text-blue-700">Disponível</Badge>;
   };
+
+  const handleDeleteLicense = async () => {
+    if (!deletingLicense) return;
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        toast.error('Sessão expirada');
+        return;
+      }
+
+      await licenseApi.deleteLicense(session.access_token, deletingLicense.id);
+
+      await fetchLicenses();
+
+      toast.success('Licença excluída!', {
+        description: 'A licença foi removida do sistema.',
+      });
+
+      setDeletingLicense(null);
+    } catch (error: any) {
+      toast.error('Erro ao excluir licença', {
+        description: error.message || 'Tente novamente.',
+      });
+    }
+  };
+
+  const handleUnbindDevice = async (license: License) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        toast.error('Sessão expirada');
+        return;
+      }
+
+      await licenseApi.updateLicense(session.access_token, license.id, {
+        is_used: false,
+        device_id: null,
+        device_type: null,
+        activated_at: null,
+      });
+
+      await fetchLicenses();
+
+      toast.success('Dispositivo desvinculado!', {
+        description: 'A licença está disponível novamente.',
+      });
+    } catch (error: any) {
+      toast.error('Erro ao desvincular dispositivo', {
+        description: error.message || 'Tente novamente.',
+      });
+    }
+  };
+
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('pt-BR');
+  };
+
+  if (!isAdmin) {
+    return (
+      <Card className="border-border">
+        <CardContent className="py-10 text-center">
+          <Shield className="mx-auto h-12 w-12 text-muted-foreground" />
+          <h3 className="mt-4 text-lg font-semibold">Acesso Negado</h3>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Apenas administradores podem acessar esta página.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <RefreshCw className="h-8 w-8 animate-spin mx-auto text-primary" />
+          <p className="mt-2 text-muted-foreground">Carregando licenças...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Gerenciamento de Licenças Standalone</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Licenças Avulsas</h1>
           <p className="text-muted-foreground">
-            Gere e gerencie licenças avulsas para clientes fora do sistema
+            Gerencie licenças standalone para clientes externos
           </p>
         </div>
         <Button onClick={() => setAddDialog(true)}>
@@ -205,66 +283,81 @@ export default function AdminLicenses() {
         </Button>
       </div>
 
-      {/* Estatísticas */}
-      <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
+      {/* Stats */}
+      <div className="grid gap-4 md:grid-cols-4">
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total de Licenças
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{licenses.length}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Ativas
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {licenses.filter((l) => l.is_used && l.sold).length}
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                <Key className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{licenses.length}</p>
+                <p className="text-sm text-muted-foreground">Total</p>
+              </div>
             </div>
           </CardContent>
         </Card>
+
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Disponíveis
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
-              {licenses.filter((l) => !l.is_used && l.sold).length}
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-chart-1/10">
+                <CheckCircle className="h-5 w-5 text-chart-1" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">
+                  {licenses.filter(l => l.is_used).length}
+                </p>
+                <p className="text-sm text-muted-foreground">Ativas</p>
+              </div>
             </div>
           </CardContent>
         </Card>
+
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Não Vendidas
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-gray-600">
-              {licenses.filter((l) => !l.sold).length}
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-chart-2/10">
+                <XCircle className="h-5 w-5 text-chart-2" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">
+                  {licenses.filter(l => !l.is_used).length}
+                </p>
+                <p className="text-sm text-muted-foreground">Disponíveis</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-chart-3/10">
+                <CheckCircle className="h-5 w-5 text-chart-3" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">
+                  {licenses.filter(l => l.sold).length}
+                </p>
+                <p className="text-sm text-muted-foreground">Vendidas</p>
+              </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Busca */}
+      {/* Search */}
       <Card>
         <CardHeader>
           <CardTitle>Buscar Licenças</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="relative">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Buscar por código, empresa ou cliente..."
+              placeholder="Buscar por código, cliente ou empresa..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-9"
@@ -273,159 +366,145 @@ export default function AdminLicenses() {
         </CardContent>
       </Card>
 
-      {/* Tabela de Licenças */}
+      {/* Licenses Table */}
       <Card>
-        <CardHeader>
-          <CardTitle>Licenças ({filteredLicenses.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Código</TableHead>
-                  <TableHead>Cliente/Empresa</TableHead>
-                  <TableHead>Plano</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Dispositivo</TableHead>
-                  <TableHead className="hidden lg:table-cell">Expiração</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredLicenses.map((license) => (
-                  <TableRow key={license.id}>
-                    <TableCell className="font-mono text-sm">{license.code}</TableCell>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">{license.company}</div>
-                        {license.client && (
-                          <div className="text-sm text-muted-foreground">{license.client}</div>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {license.plan_type ? (
-                        <Badge variant="outline">{license.plan_type}</Badge>
-                      ) : (
-                        <span className="text-muted-foreground">-</span>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Código</TableHead>
+              <TableHead>Cliente</TableHead>
+              <TableHead>Empresa</TableHead>
+              <TableHead>Plano</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Validade</TableHead>
+              <TableHead className="text-right">Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredLicenses.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center py-10">
+                  <Key className="mx-auto h-12 w-12 text-muted-foreground" />
+                  <p className="mt-2 text-muted-foreground">
+                    Nenhuma licença encontrada
+                  </p>
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredLicenses.map((license) => (
+                <TableRow key={license.id}>
+                  <TableCell>
+                    <code className="text-xs font-mono">{license.code}</code>
+                  </TableCell>
+                  <TableCell>{license.client || 'N/A'}</TableCell>
+                  <TableCell>{license.company}</TableCell>
+                  <TableCell>{license.plan_type || 'N/A'}</TableCell>
+                  <TableCell>
+                    <div className="flex flex-col gap-1">
+                      <Badge variant={license.is_used ? 'default' : 'secondary'}>
+                        {license.is_used ? 'Ativa' : 'Disponível'}
+                      </Badge>
+                      {license.sold && (
+                        <Badge variant="outline" className="w-fit">
+                          Vendida
+                        </Badge>
                       )}
-                    </TableCell>
-                    <TableCell>{getStatusBadge(license)}</TableCell>
-                    <TableCell>
-                      {license.device_id ? (
-                        <div className="flex items-center gap-1">
-                          <Laptop className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm">{license.device_type}</span>
+                      {license.is_used && license.device_id && (
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                          <Laptop className="h-3 w-3" />
+                          {license.device_type}
                         </div>
-                      ) : (
-                        <span className="text-muted-foreground">-</span>
                       )}
-                    </TableCell>
-                    <TableCell className="hidden lg:table-cell">
-                      {license.expire_date
-                        ? new Date(license.expire_date).toLocaleDateString('pt-BR')
-                        : '-'}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-1">
-                        {license.is_used && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleUnbindDevice(license)}
-                            title="Desvincular dispositivo"
-                          >
-                            <Laptop className="h-4 w-4" />
-                          </Button>
-                        )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-sm">
+                      {formatDate(license.expire_date)}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      {license.is_used && license.device_id && (
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleToggleSold(license)}
-                          title={license.sold ? 'Marcar como não vendida' : 'Marcar como vendida'}
+                          onClick={() => handleUnbindDevice(license)}
                         >
-                          {license.sold ? (
-                            <CheckCircle className="h-4 w-4 text-green-600" />
-                          ) : (
-                            <XCircle className="h-4 w-4 text-gray-400" />
-                          )}
+                          <Laptop className="h-4 w-4 mr-1" />
+                          Desvincular
                         </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setEditingLicense(license)}
-                        >
-                          <Edit2 className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => setDeletingLicense(license)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
+                      )}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setEditingLicense(license)}
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setDeletingLicense(license)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
       </Card>
 
-      {/* Dialog: Criar Licença */}
+      {/* Add License Dialog */}
       <Dialog open={addDialog} onOpenChange={setAddDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Criar Nova Licença Standalone</DialogTitle>
+            <DialogTitle>Nova Licença Avulsa</DialogTitle>
             <DialogDescription>
-              Gere uma nova licença para uso fora do sistema de assinaturas
+              Crie uma nova licença standalone para um cliente externo
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Empresa *</Label>
+              <Label htmlFor="client">Cliente (opcional)</Label>
               <Input
+                id="client"
+                placeholder="Nome do cliente"
+                value={newLicense.client}
+                onChange={(e) => setNewLicense({ ...newLicense, client: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="company">Empresa *</Label>
+              <Input
+                id="company"
                 placeholder="Nome da empresa"
                 value={newLicense.company}
-                onChange={(e) =>
-                  setNewLicense({ ...newLicense, company: e.target.value })
-                }
+                onChange={(e) => setNewLicense({ ...newLicense, company: e.target.value })}
+                required
               />
             </div>
             <div className="space-y-2">
-              <Label>Cliente</Label>
+              <Label htmlFor="plan_type">Tipo de Plano (opcional)</Label>
               <Input
-                placeholder="Nome do cliente (opcional)"
-                value={newLicense.client}
-                onChange={(e) =>
-                  setNewLicense({ ...newLicense, client: e.target.value })
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Tipo de Plano</Label>
-              <Input
-                placeholder="Ex: Profissional, Empresarial (opcional)"
+                id="plan_type"
+                placeholder="Ex: Profissional, Empresarial"
                 value={newLicense.plan_type}
-                onChange={(e) =>
-                  setNewLicense({ ...newLicense, plan_type: e.target.value })
-                }
+                onChange={(e) => setNewLicense({ ...newLicense, plan_type: e.target.value })}
               />
             </div>
             <div className="space-y-2">
-              <Label>Dias até Expiração</Label>
+              <Label htmlFor="expire_days">Validade (dias)</Label>
               <Input
+                id="expire_days"
                 type="number"
                 placeholder="183"
                 value={newLicense.expire_days}
-                onChange={(e) =>
-                  setNewLicense({ ...newLicense, expire_days: e.target.value })
-                }
+                onChange={(e) => setNewLicense({ ...newLicense, expire_days: e.target.value })}
               />
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 Padrão: 183 dias (6 meses)
               </p>
             </div>
@@ -434,40 +513,34 @@ export default function AdminLicenses() {
             <Button variant="outline" onClick={() => setAddDialog(false)}>
               Cancelar
             </Button>
-            <Button
-              onClick={handleCreateLicense}
-              disabled={!newLicense.company}
-            >
-              <Key className="h-4 w-4 mr-2" />
-              Gerar Licença
+            <Button onClick={handleCreateLicense} disabled={!newLicense.company}>
+              Criar Licença
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Dialog: Editar Licença */}
-      <Dialog open={!!editingLicense} onOpenChange={() => setEditingLicense(null)}>
+      {/* Edit License Dialog */}
+      <Dialog open={!!editingLicense} onOpenChange={(open) => !open && setEditingLicense(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Editar Licença</DialogTitle>
             <DialogDescription>
-              Código: {editingLicense?.code}
+              Atualize as informações da licença
             </DialogDescription>
           </DialogHeader>
           {editingLicense && (
-            <div className="space-y-4">
+            <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label>Empresa</Label>
-                <Input
-                  value={editingLicense.company}
-                  onChange={(e) =>
-                    setEditingLicense({ ...editingLicense, company: e.target.value })
-                  }
-                />
+                <Label>Código</Label>
+                <code className="block text-sm font-mono p-2 bg-muted rounded">
+                  {editingLicense.code}
+                </code>
               </div>
               <div className="space-y-2">
-                <Label>Cliente</Label>
+                <Label htmlFor="edit-client">Cliente</Label>
                 <Input
+                  id="edit-client"
                   value={editingLicense.client || ''}
                   onChange={(e) =>
                     setEditingLicense({ ...editingLicense, client: e.target.value })
@@ -475,8 +548,20 @@ export default function AdminLicenses() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Tipo de Plano</Label>
+                <Label htmlFor="edit-company">Empresa</Label>
                 <Input
+                  id="edit-company"
+                  value={editingLicense.company}
+                  onChange={(e) =>
+                    setEditingLicense({ ...editingLicense, company: e.target.value })
+                  }
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-plan">Tipo de Plano</Label>
+                <Input
+                  id="edit-plan"
                   value={editingLicense.plan_type || ''}
                   onChange={(e) =>
                     setEditingLicense({ ...editingLicense, plan_type: e.target.value })
@@ -484,14 +569,27 @@ export default function AdminLicenses() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Data de Expiração</Label>
+                <Label htmlFor="edit-expire">Data de Validade</Label>
                 <Input
+                  id="edit-expire"
                   type="date"
-                  value={editingLicense.expire_date || ''}
+                  value={editingLicense.expire_date?.split('T')[0] || ''}
                   onChange={(e) =>
                     setEditingLicense({ ...editingLicense, expire_date: e.target.value })
                   }
                 />
+              </div>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="edit-sold"
+                  checked={editingLicense.sold}
+                  onChange={(e) =>
+                    setEditingLicense({ ...editingLicense, sold: e.target.checked })
+                  }
+                  className="rounded border-gray-300"
+                />
+                <Label htmlFor="edit-sold">Marcar como vendida</Label>
               </div>
             </div>
           )}
@@ -499,25 +597,30 @@ export default function AdminLicenses() {
             <Button variant="outline" onClick={() => setEditingLicense(null)}>
               Cancelar
             </Button>
-            <Button onClick={handleUpdateLicense}>Salvar Alterações</Button>
+            <Button onClick={handleEditLicense}>Salvar Alterações</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* AlertDialog: Confirmar Exclusão */}
-      <AlertDialog open={!!deletingLicense} onOpenChange={() => setDeletingLicense(null)}>
+      {/* Delete License Dialog */}
+      <AlertDialog open={!!deletingLicense} onOpenChange={(open) => !open && setDeletingLicense(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Remover Licença</AlertDialogTitle>
+            <AlertDialogTitle>Excluir Licença?</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja remover a licença{' '}
-              <strong>{deletingLicense?.code}</strong>? Esta ação não pode ser desfeita.
+              Esta ação não pode ser desfeita. A licença será permanentemente removida do sistema.
+              <br />
+              <br />
+              <strong>Código:</strong> <code>{deletingLicense?.code}</code>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteLicense} className="bg-destructive">
-              Sim, Remover
+            <AlertDialogAction
+              onClick={handleDeleteLicense}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              Excluir
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
