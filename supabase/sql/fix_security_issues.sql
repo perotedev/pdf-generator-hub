@@ -113,16 +113,16 @@ where proname = 'sync_stripe_subscription';
 
 -- Verificar privilégios nas foreign tables (deve estar vazio para authenticated/anon)
 select
-  tablename,
+  table_name,
   array_agg(distinct privilege_type) as privileges,
   grantee
 from information_schema.table_privileges
 where table_schema = 'public'
-  and tablename like 'stripe_%'
+  and table_name like 'stripe_%'
   and table_name in ('stripe_customers', 'stripe_subscriptions', 'stripe_products',
                      'stripe_prices', 'stripe_payment_intents', 'stripe_invoices')
-group by tablename, grantee
-order by tablename, grantee;
+group by table_name, grantee
+order by table_name, grantee;
 
 -- Verificar privilégios nas views (deve ter SELECT para authenticated)
 select
