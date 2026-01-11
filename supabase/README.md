@@ -99,19 +99,41 @@ Execute o script `supabase/sql/stripe_wrapper.sql` no SQL Editor.
 - Views combinando dados locais com Stripe
 - Função de sincronização
 
-### 4. Criar Produto e Preços no Stripe
+### 4. Configurar Método de Pagamento no Stripe
+
+Quando o Stripe perguntar como você aceita pagamentos, escolha:
+
+**✅ Componentes Integrados (Stripe Checkout)**
+
+**Motivo:** Esta opção é ideal para assinaturas recorrentes, oferece:
+- Interface de pagamento segura hospedada pelo Stripe
+- Gerenciamento automático de renovações e faturas
+- Experiência otimizada para conversão
+- Integração perfeita com webhooks
+
+### 5. Criar Produto e Preços no Stripe
 
 No Stripe Dashboard, crie:
 
 1. **Produto:**
+   - Navegue até: **Products > Add product**
    - Nome: **PDF Generator Hub**
    - Descrição: Acesso completo ao sistema de geração de PDFs
 
-2. **Preços para o produto:**
-   - **Monthly (mensal)**: R$ 49,90/mês
-   - **Yearly (anual)**: R$ 499,00/ano
+2. **Preços para o produto (criar 2 prices no mesmo produto):**
+   - **Price 1 - Monthly (mensal)**:
+     - Pricing model: Standard pricing
+     - Price: R$ 49,90
+     - Billing period: Monthly
+     - ID será gerado automaticamente (ex: `price_xxxxx`)
 
-3. Anote os IDs e atualize a tabela `plans`:
+   - **Price 2 - Yearly (anual)**:
+     - Pricing model: Standard pricing
+     - Price: R$ 499,00
+     - Billing period: Yearly
+     - ID será gerado automaticamente (ex: `price_yyyyy`)
+
+3. Anote os IDs dos prices e do product, e atualize a tabela `plans`:
 
 ```sql
 -- Atualizar plano mensal
@@ -133,13 +155,14 @@ WHERE billing_cycle = 'YEARLY';
 
 ```
 supabase/
-├── activate_license.js      (já existe - para app desktop)
-├── verify-license.js         (já existe - para app desktop)
-├── auth-login.js             (nova - login web)
-├── auth-register.js          (nova - registro web)
-├── user-management.js        (nova - CRUD de usuários)
-├── license-management.js     (nova - gerenciar licenças standalone)
-└── stripe-webhook.js         (nova - webhooks do Stripe)
+├── activate_license.js           (já existe - para app desktop)
+├── verify-license.js              (já existe - para app desktop)
+├── auth-login.js                  (nova - login web)
+├── auth-register.js               (nova - registro web)
+├── user-management.js             (nova - CRUD de usuários)
+├── license-management.js          (nova - gerenciar licenças standalone)
+├── create-checkout-session.js     (nova - criar sessão de checkout Stripe)
+└── stripe-webhook.js              (nova - webhooks do Stripe)
 ```
 
 ### 2. Deploy Individual
@@ -156,6 +179,9 @@ supabase functions deploy user-management
 
 # Gerenciamento de licenças
 supabase functions deploy license-management
+
+# Criar checkout session
+supabase functions deploy create-checkout-session
 
 # Webhook do Stripe
 supabase functions deploy stripe-webhook

@@ -301,6 +301,32 @@ export const licenseApi = {
   },
 }
 
+// Funções para checkout e pagamentos
+export const checkoutApi = {
+  async createCheckoutSession(token: string, planId: string, successUrl: string, cancelUrl: string) {
+    const response = await fetch(`${supabaseUrl}/functions/v1/create-checkout-session`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'apikey': supabaseAnonKey,
+      },
+      body: JSON.stringify({
+        plan_id: planId,
+        success_url: successUrl,
+        cancel_url: cancelUrl,
+      }),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to create checkout session')
+    }
+
+    return response.json()
+  },
+}
+
 // Funções para acessar dados diretamente via Supabase Client
 export const db = {
   plans: {
@@ -309,7 +335,7 @@ export const db = {
         .from('plans')
         .select('*')
         .eq('is_active', true)
-        .order('price_monthly', { ascending: true })
+        .order('billing_cycle', { ascending: true })
 
       if (error) throw error
       return data as Plan[]
