@@ -126,78 +126,82 @@ const Home = () => {
             </p>
           </div>
 
-          <div className="grid gap-8 lg:grid-cols-2">
-            <Card className="border-border overflow-hidden">
+          <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+            <Card className="border-border overflow-hidden group hover:shadow-lg transition-shadow">
               <CardContent className="p-0">
-                <img
-                  src="/screenshots/perfil-documento.png"
-                  alt="Editor visual de perfil de documento"
-                  className="w-full h-auto object-cover"
-                />
-                <div className="p-6">
-                  <h3 className="text-xl font-semibold text-foreground mb-2">
+                <div className="relative overflow-hidden">
+                  <img
+                    src="/screenshots/perfil-documento.png"
+                    alt="Editor visual de perfil de documento"
+                    className="w-full h-48 object-cover transition-transform group-hover:scale-105"
+                  />
+                </div>
+                <div className="p-4">
+                  <h3 className="text-base font-semibold text-foreground mb-2">
                     Editor Visual de Documentos
                   </h3>
-                  <p className="text-muted-foreground">
-                    Clique diretamente no PDF para posicionar campos e personalize
-                    fontes, cores e estilos em tempo real.
+                  <p className="text-sm text-muted-foreground">
+                    Clique diretamente no PDF para posicionar campos e personalize estilos.
                   </p>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-border overflow-hidden">
+            <Card className="border-border overflow-hidden group hover:shadow-lg transition-shadow">
               <CardContent className="p-0">
-                <img
-                  src="/screenshots/perfil-planilha.png"
-                  alt="Configuração de perfil de planilha"
-                  className="w-full h-auto object-cover"
-                />
-                <div className="p-6">
-                  <h3 className="text-xl font-semibold text-foreground mb-2">
+                <div className="relative overflow-hidden">
+                  <img
+                    src="/screenshots/perfil-planilha.png"
+                    alt="Configuração de perfil de planilha"
+                    className="w-full h-48 object-cover transition-transform group-hover:scale-105"
+                  />
+                </div>
+                <div className="p-4">
+                  <h3 className="text-base font-semibold text-foreground mb-2">
                     Mapeamento de Planilhas
                   </h3>
-                  <p className="text-muted-foreground">
-                    Configure uma vez como sua planilha será lida e reutilize
-                    o perfil quantas vezes quiser.
+                  <p className="text-sm text-muted-foreground">
+                    Configure uma vez e reutilize o perfil quantas vezes quiser.
                   </p>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-border overflow-hidden">
+            <Card className="border-border overflow-hidden group hover:shadow-lg transition-shadow">
               <CardContent className="p-0">
-                <img
-                  src="/screenshots/geracao-pdfs-lote.png"
-                  alt="Geração em lote de PDFs"
-                  className="w-full h-auto object-cover"
-                />
-                <div className="p-6">
-                  <h3 className="text-xl font-semibold text-foreground mb-2">
+                <div className="relative overflow-hidden">
+                  <img
+                    src="/screenshots/geracao-pdfs-lote.png"
+                    alt="Geração em lote de PDFs"
+                    className="w-full h-48 object-cover transition-transform group-hover:scale-105"
+                  />
+                </div>
+                <div className="p-4">
+                  <h3 className="text-base font-semibold text-foreground mb-2">
                     Geração em Lote
                   </h3>
-                  <p className="text-muted-foreground">
-                    Selecione seus perfis e gere centenas de documentos
-                    personalizados com apenas um clique.
+                  <p className="text-sm text-muted-foreground">
+                    Gere centenas de documentos personalizados com apenas um clique.
                   </p>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-border overflow-hidden">
+            <Card className="border-border overflow-hidden group hover:shadow-lg transition-shadow">
               <CardContent className="p-0">
-                <img
-                  src="/screenshots/ativacao-licenca.png"
-                  alt="Ativação de licença simples"
-                  className="w-full h-auto object-cover"
-                />
-                <div className="p-6">
-                  <h3 className="text-xl font-semibold text-foreground mb-2">
-                    Ativação Imediata
+                <div className="relative overflow-hidden">
+                  <img
+                    src="/screenshots/pdfs-gerados.png"
+                    alt="Lista de PDFs gerados"
+                    className="w-full h-48 object-cover transition-transform group-hover:scale-105"
+                  />
+                </div>
+                <div className="p-4">
+                  <h3 className="text-base font-semibold text-foreground mb-2">
+                    Gerenciamento Completo
                   </h3>
-                  <p className="text-muted-foreground">
-                    Insira sua chave de licença e comece a usar em segundos.
-                    Processo simples e rápido.
+                  <p className="text-sm text-muted-foreground">
+                    Visualize, organize e gerencie todos os documentos gerados.
                   </p>
                 </div>
               </CardContent>
