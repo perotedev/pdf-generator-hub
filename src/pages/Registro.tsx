@@ -7,6 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { FileText } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { authApi, supabase } from "@/lib/supabase";
 
 const Registro = () => {
   const navigate = useNavigate();
@@ -40,29 +41,53 @@ const Registro = () => {
 
     setIsLoading(true);
 
-    // Simulated registration
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      await authApi.register(email, password, name);
 
-    toast({
-      title: "Conta criada com sucesso!",
-      description: "Redirecionando para o dashboard...",
-    });
+      toast({
+        title: "Conta criada com sucesso!",
+        description: "Redirecionando para o login...",
+      });
 
-    setIsLoading(false);
-    navigate("/dashboard");
+      navigate("/login");
+    } catch (error: any) {
+      toast({
+        title: "Erro ao criar conta",
+        description: error.message || "Tente novamente mais tarde.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleGoogleRegister = async () => {
     setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    
-    toast({
-      title: "Conta criada com Google!",
-      description: "Redirecionando para o dashboard...",
-    });
-    
-    setIsLoading(false);
-    navigate("/dashboard");
+
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`,
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Conta criada com Google!",
+        description: "Redirecionando para o dashboard...",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro ao registrar com Google",
+        description: "Tente novamente mais tarde.",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+    }
   };
 
   return (

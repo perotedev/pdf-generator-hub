@@ -136,6 +136,22 @@ export const authApi = {
     const { data: { user } } = await supabase.auth.getUser()
     return user
   },
+
+  async getCurrentUser(token: string) {
+    const response = await fetch(`${supabaseUrl}/functions/v1/user-management?action=getCurrentUser`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'apikey': supabaseAnonKey,
+      },
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to get current user')
+    }
+
+    return response.json()
+  },
 }
 
 // Funções para gerenciamento de usuários

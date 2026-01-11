@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { authApi, supabase } from '../lib/supabase';
 
 export type UserRole = 'ADMIN' | 'MANAGER' | 'USER';
 
@@ -19,51 +20,96 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   updateUser: (user: User) => void;
+  loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Carregar usuário do localStorage ao iniciar
+  // Check for existing session on mount
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
+    const initAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+
+        if (session?.access_token) {
+          // Fetch user data from database
+          const userData = await authApi.getCurrentUser(session.access_token);
+
+          const mappedUser: User = {
+            id: userData.id,
+            name: userData.name,
+            email: userData.email,
+            role: userData.role as UserRole,
+          };
+
+          setUser(mappedUser);
+        }
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initAuth();
+
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.access_token) {
+        try {
+          const userData = await authApi.getCurrentUser(session.access_token);
+
+          const mappedUser: User = {
+            id: userData.id,
+            name: userData.name,
+            email: userData.email,
+            role: userData.role as UserRole,
+          };
+
+          setUser(mappedUser);
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+        }
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
-    // Simulação de login - em produção, isso seria uma chamada à API
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      const response = await authApi.login(email, password);
 
-    // Para demonstração: se o email contém "admin", é admin; se contém "manager", é gerente
-    let role: UserRole = 'USER';
-    let name = 'João Silva';
+      const mappedUser: User = {
+        id: response.user.id,
+        name: response.user.name,
+        email: response.user.email,
+        role: response.user.role as UserRole,
+      };
 
-    if (email.includes('admin')) {
-      role = 'ADMIN';
-      name = 'Administrador';
-    } else if (email.includes('manager') || email.includes('gerente')) {
-      role = 'MANAGER';
-      name = 'Gerente';
+      setUser(mappedUser);
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
     }
-
-    const mockUser: User = {
-      id: '1',
-      name: name,
-      email: email,
-      role: role,
-    };
-
-    setUser(mockUser);
-    localStorage.setItem('user', JSON.stringify(mockUser));
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('user');
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+      setUser(null);
+    } catch (error) {
+      console.error('Logout error:', error);
+      throw error;
+    }
   };
 
   const updateUser = (updatedUser: User) => {
@@ -80,6 +126,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     login,
     logout,
     updateUser,
+    loading,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -10,65 +10,160 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
+import { useState, useEffect } from "react";
+import { supabase, type Subscription, type License, type Payment } from "@/lib/supabase";
 
 const Dashboard = () => {
+  const { user } = useAuth();
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [licenses, setLicenses] = useState<License[]>([]);
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!user) return;
+
+      try {
+        setLoading(true);
+
+        // Fetch active subscription
+        const { data: subData } = await supabase
+          .from('subscriptions')
+          .select('*, plans(*)')
+          .eq('user_id', user.id)
+          .eq('status', 'ACTIVE')
+          .single();
+
+        if (subData) {
+          setSubscription(subData as any);
+        }
+
+        // Fetch licenses
+        const { data: licensesData } = await supabase
+          .from('licenses')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (licensesData) {
+          setLicenses(licensesData);
+        }
+
+        // Fetch recent payments
+        const { data: paymentsData } = await supabase
+          .from('payments')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(4);
+
+        if (paymentsData) {
+          setPayments(paymentsData);
+        }
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [user]);
+
+  const activeLicenses = licenses.filter(l => l.is_used).length;
+  const totalLicenses = licenses.length;
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('pt-BR');
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(amount);
+  };
+
+  const getTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInMs = now.getTime() - date.getTime();
+    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+    const diffInDays = Math.floor(diffInHours / 24);
+
+    if (diffInHours < 1) return 'Agora';
+    if (diffInHours < 24) return `Há ${diffInHours} hora${diffInHours > 1 ? 's' : ''}`;
+    return `Há ${diffInDays} dia${diffInDays > 1 ? 's' : ''}`;
+  };
+
   const stats = [
     {
       title: "Status da Assinatura",
-      value: "Pro",
-      description: "Ativa até 15/02/2026",
+      value: subscription ? (subscription as any).plans?.name : "Sem Assinatura",
+      description: subscription
+        ? `Ativa até ${formatDate(subscription.current_period_end)}`
+        : "Nenhuma assinatura ativa",
       icon: CreditCard,
       color: "text-primary",
       bgColor: "bg-primary/10",
     },
     {
       title: "Licenças Ativas",
-      value: "2",
-      description: "de 3 disponíveis",
+      value: activeLicenses.toString(),
+      description: `de ${totalLicenses} disponíveis`,
       icon: Key,
       color: "text-chart-1",
       bgColor: "bg-chart-1/10",
     },
     {
-      title: "Renovações Automáticas",
-      value: "2",
-      description: "Ativas no momento",
+      title: "Renovação Automática",
+      value: subscription?.cancel_at_period_end ? "Não" : "Sim",
+      description: subscription?.cancel_at_period_end ? "Cancelamento agendado" : "Ativa no momento",
       icon: RefreshCw,
       color: "text-chart-2",
       bgColor: "bg-chart-2/10",
     },
     {
       title: "Próximo Pagamento",
-      value: "R$119",
-      description: "15 de Fevereiro",
+      value: subscription ? formatCurrency((subscription as any).plans?.price || 0) : "N/A",
+      description: subscription
+        ? formatDate(subscription.current_period_end)
+        : "Nenhuma cobrança agendada",
       icon: Calendar,
       color: "text-chart-3",
       bgColor: "bg-chart-3/10",
     },
   ];
 
-  const recentActivity = [
-    {
-      action: "Licença ativada",
-      description: "Computador Desktop - Windows",
-      time: "Há 2 horas",
-    },
-    {
-      action: "Download realizado",
-      description: "PDF Generator v2.5.3",
-      time: "Há 5 horas",
-    },
-    {
-      action: "Plano alterado",
-      description: "De Mensal para Anual",
-      time: "Há 1 dia",
-    },
-    {
-      action: "Pagamento confirmado",
-      description: "Plano Pro - R$119,00",
-      time: "Há 2 dias",
-    },
-  ];
+  const recentActivity = payments.map(payment => {
+    const statusMap: Record<string, string> = {
+      SUCCEEDED: "Pagamento confirmado",
+      PENDING: "Pagamento pendente",
+      FAILED: "Pagamento falhou",
+      REFUNDED: "Pagamento reembolsado",
+      CANCELED: "Pagamento cancelado",
+    };
+
+    return {
+      action: statusMap[payment.status] || payment.status,
+      description: `${payment.payment_method || 'Método de pagamento'} - ${formatCurrency(payment.amount)}`,
+      time: getTimeAgo(payment.created_at),
+    };
+  });
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <RefreshCw className="h-8 w-8 animate-spin mx-auto text-primary" />
+          <p className="mt-2 text-muted-foreground">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -76,7 +171,7 @@ const Dashboard = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-foreground">
-            Bem-vindo de volta, João!
+            Bem-vindo de volta, {user?.name || 'Usuário'}!
           </h1>
           <p className="text-muted-foreground">
             Aqui está um resumo da sua conta

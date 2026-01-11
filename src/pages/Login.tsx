@@ -8,6 +8,7 @@ import { FileText } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabase";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -45,22 +46,27 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      // Simula login com Google usando um email padrão
-      await login("usuario@gmail.com", "");
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`,
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
 
       toast({
         title: "Login com Google realizado!",
         description: "Redirecionando para o dashboard...",
       });
-
-      navigate("/dashboard");
     } catch (error) {
       toast({
-        title: "Erro ao fazer login",
+        title: "Erro ao fazer login com Google",
         description: "Tente novamente mais tarde.",
         variant: "destructive",
       });
-    } finally {
       setIsLoading(false);
     }
   };

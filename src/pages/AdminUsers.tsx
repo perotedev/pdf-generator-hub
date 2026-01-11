@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -44,55 +44,15 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { Label } from '@/components/ui/label';
-import { Search, UserCog, Shield, Trash2, Laptop, Key, CreditCard, Receipt, Calendar, DollarSign, Users2 } from 'lucide-react';
+import { Search, UserCog, Shield, Trash2, Laptop, Key, CreditCard, Receipt, Users2, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { UserRole, useAuth } from '@/contexts/AuthContext';
+import { supabase, userApi, type User as DbUser, type Subscription, type License, type Payment } from '@/lib/supabase';
 
-interface Device {
-  id: string;
-  computerUid: string;
-  deviceName: string;
-  activatedAt: string;
-}
-
-interface License {
-  id: string;
-  code: string;
-  nickname: string;
-  status: 'Ativa' | 'Expirada' | 'Disponível';
-  device: Device | null;
-}
-
-interface Payment {
-  id: string;
-  date: string;
-  amount: string;
-  status: 'Pago' | 'Pendente' | 'Reembolsado' | 'Cancelado';
-  method: 'Cartão de Crédito' | 'PIX' | 'Boleto';
-  installment?: string;
-}
-
-interface Subscription {
-  id: string;
-  plan: string;
-  status: 'Ativa' | 'Expirada' | 'Cancelada';
-  startDate: string;
-  endDate: string;
-  price: string;
-  autoRenew: boolean;
-  license: License;
-  payments: Payment[];
-}
-
-interface SystemUser {
-  id: string;
-  name: string;
-  email: string;
-  role: UserRole;
-  status: 'Ativo' | 'Inativo' | 'Suspenso';
-  subscriptions: Subscription[];
-  createdAt: string;
-  lastLogin: string;
+interface SystemUser extends DbUser {
+  subscriptions?: (Subscription & { plans?: any })[];
+  licenses?: License[];
+  payments?: Payment[];
 }
 
 export default function AdminUsers() {
@@ -103,174 +63,66 @@ export default function AdminUsers() {
   const [editingUser, setEditingUser] = useState<SystemUser | null>(null);
   const [deletingUser, setDeletingUser] = useState<SystemUser | null>(null);
   const [selectedUserDetails, setSelectedUserDetails] = useState<SystemUser | null>(null);
-  const [unlinkingDevice, setUnlinkingDevice] = useState<{ user: SystemUser; device: Device; license: License; subscription: Subscription } | null>(null);
-  const [updatingLicense, setUpdatingLicense] = useState<{ user: SystemUser; subscription: Subscription } | null>(null);
-  const [newEndDate, setNewEndDate] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [users, setUsers] = useState<SystemUser[]>([]);
 
-  // Dados mockados de usuários
-  const [users, setUsers] = useState<SystemUser[]>([
-    {
-      id: '1',
-      name: 'João Silva',
-      email: 'joao.silva@email.com',
-      role: 'USER',
-      status: 'Ativo',
-      createdAt: '2024-01-15',
-      lastLogin: '2026-01-10 14:30',
-      subscriptions: [
-        {
-          id: 'sub1',
-          plan: 'Profissional - Mensal',
-          status: 'Ativa',
-          startDate: '2024-01-15',
-          endDate: '2026-02-15',
-          price: 'R$ 49,00/mês',
-          autoRenew: true,
-          license: {
-            id: 'lic1',
-            code: 'PDFG-PRO-X8K2-M9P4-L3N7',
-            nickname: 'PC Escritório',
-            status: 'Ativa',
-            device: {
-              id: 'dev1',
-              computerUid: 'WIN-ABC123XYZ',
-              deviceName: 'Desktop Dell - Windows 11',
-              activatedAt: '2024-01-16 10:00',
-            },
-          },
-          payments: [
-            { id: 'pay1', date: '2026-01-15', amount: 'R$ 49,00', status: 'Pago', method: 'Cartão de Crédito' },
-            { id: 'pay2', date: '2025-12-15', amount: 'R$ 49,00', status: 'Pago', method: 'Cartão de Crédito' },
-            { id: 'pay3', date: '2025-11-15', amount: 'R$ 49,00', status: 'Pago', method: 'Cartão de Crédito' },
-          ],
-        },
-      ],
-    },
-    {
-      id: '2',
-      name: 'Maria Santos',
-      email: 'maria.santos@email.com',
-      role: 'USER',
-      status: 'Ativo',
-      createdAt: '2024-03-20',
-      lastLogin: '2026-01-10 09:15',
-      subscriptions: [
-        {
-          id: 'sub2',
-          plan: 'Profissional - Anual',
-          status: 'Ativa',
-          startDate: '2024-03-20',
-          endDate: '2027-03-20',
-          price: 'R$ 468,00/ano',
-          autoRenew: true,
-          license: {
-            id: 'lic2',
-            code: 'PDFG-PRO-K9L3-P2M8-N4R6',
-            nickname: 'Notebook Trabalho',
-            status: 'Ativa',
-            device: {
-              id: 'dev2',
-              computerUid: 'MAC-DEF456ABC',
-              deviceName: 'MacBook Pro - macOS 14',
-              activatedAt: '2024-03-21 15:30',
-            },
-          },
-          payments: [
-            { id: 'pay4', date: '2026-03-20', amount: 'R$ 468,00', status: 'Pago', method: 'PIX', installment: '1/1' },
-            { id: 'pay5', date: '2025-03-20', amount: 'R$ 468,00', status: 'Pago', method: 'Cartão de Crédito', installment: '12x R$ 39,00' },
-          ],
-        },
-      ],
-    },
-    {
-      id: '3',
-      name: 'Carlos Oliveira',
-      email: 'carlos.oliveira@email.com',
-      role: 'ADMIN',
-      status: 'Ativo',
-      createdAt: '2023-11-10',
-      lastLogin: '2026-01-10 16:45',
-      subscriptions: [],
-    },
-    {
-      id: '4',
-      name: 'Ana Paula',
-      email: 'ana.paula@email.com',
-      role: 'USER',
-      status: 'Suspenso',
-      createdAt: '2024-05-12',
-      lastLogin: '2025-12-28 11:20',
-      subscriptions: [
-        {
-          id: 'sub4',
-          plan: 'Profissional - Mensal',
-          status: 'Expirada',
-          startDate: '2024-05-12',
-          endDate: '2025-12-12',
-          price: 'R$ 49,00/mês',
-          autoRenew: false,
-          license: {
-            id: 'lic4',
-            code: 'PDFG-PRO-T7Y3-W9Q5-H2K8',
-            nickname: 'PC Casa',
-            status: 'Expirada',
-            device: null,
-          },
-          payments: [
-            { id: 'pay6', date: '2025-11-12', amount: 'R$ 49,00', status: 'Pendente', method: 'Boleto' },
-            { id: 'pay7', date: '2025-10-12', amount: 'R$ 49,00', status: 'Pago', method: 'PIX' },
-          ],
-        },
-      ],
-    },
-    {
-      id: '5',
-      name: 'Roberto Lima',
-      email: 'roberto.lima@email.com',
-      role: 'USER',
-      status: 'Ativo',
-      createdAt: '2024-08-05',
-      lastLogin: '2026-01-09 08:50',
-      subscriptions: [
-        {
-          id: 'sub5',
-          plan: 'Profissional - Mensal',
-          status: 'Ativa',
-          startDate: '2024-08-05',
-          endDate: '2026-02-05',
-          price: 'R$ 49,00/mês',
-          autoRenew: true,
-          license: {
-            id: 'lic5',
-            code: 'PDFG-PRO-B4C7-D9E2-F5G8',
-            nickname: 'Escritório Principal',
-            status: 'Ativa',
-            device: {
-              id: 'dev5',
-              computerUid: 'WIN-GHI789JKL',
-              deviceName: 'Desktop HP - Windows 10',
-              activatedAt: '2024-08-06 14:20',
-            },
-          },
-          payments: [
-            { id: 'pay8', date: '2026-01-05', amount: 'R$ 49,00', status: 'Pago', method: 'Cartão de Crédito' },
-            { id: 'pay9', date: '2025-12-05', amount: 'R$ 49,00', status: 'Pago', method: 'Cartão de Crédito' },
-            { id: 'pay10', date: '2025-11-05', amount: 'R$ 49,00', status: 'Pago', method: 'Cartão de Crédito' },
-          ],
-        },
-      ],
-    },
-    {
-      id: '6',
-      name: 'Fernanda Costa',
-      email: 'fernanda.costa@email.com',
-      role: 'MANAGER',
-      status: 'Ativo',
-      createdAt: '2024-02-18',
-      lastLogin: '2026-01-11 10:30',
-      subscriptions: [],
-    },
-  ]);
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        toast.error('Sessão expirada', {
+          description: 'Por favor, faça login novamente.',
+        });
+        return;
+      }
+
+      const usersData = await userApi.getUsers(session.access_token);
+
+      // Fetch additional data for each user
+      const usersWithDetails = await Promise.all(
+        usersData.map(async (user: DbUser) => {
+          const [subsData, licensesData, paymentsData] = await Promise.all([
+            supabase
+              .from('subscriptions')
+              .select('*, plans(*)')
+              .eq('user_id', user.id),
+            supabase
+              .from('licenses')
+              .select('*')
+              .eq('user_id', user.id)
+              .eq('is_standalone', false),
+            supabase
+              .from('payments')
+              .select('*')
+              .eq('user_id', user.id)
+              .order('created_at', { ascending: false })
+          ]);
+
+          return {
+            ...user,
+            subscriptions: subsData.data || [],
+            licenses: licensesData.data || [],
+            payments: paymentsData.data || [],
+          };
+        })
+      );
+
+      setUsers(usersWithDetails);
+    } catch (error: any) {
+      console.error('Error fetching users:', error);
+      toast.error('Erro ao carregar usuários', {
+        description: error.message || 'Tente novamente mais tarde.',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
@@ -281,240 +133,150 @@ export default function AdminUsers() {
     return matchesSearch && matchesRole && matchesStatus;
   });
 
-  const handleUpdateRole = () => {
+  const handleUpdateRole = async () => {
     if (!editingUser) return;
 
-    setUsers((prev) =>
-      prev.map((u) => (u.id === editingUser.id ? editingUser : u))
-    );
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
 
-    const roleText = editingUser.role === 'ADMIN' ? 'Administrador' : editingUser.role === 'MANAGER' ? 'Gerente' : 'Usuário';
-    toast.success('Permissão atualizada', {
-      description: `${editingUser.name} agora é ${roleText}`,
-    });
-    setEditingUser(null);
+      if (!session?.access_token) {
+        toast.error('Sessão expirada');
+        return;
+      }
+
+      await userApi.updateUser(session.access_token, editingUser.id, {
+        role: editingUser.role,
+      });
+
+      await fetchUsers();
+
+      const roleText = editingUser.role === 'ADMIN' ? 'Administrador' : editingUser.role === 'MANAGER' ? 'Gerente' : 'Usuário';
+      toast.success('Permissão atualizada', {
+        description: `${editingUser.name} agora é ${roleText}`,
+      });
+      setEditingUser(null);
+    } catch (error: any) {
+      toast.error('Erro ao atualizar permissão', {
+        description: error.message || 'Tente novamente.',
+      });
+    }
   };
 
-  const handleUpdateStatus = (userId: string, newStatus: SystemUser['status']) => {
-    setUsers((prev) =>
-      prev.map((u) => (u.id === userId ? { ...u, status: newStatus } : u))
-    );
+  const handleUpdateStatus = async (userId: string, newStatus: DbUser['status']) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
 
-    const statusText = newStatus === 'Ativo' ? 'ativado' : newStatus === 'Suspenso' ? 'suspenso' : 'desativado';
-    toast.success('Status atualizado', {
-      description: `Usuário ${statusText} com sucesso`,
-    });
+      if (!session?.access_token) {
+        toast.error('Sessão expirada');
+        return;
+      }
+
+      await userApi.updateUser(session.access_token, userId, {
+        status: newStatus,
+      });
+
+      await fetchUsers();
+
+      const statusText = newStatus === 'ACTIVE' ? 'ativado' : newStatus === 'SUSPENDED' ? 'suspenso' : 'desativado';
+      toast.success('Status atualizado', {
+        description: `Usuário ${statusText} com sucesso`,
+      });
+    } catch (error: any) {
+      toast.error('Erro ao atualizar status', {
+        description: error.message || 'Tente novamente.',
+      });
+    }
   };
 
-  const handleDeleteUser = () => {
+  const handleDeleteUser = async () => {
     if (!deletingUser) return;
 
-    setUsers((prev) => prev.filter((u) => u.id !== deletingUser.id));
-    toast.success('Usuário removido', {
-      description: `${deletingUser.name} foi removido do sistema`,
-    });
-    setDeletingUser(null);
-  };
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
 
-  const handleUnlinkDevice = () => {
-    if (!unlinkingDevice) return;
-
-    const { user, device, license, subscription } = unlinkingDevice;
-
-    setUsers((prev) =>
-      prev.map((u) => {
-        if (u.id === user.id) {
-          return {
-            ...u,
-            subscriptions: u.subscriptions.map((sub) => {
-              if (sub.id === subscription.id) {
-                return {
-                  ...sub,
-                  license: {
-                    ...sub.license,
-                    device: null,
-                  },
-                };
-              }
-              return sub;
-            }),
-          };
-        }
-        return u;
-      })
-    );
-
-    toast.success('Dispositivo desvinculado', {
-      description: `${device.deviceName} foi desvinculado da licença ${license.code}`,
-    });
-    setUnlinkingDevice(null);
-
-    // Atualiza o usuário selecionado se o diálogo estiver aberto
-    if (selectedUserDetails?.id === user.id) {
-      const updatedUser = users.find(u => u.id === user.id);
-      if (updatedUser) {
-        setSelectedUserDetails({...updatedUser, subscriptions: updatedUser.subscriptions.map((sub) => {
-          if (sub.id === subscription.id) {
-            return { ...sub, license: { ...sub.license, device: null } };
-          }
-          return sub;
-        })});
+      if (!session?.access_token) {
+        toast.error('Sessão expirada');
+        return;
       }
+
+      await userApi.deleteUser(session.access_token, deletingUser.id);
+
+      await fetchUsers();
+
+      toast.success('Usuário excluído', {
+        description: `${deletingUser.name} foi removido do sistema`,
+      });
+      setDeletingUser(null);
+    } catch (error: any) {
+      toast.error('Erro ao excluir usuário', {
+        description: error.message || 'Tente novamente.',
+      });
     }
   };
 
-  const handleUpdateLicenseDate = () => {
-    if (!updatingLicense || !newEndDate) return;
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('pt-BR');
+  };
 
-    const { user, subscription } = updatingLicense;
+  const formatDateTime = (dateString: string) => {
+    return new Date(dateString).toLocaleString('pt-BR');
+  };
 
-    setUsers((prev) =>
-      prev.map((u) => {
-        if (u.id === user.id) {
-          return {
-            ...u,
-            subscriptions: u.subscriptions.map((sub) => {
-              if (sub.id === subscription.id) {
-                return {
-                  ...sub,
-                  endDate: newEndDate,
-                  status: new Date(newEndDate) > new Date() ? 'Ativa' : 'Expirada',
-                };
-              }
-              return sub;
-            }),
-          };
-        }
-        return u;
-      })
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(amount);
+  };
+
+  if (!isAdmin) {
+    return (
+      <Card className="border-border">
+        <CardContent className="py-10 text-center">
+          <Shield className="mx-auto h-12 w-12 text-muted-foreground" />
+          <h3 className="mt-4 text-lg font-semibold">Acesso Negado</h3>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Apenas administradores podem acessar esta página.
+          </p>
+        </CardContent>
+      </Card>
     );
+  }
 
-    toast.success('Licença atualizada', {
-      description: `Data de expiração alterada para ${new Date(newEndDate).toLocaleDateString('pt-BR')}`,
-    });
-    setUpdatingLicense(null);
-    setNewEndDate('');
-  };
-
-  const getRoleBadge = (role: UserRole) => {
-    if (role === 'ADMIN') {
-      return (
-        <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-200">
-          <Shield className="w-3 h-3 mr-1" />
-          Admin
-        </Badge>
-      );
-    } else if (role === 'MANAGER') {
-      return (
-        <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-200">
-          <Users2 className="w-3 h-3 mr-1" />
-          Gerente
-        </Badge>
-      );
-    } else {
-      return <Badge variant="secondary">Usuário</Badge>;
-    }
-  };
-
-  const getStatusBadge = (status: SystemUser['status']) => {
-    const variants = {
-      Ativo: 'default',
-      Inativo: 'secondary',
-      Suspenso: 'destructive',
-    } as const;
-
-    return <Badge variant={variants[status]}>{status}</Badge>;
-  };
-
-  const getSubscriptionStatusBadge = (status: Subscription['status']) => {
-    const config = {
-      Ativa: { variant: 'default' as const, color: 'text-green-700' },
-      Expirada: { variant: 'destructive' as const, color: 'text-red-700' },
-      Cancelada: { variant: 'secondary' as const, color: 'text-gray-700' },
-    };
-
-    return <Badge variant={config[status].variant}>{status}</Badge>;
-  };
-
-  const getPaymentStatusBadge = (status: Payment['status']) => {
-    const config = {
-      Pago: { variant: 'default' as const, className: 'bg-green-100 text-green-700 hover:bg-green-200' },
-      Pendente: { variant: 'secondary' as const, className: 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200' },
-      Reembolsado: { variant: 'secondary' as const, className: 'bg-blue-100 text-blue-700 hover:bg-blue-200' },
-      Cancelado: { variant: 'destructive' as const, className: '' },
-    };
-
-    return <Badge variant={config[status].variant} className={config[status].className}>{status}</Badge>;
-  };
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <RefreshCw className="h-8 w-8 animate-spin mx-auto text-primary" />
+          <p className="mt-2 text-muted-foreground">Carregando usuários...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold mb-2">Gerenciamento de Usuários</h1>
-        <p className="text-muted-foreground">
-          Gerencie usuários, permissões, assinaturas, licenças e pagamentos
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Gerenciar Usuários</h1>
+          <p className="text-muted-foreground">
+            Gerencie usuários, permissões e assinaturas
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Users2 className="h-5 w-5 text-muted-foreground" />
+          <span className="text-2xl font-bold">{users.length}</span>
+        </div>
       </div>
 
-      {/* Estatísticas */}
-      <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="pb-3">
-        <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
-          Total de Usuários
-        </CardTitle>
-          </CardHeader>
-          <CardContent>
-        <div className="text-xl sm:text-2xl font-bold">{users.length}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-3">
-        <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
-          Usuários Ativos
-        </CardTitle>
-          </CardHeader>
-          <CardContent>
-        <div className="text-xl sm:text-2xl font-bold text-green-600">
-          {users.filter((u) => u.status === 'Ativo').length}
-        </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-3">
-        <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
-          Assinaturas Ativas
-        </CardTitle>
-          </CardHeader>
-          <CardContent>
-        <div className="text-xl sm:text-2xl font-bold text-blue-600">
-          {users.reduce((acc, u) => acc + u.subscriptions.filter(s => s.status === 'Ativa').length, 0)}
-        </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-3">
-        <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
-          Suspensos
-        </CardTitle>
-          </CardHeader>
-          <CardContent>
-        <div className="text-xl sm:text-2xl font-bold text-red-600">
-          {users.filter((u) => u.status === 'Suspenso').length}
-        </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Filtros */}
       <Card className="border-border">
         <CardHeader>
           <CardTitle>Filtros</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-3">
             <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Buscar por nome ou email..."
                 value={searchTerm}
@@ -524,411 +286,141 @@ export default function AdminUsers() {
             </div>
             <Select value={selectedRole} onValueChange={setSelectedRole}>
               <SelectTrigger>
-                <SelectValue placeholder="Filtrar por permissão" />
+                <SelectValue placeholder="Todas as permissões" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todas as permissões</SelectItem>
-                <SelectItem value="ADMIN">Administradores</SelectItem>
-                <SelectItem value="MANAGER">Gerentes</SelectItem>
-                <SelectItem value="USER">Usuários</SelectItem>
+                <SelectItem value="USER">Usuário</SelectItem>
+                <SelectItem value="MANAGER">Gerente</SelectItem>
+                <SelectItem value="ADMIN">Administrador</SelectItem>
               </SelectContent>
             </Select>
             <Select value={selectedStatus} onValueChange={setSelectedStatus}>
               <SelectTrigger>
-                <SelectValue placeholder="Filtrar por status" />
+                <SelectValue placeholder="Todos os status" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos os status</SelectItem>
-                <SelectItem value="Ativo">Ativos</SelectItem>
-                <SelectItem value="Inativo">Inativos</SelectItem>
-                <SelectItem value="Suspenso">Suspensos</SelectItem>
+                <SelectItem value="ACTIVE">Ativo</SelectItem>
+                <SelectItem value="INACTIVE">Inativo</SelectItem>
+                <SelectItem value="SUSPENDED">Suspenso</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </CardContent>
       </Card>
 
-      {/* Tabela de Usuários */}
       <Card className="border-border">
-        <CardHeader>
-          <CardTitle>Usuários ({filteredUsers.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {/* Mobile Card View */}
-          <div className="md:hidden space-y-4">
-            {filteredUsers.map((user) => (
-              <Card key={user.id} className="border-border">
-                <CardContent className="p-4">
-                  <div className="space-y-3">
-                    <div>
-                      <div className="font-medium">{user.name}</div>
-                      <div className="text-sm text-muted-foreground">{user.email}</div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Usuário</TableHead>
+              <TableHead>Permissão</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Assinaturas</TableHead>
+              <TableHead>Cadastrado em</TableHead>
+              <TableHead className="text-right">Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredUsers.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-10">
+                  <p className="text-muted-foreground">Nenhum usuário encontrado</p>
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredUsers.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell>
+                    <div className="flex flex-col">
+                      <span className="font-medium">{user.name}</span>
+                      <span className="text-sm text-muted-foreground">{user.email}</span>
                     </div>
-                    <div className="flex flex-wrap gap-2">
-                      {getRoleBadge(user.role)}
-                      {getStatusBadge(user.status)}
-                    </div>
-                    {user.subscriptions.length > 0 && (
-                      <div className="text-xs text-muted-foreground">
-                        <span className="font-medium">{user.subscriptions.length}</span> assinatura(s) •{" "}
-                        <span className="font-medium">{user.subscriptions.filter(s => s.status === 'Ativa').length}</span> ativa(s)
-                      </div>
-                    )}
-                    <div className="grid grid-cols-2 gap-2">
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant={
+                        user.role === 'ADMIN'
+                          ? 'default'
+                          : user.role === 'MANAGER'
+                          ? 'secondary'
+                          : 'outline'
+                      }
+                    >
+                      {user.role === 'ADMIN' ? 'Admin' : user.role === 'MANAGER' ? 'Gerente' : 'Usuário'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant={
+                        user.status === 'ACTIVE'
+                          ? 'default'
+                          : user.status === 'SUSPENDED'
+                          ? 'destructive'
+                          : 'secondary'
+                      }
+                    >
+                      {user.status === 'ACTIVE' ? 'Ativo' : user.status === 'SUSPENDED' ? 'Suspenso' : 'Inativo'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline">
+                      {user.subscriptions?.filter(s => s.status === 'ACTIVE').length || 0} ativa(s)
+                    </Badge>
+                  </TableCell>
+                  <TableCell>{formatDate(user.created_at)}</TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => setSelectedUserDetails(user)}
                       >
-                        <CreditCard className="w-4 h-4 mr-2" />
-                        Detalhes
+                        Ver Detalhes
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => setEditingUser(user)}
                       >
-                        <UserCog className="w-4 h-4 mr-2" />
-                        Permissões
+                        <UserCog className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() =>
-                          handleUpdateStatus(
-                            user.id,
-                            user.status === 'Ativo' ? 'Suspenso' : 'Ativo'
-                          )
-                        }
-                      >
-                        {user.status === 'Ativo' ? 'Suspender' : 'Ativar'}
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        size="sm"
                         onClick={() => setDeletingUser(user)}
                       >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Remover
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          {/* Desktop Table View */}
-          <div className="hidden md:block overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Usuário</TableHead>
-                  <TableHead>Permissão</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="hidden lg:table-cell">Assinaturas</TableHead>
-                  <TableHead className="hidden xl:table-cell">Último Acesso</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredUsers.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">{user.name}</div>
-                        <div className="text-sm text-muted-foreground">{user.email}</div>
-                      </div>
-                    </TableCell>
-                    <TableCell>{getRoleBadge(user.role)}</TableCell>
-                    <TableCell>{getStatusBadge(user.status)}</TableCell>
-                    <TableCell className="hidden lg:table-cell">
-                      <div className="space-y-1">
-                        {user.subscriptions.length > 0 ? (
-                          <>
-                            <div className="text-sm font-medium">
-                              {user.subscriptions.length} assinatura(s)
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              {user.subscriptions.filter(s => s.status === 'Ativa').length} ativa(s)
-                            </div>
-                          </>
-                        ) : (
-                          <span className="text-sm text-muted-foreground">Sem assinaturas</span>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="hidden xl:table-cell">
-                      <div className="text-sm">{user.lastLogin}</div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-1 flex-wrap">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setSelectedUserDetails(user)}
-                        >
-                          <CreditCard className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setEditingUser(user)}
-                        >
-                          <UserCog className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() =>
-                            handleUpdateStatus(
-                              user.id,
-                              user.status === 'Ativo' ? 'Suspenso' : 'Ativo'
-                            )
-                          }
-                          className="hidden lg:inline-flex"
-                        >
-                          {user.status === 'Ativo' ? 'Suspender' : 'Ativar'}
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => setDeletingUser(user)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
+              ))
+            )}
+          </TableBody>
+        </Table>
       </Card>
 
-      {/* Dialog: Detalhes do Usuário (Assinaturas e Pagamentos) */}
-      <Dialog open={!!selectedUserDetails} onOpenChange={() => setSelectedUserDetails(null)}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto w-[95vw] sm:w-full">
-          <DialogHeader>
-            <DialogTitle>Detalhes do Usuário</DialogTitle>
-            <DialogDescription>
-              Assinaturas, licenças e pagamentos de {selectedUserDetails?.name}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            {selectedUserDetails?.subscriptions && selectedUserDetails.subscriptions.length > 0 ? (
-              <Accordion type="single" collapsible className="w-full">
-                {selectedUserDetails.subscriptions.map((subscription, index) => (
-                  <AccordionItem key={subscription.id} value={subscription.id}>
-                    <AccordionTrigger className="hover:no-underline">
-                      <div className="flex items-center justify-between w-full pr-4">
-                        <div className="flex items-center gap-3">
-                          <CreditCard className="w-5 h-5 text-muted-foreground" />
-                          <div className="text-left">
-                            <div className="font-medium">{subscription.plan}</div>
-                            <div className="text-sm text-muted-foreground">
-                              {subscription.price}
-                            </div>
-                          </div>
-                        </div>
-                        {getSubscriptionStatusBadge(subscription.status)}
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <div className="space-y-4 pt-4">
-                        {/* Informações da Assinatura */}
-                        <Card>
-                          <CardHeader>
-                            <CardTitle className="text-base">Informações da Assinatura</CardTitle>
-                          </CardHeader>
-                          <CardContent className="space-y-3">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                              <div>
-                                <div className="text-sm text-muted-foreground">Data de Início</div>
-                                <div className="font-medium">
-                                  {new Date(subscription.startDate).toLocaleDateString('pt-BR')}
-                                </div>
-                              </div>
-                              <div>
-                                <div className="text-sm text-muted-foreground">Data de Expiração</div>
-                                <div className="font-medium flex items-center gap-2">
-                                  {new Date(subscription.endDate).toLocaleDateString('pt-BR')}
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => {
-                                      setUpdatingLicense({ user: selectedUserDetails, subscription });
-                                      setNewEndDate(subscription.endDate);
-                                    }}
-                                  >
-                                    <Calendar className="w-3 h-3" />
-                                  </Button>
-                                </div>
-                              </div>
-                              <div>
-                                <div className="text-sm text-muted-foreground">Renovação Automática</div>
-                                <div className="font-medium">
-                                  {subscription.autoRenew ? 'Ativada' : 'Desativada'}
-                                </div>
-                              </div>
-                              <div>
-                                <div className="text-sm text-muted-foreground">Status</div>
-                                <div className="font-medium">
-                                  {getSubscriptionStatusBadge(subscription.status)}
-                                </div>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-
-                        {/* Informações da Licença */}
-                        <Card>
-                          <CardHeader>
-                            <CardTitle className="text-base flex items-center gap-2">
-                              <Key className="w-4 h-4" />
-                              Licença
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent className="space-y-3">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                              <div>
-                                <div className="text-sm text-muted-foreground">Código da Licença</div>
-                                <div className="font-mono font-medium text-sm">
-                                  {subscription.license.code}
-                                </div>
-                              </div>
-                              <div>
-                                <div className="text-sm text-muted-foreground">Apelido</div>
-                                <div className="font-medium">{subscription.license.nickname}</div>
-                              </div>
-                            </div>
-
-                            {subscription.license.device ? (
-                              <>
-                                <Separator />
-                                <div>
-                                  <div className="flex items-center justify-between mb-2">
-                                    <div className="text-sm font-medium">Dispositivo Vinculado</div>
-                                    <Button
-                                      variant="destructive"
-                                      size="sm"
-                                      onClick={() =>
-                                        setUnlinkingDevice({
-                                          user: selectedUserDetails,
-                                          device: subscription.license.device!,
-                                          license: subscription.license,
-                                          subscription: subscription,
-                                        })
-                                      }
-                                    >
-                                      <Laptop className="w-3 h-3 mr-1" />
-                                      Desvincular
-                                    </Button>
-                                  </div>
-                                  <div className="bg-muted p-3 rounded-lg space-y-2">
-                                    <div className="flex items-start gap-2">
-                                      <Laptop className="w-4 h-4 text-muted-foreground mt-1" />
-                                      <div className="flex-1">
-                                        <div className="font-medium text-sm">
-                                          {subscription.license.device.deviceName}
-                                        </div>
-                                        <div className="text-xs text-muted-foreground">
-                                          UID: {subscription.license.device.computerUid}
-                                        </div>
-                                        <div className="text-xs text-muted-foreground mt-1">
-                                          Ativado em: {subscription.license.device.activatedAt}
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                              </>
-                            ) : (
-                              <>
-                                <Separator />
-                                <div className="text-sm text-muted-foreground text-center py-2">
-                                  Nenhum dispositivo vinculado
-                                </div>
-                              </>
-                            )}
-                          </CardContent>
-                        </Card>
-
-                        {/* Histórico de Pagamentos */}
-                        <Card>
-                          <CardHeader>
-                            <CardTitle className="text-base flex items-center gap-2">
-                              <Receipt className="w-4 h-4" />
-                              Histórico de Pagamentos
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            {subscription.payments.length > 0 ? (
-                              <div className="space-y-2">
-                                {subscription.payments.map((payment) => (
-                                  <div
-                                    key={payment.id}
-                                    className="flex items-center justify-between p-3 border rounded-lg"
-                                  >
-                                    <div className="flex items-center gap-3">
-                                      <DollarSign className="w-4 h-4 text-muted-foreground" />
-                                      <div>
-                                        <div className="font-medium text-sm">{payment.amount}</div>
-                                        <div className="text-xs text-muted-foreground">
-                                          {new Date(payment.date).toLocaleDateString('pt-BR')} • {payment.method}
-                                          {payment.installment && ` • ${payment.installment}`}
-                                        </div>
-                                      </div>
-                                    </div>
-                                    {getPaymentStatusBadge(payment.status)}
-                                  </div>
-                                ))}
-                              </div>
-                            ) : (
-                              <div className="text-sm text-muted-foreground text-center py-4">
-                                Nenhum pagamento registrado
-                              </div>
-                            )}
-                          </CardContent>
-                        </Card>
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                Este usuário não possui assinaturas
-              </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button onClick={() => setSelectedUserDetails(null)}>Fechar</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Dialog: Editar Permissões */}
-      <Dialog open={!!editingUser} onOpenChange={() => setEditingUser(null)}>
+      {/* Edit User Dialog */}
+      <Dialog open={!!editingUser} onOpenChange={(open) => !open && setEditingUser(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Editar Permissões</DialogTitle>
+            <DialogTitle>Editar Permissões de Usuário</DialogTitle>
             <DialogDescription>
-              Altere as permissões do usuário {editingUser?.name}
+              Altere as permissões de {editingUser?.name}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Permissão</Label>
+              <Label htmlFor="role">Permissão</Label>
               <Select
                 value={editingUser?.role}
-                onValueChange={(value: UserRole) =>
-                  setEditingUser((prev) => (prev ? { ...prev, role: value } : null))
+                onValueChange={(value) =>
+                  setEditingUser(editingUser ? { ...editingUser, role: value as UserRole } : null)
                 }
-                disabled={!isAdmin}
               >
-                <SelectTrigger>
+                <SelectTrigger id="role">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -937,34 +429,22 @@ export default function AdminUsers() {
                   <SelectItem value="ADMIN">Administrador</SelectItem>
                 </SelectContent>
               </Select>
-              <p className="text-sm text-muted-foreground">
-                {editingUser?.role === 'ADMIN'
-                  ? 'Administradores têm acesso completo ao sistema, incluindo gerenciamento de usuários e configurações.'
-                  : editingUser?.role === 'MANAGER'
-                  ? 'Gerentes podem gerenciar usuários, assinaturas e licenças, mas não podem alterar permissões de outros usuários.'
-                  : 'Usuários têm acesso apenas às suas próprias assinaturas e downloads.'}
-              </p>
-              {!isAdmin && (
-                <p className="text-sm text-amber-600 bg-amber-50 p-2 rounded border border-amber-200">
-                  Apenas administradores podem alterar permissões de usuários.
-                </p>
-              )}
             </div>
             <div className="space-y-2">
-              <Label>Status da Conta</Label>
+              <Label htmlFor="status">Status</Label>
               <Select
                 value={editingUser?.status}
-                onValueChange={(value: SystemUser['status']) =>
-                  setEditingUser((prev) => (prev ? { ...prev, status: value } : null))
+                onValueChange={(value) =>
+                  setEditingUser(editingUser ? { ...editingUser, status: value as DbUser['status'] } : null)
                 }
               >
-                <SelectTrigger>
+                <SelectTrigger id="status">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Ativo">Ativo</SelectItem>
-                  <SelectItem value="Inativo">Inativo</SelectItem>
-                  <SelectItem value="Suspenso">Suspenso</SelectItem>
+                  <SelectItem value="ACTIVE">Ativo</SelectItem>
+                  <SelectItem value="INACTIVE">Inativo</SelectItem>
+                  <SelectItem value="SUSPENDED">Suspenso</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -978,87 +458,182 @@ export default function AdminUsers() {
         </DialogContent>
       </Dialog>
 
-      {/* Dialog: Atualizar Data de Expiração */}
-      <Dialog open={!!updatingLicense} onOpenChange={() => setUpdatingLicense(null)}>
-        <DialogContent>
+      {/* Delete User Dialog */}
+      <AlertDialog open={!!deletingUser} onOpenChange={(open) => !open && setDeletingUser(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação não pode ser desfeita. Isso irá excluir permanentemente a conta de{' '}
+              <strong>{deletingUser?.name}</strong> e todos os dados associados.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteUser} className="bg-destructive hover:bg-destructive/90">
+              Excluir Usuário
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* User Details Dialog */}
+      <Dialog open={!!selectedUserDetails} onOpenChange={(open) => !open && setSelectedUserDetails(null)}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Atualizar Licença</DialogTitle>
+            <DialogTitle>Detalhes do Usuário</DialogTitle>
             <DialogDescription>
-              Altere a data de expiração da licença {updatingLicense?.subscription.license.code}
+              Informações completas de {selectedUserDetails?.name}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Nova Data de Expiração</Label>
-              <Input
-                type="date"
-                value={newEndDate}
-                onChange={(e) => setNewEndDate(e.target.value)}
-              />
+            {/* User Info */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Nome</Label>
+                <p className="text-sm font-medium">{selectedUserDetails?.name}</p>
+              </div>
+              <div>
+                <Label>Email</Label>
+                <p className="text-sm font-medium">{selectedUserDetails?.email}</p>
+              </div>
+              <div>
+                <Label>Permissão</Label>
+                <Badge variant="outline">{selectedUserDetails?.role}</Badge>
+              </div>
+              <div>
+                <Label>Status</Label>
+                <Badge variant="outline">{selectedUserDetails?.status}</Badge>
+              </div>
+              <div>
+                <Label>Cadastrado em</Label>
+                <p className="text-sm">{selectedUserDetails && formatDate(selectedUserDetails.created_at)}</p>
+              </div>
+              <div>
+                <Label>Último login</Label>
+                <p className="text-sm">{selectedUserDetails?.last_login ? formatDateTime(selectedUserDetails.last_login) : 'Nunca'}</p>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Subscriptions */}
+            <div>
+              <h4 className="font-semibold mb-3 flex items-center gap-2">
+                <CreditCard className="h-4 w-4" />
+                Assinaturas ({selectedUserDetails?.subscriptions?.length || 0})
+              </h4>
+              {selectedUserDetails?.subscriptions && selectedUserDetails.subscriptions.length > 0 ? (
+                <Accordion type="single" collapsible className="w-full">
+                  {selectedUserDetails.subscriptions.map((sub, idx) => (
+                    <AccordionItem key={sub.id} value={`sub-${idx}`}>
+                      <AccordionTrigger>
+                        <div className="flex items-center gap-2">
+                          <Badge variant={sub.status === 'ACTIVE' ? 'default' : 'secondary'}>
+                            {sub.status}
+                          </Badge>
+                          <span>{sub.plans?.name} - {sub.billing_cycle === 'MONTHLY' ? 'Mensal' : 'Anual'}</span>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <div className="grid grid-cols-2 gap-3 p-4 bg-muted/30 rounded-lg">
+                          <div>
+                            <Label>Valor</Label>
+                            <p className="text-sm font-medium">{formatCurrency(sub.plans?.price || 0)}</p>
+                          </div>
+                          <div>
+                            <Label>Período Atual</Label>
+                            <p className="text-sm">{formatDate(sub.current_period_start)} - {formatDate(sub.current_period_end)}</p>
+                          </div>
+                          <div>
+                            <Label>Renovação Automática</Label>
+                            <p className="text-sm">{sub.cancel_at_period_end ? 'Não' : 'Sim'}</p>
+                          </div>
+                          <div>
+                            <Label>Criada em</Label>
+                            <p className="text-sm">{formatDate(sub.created_at)}</p>
+                          </div>
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              ) : (
+                <p className="text-sm text-muted-foreground">Nenhuma assinatura encontrada</p>
+              )}
+            </div>
+
+            <Separator />
+
+            {/* Licenses */}
+            <div>
+              <h4 className="font-semibold mb-3 flex items-center gap-2">
+                <Key className="h-4 w-4" />
+                Licenças ({selectedUserDetails?.licenses?.length || 0})
+              </h4>
+              {selectedUserDetails?.licenses && selectedUserDetails.licenses.length > 0 ? (
+                <div className="space-y-2">
+                  {selectedUserDetails.licenses.map((license) => (
+                    <div key={license.id} className="p-3 bg-muted/30 rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <code className="text-sm font-mono">{license.code}</code>
+                        <Badge variant={license.is_used ? 'default' : 'outline'}>
+                          {license.is_used ? 'Ativa' : 'Disponível'}
+                        </Badge>
+                      </div>
+                      {license.device_id && (
+                        <div className="text-sm text-muted-foreground">
+                          <Laptop className="h-3 w-3 inline mr-1" />
+                          {license.device_type} - {license.device_id}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">Nenhuma licença encontrada</p>
+              )}
+            </div>
+
+            <Separator />
+
+            {/* Payments */}
+            <div>
+              <h4 className="font-semibold mb-3 flex items-center gap-2">
+                <Receipt className="h-4 w-4" />
+                Histórico de Pagamentos ({selectedUserDetails?.payments?.length || 0})
+              </h4>
+              {selectedUserDetails?.payments && selectedUserDetails.payments.length > 0 ? (
+                <div className="space-y-2">
+                  {selectedUserDetails.payments.slice(0, 5).map((payment) => (
+                    <div key={payment.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                      <div>
+                        <p className="text-sm font-medium">{formatCurrency(payment.amount)}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatDate(payment.created_at)} - {payment.payment_method || 'N/A'}
+                        </p>
+                      </div>
+                      <Badge
+                        variant={
+                          payment.status === 'SUCCEEDED'
+                            ? 'default'
+                            : payment.status === 'FAILED'
+                            ? 'destructive'
+                            : 'secondary'
+                        }
+                      >
+                        {payment.status}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">Nenhum pagamento encontrado</p>
+              )}
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setUpdatingLicense(null)}>
-              Cancelar
-            </Button>
-            <Button onClick={handleUpdateLicenseDate}>Atualizar</Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* AlertDialog: Confirmar Desvincular Dispositivo */}
-      <AlertDialog
-        open={!!unlinkingDevice}
-        onOpenChange={() => setUnlinkingDevice(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Desvincular Dispositivo</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja desvincular o dispositivo{' '}
-              <strong>{unlinkingDevice?.device.deviceName}</strong> da licença{' '}
-              <strong>{unlinkingDevice?.license.code}</strong>?
-              <br />
-              <br />
-              O usuário {unlinkingDevice?.user.name} precisará ativar a licença novamente
-              em um dispositivo.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleUnlinkDevice}>
-              Sim, Desvincular
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* AlertDialog: Confirmar Exclusão */}
-      <AlertDialog open={!!deletingUser} onOpenChange={() => setDeletingUser(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remover Usuário</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja remover <strong>{deletingUser?.name}</strong> do
-              sistema? Esta ação não pode ser desfeita.
-              {deletingUser?.subscriptions && deletingUser.subscriptions.length > 0 && (
-                <>
-                  <br />
-                  <br />
-                  <strong>Atenção:</strong> Este usuário possui{' '}
-                  {deletingUser.subscriptions.length} assinatura(s).
-                </>
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteUser} className="bg-destructive">
-              Sim, Remover
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }
