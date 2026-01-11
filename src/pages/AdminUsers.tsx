@@ -436,51 +436,51 @@ export default function AdminUsers() {
       </div>
 
       {/* Estatísticas */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
-              Total de Usuários
-            </CardTitle>
+        <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
+          Total de Usuários
+        </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-xl sm:text-2xl font-bold">{users.length}</div>
+        <div className="text-xl sm:text-2xl font-bold">{users.length}</div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
-              Usuários Ativos
-            </CardTitle>
+        <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
+          Usuários Ativos
+        </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-xl sm:text-2xl font-bold text-green-600">
-              {users.filter((u) => u.status === 'Ativo').length}
-            </div>
+        <div className="text-xl sm:text-2xl font-bold text-green-600">
+          {users.filter((u) => u.status === 'Ativo').length}
+        </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
-              Assinaturas Ativas
-            </CardTitle>
+        <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
+          Assinaturas Ativas
+        </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-xl sm:text-2xl font-bold text-blue-600">
-              {users.reduce((acc, u) => acc + u.subscriptions.filter(s => s.status === 'Ativa').length, 0)}
-            </div>
+        <div className="text-xl sm:text-2xl font-bold text-blue-600">
+          {users.reduce((acc, u) => acc + u.subscriptions.filter(s => s.status === 'Ativa').length, 0)}
+        </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
-              Suspensos
-            </CardTitle>
+        <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
+          Suspensos
+        </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-xl sm:text-2xl font-bold text-red-600">
-              {users.filter((u) => u.status === 'Suspenso').length}
-            </div>
+        <div className="text-xl sm:text-2xl font-bold text-red-600">
+          {users.filter((u) => u.status === 'Suspenso').length}
+        </div>
           </CardContent>
         </Card>
       </div>
