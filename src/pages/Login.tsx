@@ -69,9 +69,13 @@ const Login = () => {
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-12">
       <Card className="w-full max-w-md border-border">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-primary">
-            <FileText className="h-6 w-6 text-primary-foreground" />
-          </div>
+            <div className="mx-auto my-2">
+              <img 
+                src="/imgs/pdf_generator.png" 
+                alt="PDF Generator Logo" 
+                className="h-12 w-12"
+              />
+            </div>
           <CardTitle className="text-2xl">Entrar na sua conta</CardTitle>
           <p className="text-sm text-muted-foreground">
             Acesse sua conta para gerenciar suas assinaturas e licenças
