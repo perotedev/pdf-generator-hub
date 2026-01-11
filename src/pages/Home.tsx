@@ -114,6 +114,98 @@ const Home = () => {
         </div>
       </section>
 
+      {/* Sistema em Ação */}
+      <section className="py-20 bg-muted/30">
+        <div className="container">
+          <div className="mx-auto mb-12 max-w-2xl text-center">
+            <h2 className="mb-4 text-3xl font-bold text-foreground">
+              Veja o sistema em ação
+            </h2>
+            <p className="text-muted-foreground">
+              Interface intuitiva e poderosa, projetada para máxima produtividade
+            </p>
+          </div>
+
+          <div className="grid gap-8 lg:grid-cols-2">
+            <Card className="border-border overflow-hidden">
+              <CardContent className="p-0">
+                <img
+                  src="/screenshots/perfil-documento.png"
+                  alt="Editor visual de perfil de documento"
+                  className="w-full h-auto object-cover"
+                />
+                <div className="p-6">
+                  <h3 className="text-xl font-semibold text-foreground mb-2">
+                    Editor Visual de Documentos
+                  </h3>
+                  <p className="text-muted-foreground">
+                    Clique diretamente no PDF para posicionar campos e personalize
+                    fontes, cores e estilos em tempo real.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-border overflow-hidden">
+              <CardContent className="p-0">
+                <img
+                  src="/screenshots/perfil-planilha.png"
+                  alt="Configuração de perfil de planilha"
+                  className="w-full h-auto object-cover"
+                />
+                <div className="p-6">
+                  <h3 className="text-xl font-semibold text-foreground mb-2">
+                    Mapeamento de Planilhas
+                  </h3>
+                  <p className="text-muted-foreground">
+                    Configure uma vez como sua planilha será lida e reutilize
+                    o perfil quantas vezes quiser.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-border overflow-hidden">
+              <CardContent className="p-0">
+                <img
+                  src="/screenshots/geracao-pdfs-lote.png"
+                  alt="Geração em lote de PDFs"
+                  className="w-full h-auto object-cover"
+                />
+                <div className="p-6">
+                  <h3 className="text-xl font-semibold text-foreground mb-2">
+                    Geração em Lote
+                  </h3>
+                  <p className="text-muted-foreground">
+                    Selecione seus perfis e gere centenas de documentos
+                    personalizados com apenas um clique.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-border overflow-hidden">
+              <CardContent className="p-0">
+                <img
+                  src="/screenshots/ativacao-licenca.png"
+                  alt="Ativação de licença simples"
+                  className="w-full h-auto object-cover"
+                />
+                <div className="p-6">
+                  <h3 className="text-xl font-semibold text-foreground mb-2">
+                    Ativação Imediata
+                  </h3>
+                  <p className="text-muted-foreground">
+                    Insira sua chave de licença e comece a usar em segundos.
+                    Processo simples e rápido.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
       {/* Features Section */}
       <section className="py-20 bg-card">
         <div className="container">

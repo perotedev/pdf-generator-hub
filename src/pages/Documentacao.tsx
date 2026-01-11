@@ -235,6 +235,17 @@ const Documentacao = () => {
             Você só precisa fazer isso uma vez por cada tipo de planilha.
           </p>
 
+          {/* Screenshot da tela de Perfil de Planilha */}
+          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent overflow-hidden">
+            <CardContent className="p-0">
+              <img
+                src="/screenshots/perfil-planilha.png"
+                alt="Interface de Perfil de Planilha do PDF Generator"
+                className="w-full h-auto object-cover"
+              />
+            </CardContent>
+          </Card>
+
           <h3 className="text-lg font-semibold text-foreground">
             Configuração do Perfil
           </h3>
@@ -327,6 +338,17 @@ const Documentacao = () => {
             Aqui é onde a mágica visual acontece. Carregue seu modelo PDF e simplesmente
             clique nos locais onde as informações da planilha devem ser inseridas.
           </p>
+
+          {/* Screenshot da tela de Perfil de Documento */}
+          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent overflow-hidden">
+            <CardContent className="p-0">
+              <img
+                src="/screenshots/perfil-documento.png"
+                alt="Interface de Perfil de Documento do PDF Generator mostrando editor visual"
+                className="w-full h-auto object-cover"
+              />
+            </CardContent>
+          </Card>
 
           <h3 className="text-lg font-semibold text-foreground">
             Editor Visual de Template
@@ -428,6 +450,17 @@ const Documentacao = () => {
             documentos é um processo instantâneo e automático.
           </p>
 
+          {/* Screenshot da tela de Geração em Lote */}
+          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent overflow-hidden">
+            <CardContent className="p-0">
+              <img
+                src="/screenshots/geracao-pdfs-lote.png"
+                alt="Interface de geração em lote de PDFs"
+                className="w-full h-auto object-cover"
+              />
+            </CardContent>
+          </Card>
+
           <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -496,6 +529,18 @@ const Documentacao = () => {
             O PDF Generator oferece uma interface dedicada para visualizar e gerenciar
             todos os documentos que você já criou:
           </p>
+
+          {/* Screenshot da tela de PDFs Gerados */}
+          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent overflow-hidden mb-4">
+            <CardContent className="p-0">
+              <img
+                src="/screenshots/pdfs-gerados.png"
+                alt="Tela de gerenciamento mostrando lista de PDFs gerados com filtros e ações"
+                className="w-full h-auto object-cover"
+              />
+            </CardContent>
+          </Card>
+
           <div className="grid gap-4 md:grid-cols-2">
             <Card className="border-border">
               <CardContent className="p-4">
@@ -704,11 +749,19 @@ const Documentacao = () => {
               <h4 className="font-semibold text-foreground mb-2">
                 Como ativo minha licença?
               </h4>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-muted-foreground mb-4">
                 Após adquirir seu plano, você receberá uma chave de licença por email. Na
                 primeira vez que abrir o PDF Generator, ele solicitará esta chave. Insira-a
                 e clique em "Ativar". A licença ficará vinculada ao seu computador.
               </p>
+              {/* Screenshot do dialog de ativação */}
+              <div className="rounded-lg border border-border overflow-hidden">
+                <img
+                  src="/screenshots/ativacao-licenca.png"
+                  alt="Dialog de ativação de licença do PDF Generator"
+                  className="w-full h-auto object-cover"
+                />
+              </div>
             </CardContent>
           </Card>
 
