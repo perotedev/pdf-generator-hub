@@ -40,10 +40,18 @@ Use este checklist para garantir que tudo está configurado corretamente.
 - [ ] Configurar Site URL: `http://localhost:5173`
 - [ ] Salvar configurações
 
-## ☐ 4. Trigger do Banco de Dados
+## ☐ 4. Corrigir Tabela Users para OAuth (CRÍTICO!)
 
 - [ ] Acessar SQL Editor no Supabase
-- [ ] Executar o script: `supabase/sql/google_oauth_trigger.sql`
+- [ ] **PRIMEIRO**: Executar o script: `supabase/sql/fix_oauth_user_creation.sql`
+  - Este script remove a constraint NOT NULL de password_hash
+  - Usuários OAuth não têm senha, então password_hash deve ser nullable
+- [ ] Verificar se a correção funcionou:
+  ```sql
+  SELECT column_name, is_nullable FROM information_schema.columns
+  WHERE table_name = 'users' AND column_name = 'password_hash';
+  -- Deve retornar: is_nullable = 'YES'
+  ```
 - [ ] Verificar se o trigger foi criado:
   ```sql
   SELECT * FROM pg_trigger WHERE tgname = 'on_auth_user_created';
@@ -58,6 +66,8 @@ Use este checklist para garantir que tudo está configurado corretamente.
 - [ ] **NÃO adicionar credenciais do Google no .env**
 
 ## ☐ 6. Testar a Integração
+
+⚠️ **IMPORTANTE**: Se você receber erro "Database error saving new user", significa que o Passo 4 não foi executado. Execute o script `fix_oauth_user_creation.sql` primeiro!
 
 ### Teste 1: Registro com Google
 - [ ] Iniciar o servidor: `npm run dev`
