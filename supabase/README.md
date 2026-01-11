@@ -333,6 +333,17 @@ Todas as tabelas têm RLS habilitado:
 - **Gerentes (MANAGER):** Podem gerenciar usuários, mas não alterar permissões
 - **Admins (ADMIN):** Acesso total ao sistema
 
+### Views e Security Invoker
+
+As views `subscriptions_with_stripe` e `payments_with_stripe` usam `security_invoker=true` para:
+- Herdar as permissões RLS das tabelas base
+- Executar com as permissões do usuário que faz a consulta (não do criador da view)
+- Evitar bypass acidental das políticas de segurança
+
+**Nota:** Se o Supabase Dashboard mostrar avisos sobre `SECURITY DEFINER`, isso é esperado para:
+- ✅ Função `sync_stripe_subscription`: Precisa de privilégios elevados para atualizar dados do Stripe
+- ❌ Views: Já corrigidas para usar `security_invoker=true`
+
 ## 📝 Notas Importantes
 
 1. **Bcrypt:** As Edge Functions usam bcrypt para hash de senhas
@@ -359,6 +370,54 @@ CREATE EXTENSION IF NOT EXISTS wrappers WITH SCHEMA extensions;
 1. Verifique se o `STRIPE_WEBHOOK_SECRET` está configurado
 2. Teste o endpoint manualmente
 3. Verifique os logs no Stripe Dashboard
+
+### Aviso de Segurança: "SECURITY DEFINER" em Views
+
+**Problema:** Supabase Dashboard mostra aviso sobre views com `SECURITY DEFINER`
+
+**Solução Aplicada:**
+- Views agora usam `with (security_invoker=true)`
+- Isso garante que as views respeitam as permissões RLS do usuário atual
+
+**Como aplicar a correção se você já executou os scripts:**
+
+1. **Opção 1 - Script de Atualização (Recomendado):**
+   - Abra o SQL Editor no Supabase Dashboard
+   - Execute o script `supabase/sql/update_views_security.sql`
+   - Este script recria apenas as views com a configuração correta
+
+2. **Opção 2 - Re-executar Script Completo:**
+   - Execute novamente `supabase/sql/stripe_wrapper.sql` no SQL Editor
+   - O script usa `DROP ... IF EXISTS` então é seguro re-executar
+
+**Verificar se funcionou:**
+```sql
+-- Verificar configuração das views
+SELECT
+  schemaname,
+  viewname,
+  pg_get_viewdef(viewname::regclass, true) as definition
+FROM pg_views
+WHERE schemaname = 'public'
+  AND viewname IN ('subscriptions_with_stripe', 'payments_with_stripe');
+```
+
+Se a definição contiver `WITH (security_invoker='true')`, está correto!
+
+### Erro: "invalid secret id" no Stripe Wrapper
+
+**Problema:** `ERROR: HV000: invalid secret id "stripe_secret_key": failed to parse a UUID`
+
+**Causa:** A secret key do Stripe não foi configurada no Supabase Vault
+
+**Solução:**
+1. Vá em **Settings > Vault** no Supabase Dashboard
+2. Clique em **New Secret**
+3. Configure:
+   - **Name**: `stripe_secret_key` (exatamente este nome)
+   - **Secret**: Sua chave secreta do Stripe (sk_test_... ou sk_live_...)
+4. Clique em **Add Secret**
+5. Execute novamente o script `stripe_wrapper.sql`
 
 ## 📞 Suporte
 
