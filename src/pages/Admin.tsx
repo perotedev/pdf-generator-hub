@@ -259,7 +259,7 @@ const Admin = () => {
       </div>
 
       {/* Acesso Rápido */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Link to="/dashboard/admin/usuarios">
           <Card className="border-border hover:border-primary transition-colors cursor-pointer h-full">
             <CardHeader>
@@ -301,12 +301,12 @@ const Admin = () => {
       {/* Configuração de Preços */}
       <Card className="border-border">
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <DollarSign className="h-5 w-5 text-primary" />
               <CardTitle className="text-lg">Preços dos Planos</CardTitle>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 w-full sm:w-auto">
               {editingPrices && (
                 <Button
                   variant="outline"
@@ -337,7 +337,7 @@ const Admin = () => {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
             <div className="space-y-2">
               <Label htmlFor="monthlyPrice">Plano Mensal (R$)</Label>
               <Input
@@ -375,26 +375,77 @@ const Admin = () => {
       {/* Versões do Sistema */}
       <Card className="border-border">
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <Package className="h-5 w-5 text-primary" />
               <CardTitle className="text-lg">Versões do Sistema</CardTitle>
             </div>
-            <Button size="sm" onClick={() => setAddVersionDialog(true)}>
+            <Button size="sm" onClick={() => setAddVersionDialog(true)} className="w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
               Nova Versão
             </Button>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
+          {/* Mobile Card View */}
+          <div className="md:hidden space-y-4">
+            {versions.map((version) => (
+              <Card key={version.id} className="border-border">
+                <CardContent className="p-4">
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <Badge variant="secondary" className="text-sm">{version.version}</Badge>
+                        <div className="text-xs text-muted-foreground mt-1">{version.releaseDate}</div>
+                      </div>
+                      <div className="text-xs text-muted-foreground">{version.size}</div>
+                    </div>
+                    <div className="text-xs text-muted-foreground break-all">
+                      <span className="font-medium">Link:</span>{" "}
+                      <a
+                        href={version.downloadUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary hover:underline"
+                      >
+                        {version.downloadUrl}
+                      </a>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => openEditVersion(version)}
+                      >
+                        <Edit2 className="h-4 w-4 mr-2" />
+                        Editar
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => handleDeleteVersion(version.id)}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Remover
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Desktop Table View */}
+          <div className="hidden md:block overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Versão</TableHead>
                   <TableHead>Data de Lançamento</TableHead>
-                  <TableHead>Tamanho</TableHead>
-                  <TableHead>Link de Download</TableHead>
+                  <TableHead className="hidden lg:table-cell">Tamanho</TableHead>
+                  <TableHead className="hidden lg:table-cell">Link de Download</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -405,8 +456,8 @@ const Admin = () => {
                       <Badge variant="secondary">{version.version}</Badge>
                     </TableCell>
                     <TableCell>{version.releaseDate}</TableCell>
-                    <TableCell>{version.size}</TableCell>
-                    <TableCell>
+                    <TableCell className="hidden lg:table-cell">{version.size}</TableCell>
+                    <TableCell className="hidden lg:table-cell">
                       <a
                         href={version.downloadUrl}
                         target="_blank"
@@ -445,25 +496,75 @@ const Admin = () => {
       {/* Links de Recursos */}
       <Card className="border-border">
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <LinkIcon className="h-5 w-5 text-primary" />
               <CardTitle className="text-lg">Links de Recursos</CardTitle>
             </div>
-            <Button size="sm" onClick={() => setAddResourceDialog(true)}>
+            <Button size="sm" onClick={() => setAddResourceDialog(true)} className="w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
               Novo Recurso
             </Button>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
+          {/* Mobile Card View */}
+          <div className="md:hidden space-y-4">
+            {resources.map((resource) => (
+              <Card key={resource.id} className="border-border">
+                <CardContent className="p-4">
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1">
+                        <Badge variant="outline" className="text-xs mb-2">{getResourceTypeName(resource.type)}</Badge>
+                        <p className="text-sm font-medium">{resource.name}</p>
+                      </div>
+                    </div>
+                    <div className="text-xs text-muted-foreground break-all">
+                      <span className="font-medium">URL:</span>{" "}
+                      <a
+                        href={resource.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary hover:underline"
+                      >
+                        {resource.url}
+                      </a>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => openEditResource(resource)}
+                      >
+                        <Edit2 className="h-4 w-4 mr-2" />
+                        Editar
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => handleDeleteResource(resource.id)}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Remover
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Desktop Table View */}
+          <div className="hidden md:block overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Tipo</TableHead>
                   <TableHead>Nome</TableHead>
-                  <TableHead>URL</TableHead>
+                  <TableHead className="hidden lg:table-cell">URL</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -471,10 +572,10 @@ const Admin = () => {
                 {resources.map((resource) => (
                   <TableRow key={resource.id}>
                     <TableCell>
-                      <Badge variant="outline">{getResourceTypeName(resource.type)}</Badge>
+                      <Badge variant="outline" className="text-xs">{getResourceTypeName(resource.type)}</Badge>
                     </TableCell>
                     <TableCell className="font-medium">{resource.name}</TableCell>
-                    <TableCell>
+                    <TableCell className="hidden lg:table-cell">
                       <a
                         href={resource.url}
                         target="_blank"

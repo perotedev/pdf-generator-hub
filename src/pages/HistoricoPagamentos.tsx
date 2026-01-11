@@ -202,7 +202,7 @@ const HistoricoPagamentos = () => {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
         <Card className="border-border">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
@@ -253,9 +253,9 @@ const HistoricoPagamentos = () => {
         <CardHeader>
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <CardTitle>Todas as Transações</CardTitle>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
               <Select value={filterYear} onValueChange={setFilterYear}>
-                <SelectTrigger className="w-[140px]">
+                <SelectTrigger className="w-full sm:w-[140px]">
                   <SelectValue placeholder="Ano" />
                 </SelectTrigger>
                 <SelectContent>
@@ -266,7 +266,7 @@ const HistoricoPagamentos = () => {
                 </SelectContent>
               </Select>
               <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger className="w-[140px]">
+                <SelectTrigger className="w-full sm:w-[140px]">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -281,17 +281,66 @@ const HistoricoPagamentos = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
+          {/* Mobile Card View */}
+          <div className="md:hidden space-y-4">
+            {filteredPayments.length > 0 ? (
+              filteredPayments.map((payment) => (
+                <Card key={payment.id} className="border-border">
+                  <CardContent className="p-4">
+                    <div className="space-y-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{payment.description}</p>
+                          <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                            <Calendar className="h-3 w-3" />
+                            <span>{payment.date}</span>
+                          </div>
+                        </div>
+                        <div className="text-right flex-shrink-0">
+                          <p className="text-sm font-bold">{payment.amount}</p>
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <Badge variant="secondary" className="text-xs">{payment.plan}</Badge>
+                        <Badge variant={getStatusVariant(payment.status)} className="text-xs">
+                          {payment.status}
+                        </Badge>
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        <span className="font-medium">Método:</span> {payment.paymentMethod}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                        onClick={() => handleViewDetails(payment)}
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        Ver Detalhes
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                Nenhuma transação encontrada com os filtros selecionados.
+              </div>
+            )}
+          </div>
+
+          {/* Desktop Table View */}
+          <div className="hidden md:block overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Data</TableHead>
                   <TableHead>Descrição</TableHead>
                   <TableHead>Plano</TableHead>
-                  <TableHead>Método</TableHead>
+                  <TableHead className="hidden lg:table-cell">Método</TableHead>
                   <TableHead>Valor</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="text-center">Ações</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -305,20 +354,15 @@ const HistoricoPagamentos = () => {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div>
-                          <p className="text-sm font-medium">{payment.description}</p>
-                          <p className="text-xs text-muted-foreground">
-                            ID: {payment.id}
-                          </p>
-                        </div>
+                        <p className="text-sm font-medium">{payment.description}</p>
                       </TableCell>
                       <TableCell>
                         <Badge variant="secondary">{payment.plan}</Badge>
                       </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
+                      <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
                         {payment.paymentMethod}
                       </TableCell>
-                      <TableCell className="font-semibold">
+                      <TableCell className="font-semibold whitespace-nowrap">
                         {payment.amount}
                       </TableCell>
                       <TableCell>
@@ -326,15 +370,13 @@ const HistoricoPagamentos = () => {
                           {payment.status}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-center">
+                      <TableCell className="text-right">
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="gap-2"
                           onClick={() => handleViewDetails(payment)}
                         >
                           <Eye className="h-4 w-4" />
-                          Detalhes
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -359,14 +401,6 @@ const HistoricoPagamentos = () => {
         </CardHeader>
         <CardContent className="space-y-3 text-sm text-muted-foreground">
           <p>
-            • As notas fiscais são emitidas automaticamente após a confirmação do
-            pagamento.
-          </p>
-          <p>
-            • Você pode baixar suas notas fiscais a qualquer momento clicando no botão
-            correspondente.
-          </p>
-          <p>
             • Em caso de reembolso, o valor será devolvido no mesmo método de pagamento
             utilizado.
           </p>
@@ -379,7 +413,7 @@ const HistoricoPagamentos = () => {
 
       {/* Payment Details Dialog */}
       <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl w-[95vw] sm:w-full max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Detalhes do Pagamento</DialogTitle>
             <DialogDescription>

@@ -436,49 +436,49 @@ export default function AdminUsers() {
       </div>
 
       {/* Estatísticas */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
               Total de Usuários
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{users.length}</div>
+            <div className="text-xl sm:text-2xl font-bold">{users.length}</div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
               Usuários Ativos
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-xl sm:text-2xl font-bold text-green-600">
               {users.filter((u) => u.status === 'Ativo').length}
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
               Assinaturas Ativas
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
+            <div className="text-xl sm:text-2xl font-bold text-blue-600">
               {users.reduce((acc, u) => acc + u.subscriptions.filter(s => s.status === 'Ativa').length, 0)}
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
               Suspensos
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">
+            <div className="text-xl sm:text-2xl font-bold text-red-600">
               {users.filter((u) => u.status === 'Suspenso').length}
             </div>
           </CardContent>
@@ -486,12 +486,12 @@ export default function AdminUsers() {
       </div>
 
       {/* Filtros */}
-      <Card>
+      <Card className="border-border">
         <CardHeader>
           <CardTitle>Filtros</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
@@ -527,60 +527,38 @@ export default function AdminUsers() {
       </Card>
 
       {/* Tabela de Usuários */}
-      <Card>
+      <Card className="border-border">
         <CardHeader>
           <CardTitle>Usuários ({filteredUsers.length})</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Usuário</TableHead>
-                <TableHead>Permissão</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Assinaturas</TableHead>
-                <TableHead>Último Acesso</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredUsers.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell>
+          {/* Mobile Card View */}
+          <div className="md:hidden space-y-4">
+            {filteredUsers.map((user) => (
+              <Card key={user.id} className="border-border">
+                <CardContent className="p-4">
+                  <div className="space-y-3">
                     <div>
                       <div className="font-medium">{user.name}</div>
                       <div className="text-sm text-muted-foreground">{user.email}</div>
                     </div>
-                  </TableCell>
-                  <TableCell>{getRoleBadge(user.role)}</TableCell>
-                  <TableCell>{getStatusBadge(user.status)}</TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      {user.subscriptions.length > 0 ? (
-                        <>
-                          <div className="text-sm font-medium">
-                            {user.subscriptions.length} assinatura(s)
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {user.subscriptions.filter(s => s.status === 'Ativa').length} ativa(s)
-                          </div>
-                        </>
-                      ) : (
-                        <span className="text-sm text-muted-foreground">Sem assinaturas</span>
-                      )}
+                    <div className="flex flex-wrap gap-2">
+                      {getRoleBadge(user.role)}
+                      {getStatusBadge(user.status)}
                     </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm">{user.lastLogin}</div>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
+                    {user.subscriptions.length > 0 && (
+                      <div className="text-xs text-muted-foreground">
+                        <span className="font-medium">{user.subscriptions.length}</span> assinatura(s) •{" "}
+                        <span className="font-medium">{user.subscriptions.filter(s => s.status === 'Ativa').length}</span> ativa(s)
+                      </div>
+                    )}
+                    <div className="grid grid-cols-2 gap-2">
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => setSelectedUserDetails(user)}
                       >
-                        <CreditCard className="w-4 h-4 mr-1" />
+                        <CreditCard className="w-4 h-4 mr-2" />
                         Detalhes
                       </Button>
                       <Button
@@ -588,7 +566,7 @@ export default function AdminUsers() {
                         size="sm"
                         onClick={() => setEditingUser(user)}
                       >
-                        <UserCog className="w-4 h-4 mr-1" />
+                        <UserCog className="w-4 h-4 mr-2" />
                         Permissões
                       </Button>
                       <Button
@@ -608,20 +586,108 @@ export default function AdminUsers() {
                         size="sm"
                         onClick={() => setDeletingUser(user)}
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Remover
                       </Button>
                     </div>
-                  </TableCell>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Desktop Table View */}
+          <div className="hidden md:block overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Usuário</TableHead>
+                  <TableHead>Permissão</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="hidden lg:table-cell">Assinaturas</TableHead>
+                  <TableHead className="hidden xl:table-cell">Último Acesso</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredUsers.map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell>
+                      <div>
+                        <div className="font-medium">{user.name}</div>
+                        <div className="text-sm text-muted-foreground">{user.email}</div>
+                      </div>
+                    </TableCell>
+                    <TableCell>{getRoleBadge(user.role)}</TableCell>
+                    <TableCell>{getStatusBadge(user.status)}</TableCell>
+                    <TableCell className="hidden lg:table-cell">
+                      <div className="space-y-1">
+                        {user.subscriptions.length > 0 ? (
+                          <>
+                            <div className="text-sm font-medium">
+                              {user.subscriptions.length} assinatura(s)
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {user.subscriptions.filter(s => s.status === 'Ativa').length} ativa(s)
+                            </div>
+                          </>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">Sem assinaturas</span>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="hidden xl:table-cell">
+                      <div className="text-sm">{user.lastLogin}</div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-1 flex-wrap">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setSelectedUserDetails(user)}
+                        >
+                          <CreditCard className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setEditingUser(user)}
+                        >
+                          <UserCog className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            handleUpdateStatus(
+                              user.id,
+                              user.status === 'Ativo' ? 'Suspenso' : 'Ativo'
+                            )
+                          }
+                          className="hidden lg:inline-flex"
+                        >
+                          {user.status === 'Ativo' ? 'Suspender' : 'Ativar'}
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => setDeletingUser(user)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
 
       {/* Dialog: Detalhes do Usuário (Assinaturas e Pagamentos) */}
       <Dialog open={!!selectedUserDetails} onOpenChange={() => setSelectedUserDetails(null)}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto w-[95vw] sm:w-full">
           <DialogHeader>
             <DialogTitle>Detalhes do Usuário</DialogTitle>
             <DialogDescription>
@@ -655,7 +721,7 @@ export default function AdminUsers() {
                             <CardTitle className="text-base">Informações da Assinatura</CardTitle>
                           </CardHeader>
                           <CardContent className="space-y-3">
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                               <div>
                                 <div className="text-sm text-muted-foreground">Data de Início</div>
                                 <div className="font-medium">
@@ -703,7 +769,7 @@ export default function AdminUsers() {
                             </CardTitle>
                           </CardHeader>
                           <CardContent className="space-y-3">
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                               <div>
                                 <div className="text-sm text-muted-foreground">Código da Licença</div>
                                 <div className="font-mono font-medium text-sm">
