@@ -168,6 +168,7 @@ const Registro = () => {
                 id="name"
                 type="text"
                 placeholder="Seu nome aqui"
+                autoComplete="off"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
@@ -179,6 +180,7 @@ const Registro = () => {
                 id="email"
                 type="email"
                 placeholder="seu@email.com"
+                autoComplete="off"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
