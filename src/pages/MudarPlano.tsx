@@ -241,14 +241,20 @@ const MudarPlano = () => {
                 <div className="text-center">
                   <div className="flex items-baseline justify-center gap-1">
                     <span className="text-4xl font-bold text-foreground">
-                      R${plan.monthlyPrice}
+                      {new Intl.NumberFormat('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL',
+                      }).format(plan.monthlyPrice)}
                     </span>
                     <span className="text-muted-foreground">/mês</span>
                   </div>
                   <p className="mt-1 text-sm text-muted-foreground">
                     {plan.isMonthly
                       ? "Cobrado mensalmente"
-                      : `Cobrado anualmente (R${plan.monthlyPrice * 12})`}
+                      : `Cobrado anualmente (${new Intl.NumberFormat('pt-BR', {
+                          style: 'currency',
+                          currency: 'BRL',
+                        }).format(plan.annualPrice)})`}
                   </p>
                 </div>
 
@@ -326,7 +332,15 @@ const MudarPlano = () => {
               </p>
               <p className="mt-4">
                 Valor do novo plano:{" "}
-                <strong>R${getSelectedPlanInfo()?.monthlyPrice}/mês</strong>
+                <strong>
+                  {getSelectedPlanInfo()?.monthlyPrice
+                    ? new Intl.NumberFormat('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL',
+                      }).format(getSelectedPlanInfo()!.monthlyPrice)
+                    : 'N/A'}
+                  /mês
+                </strong>
               </p>
               <p>
                 A mudança será aplicada imediatamente e o ajuste de valores será

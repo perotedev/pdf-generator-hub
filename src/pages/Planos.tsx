@@ -194,14 +194,20 @@ const Planos = () => {
                 <div className="text-center">
                   <div className="flex items-baseline justify-center gap-1">
                     <span className="text-4xl font-bold text-foreground">
-                      R${plan.monthlyPrice}
+                      {new Intl.NumberFormat('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL',
+                      }).format(plan.monthlyPrice)}
                     </span>
                     <span className="text-muted-foreground">/mês</span>
                   </div>
                   <p className="mt-1 text-sm text-muted-foreground">
                     {plan.isMonthly
                       ? "Cobrado mensalmente"
-                      : `Cobrado anualmente (R${plan.monthlyPrice * 12})`
+                      : `Cobrado anualmente (${new Intl.NumberFormat('pt-BR', {
+                          style: 'currency',
+                          currency: 'BRL',
+                        }).format(plan.annualPrice)})`
                     }
                   </p>
                 </div>
