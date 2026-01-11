@@ -21,6 +21,7 @@ import HistoricoPagamentos from "./pages/HistoricoPagamentos";
 import Admin from "./pages/Admin";
 import AdminUsers from "./pages/AdminUsers";
 import AdminLicenses from "./pages/AdminLicenses";
+import AuthCallback from "./pages/AuthCallback";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,9 @@ const App = () => (
         <BrowserRouter>
           <ScrollToTop />
           <Routes>
+            {/* Auth Callback Route (must be before PublicLayout) */}
+            <Route path="/auth/callback" element={<AuthCallback />} />
+
             {/* Public Routes */}
             <Route element={<PublicLayout />}>
               <Route path="/" element={<Home />} />

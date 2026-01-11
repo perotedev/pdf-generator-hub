@@ -34,8 +34,9 @@ Use este checklist para garantir que tudo está configurado corretamente.
 
 - [ ] Ir em Authentication → URL Configuration
 - [ ] Adicionar em Redirect URLs:
+  - [ ] `http://localhost:5173/auth/callback` (desenvolvimento - **IMPORTANTE!**)
   - [ ] `http://localhost:5173/dashboard` (desenvolvimento)
-  - [ ] Seu domínio de produção quando fizer deploy
+  - [ ] Seu domínio de produção quando fizer deploy (ex: `https://seu-dominio.com/auth/callback`)
 - [ ] Configurar Site URL: `http://localhost:5173`
 - [ ] Salvar configurações
 
@@ -94,10 +95,11 @@ Se algo não funcionar:
 
 ## Status da Implementação
 
-- ✅ Código de OAuth no Login.tsx está correto
-- ✅ Código de OAuth no Registro.tsx está correto
-- ✅ AuthContext configurado para detectar login OAuth
-- ✅ Redirect para /dashboard configurado
+- ✅ Código de OAuth no Login.tsx - redirectTo corrigido para /auth/callback
+- ✅ Código de OAuth no Registro.tsx - redirectTo corrigido para /auth/callback
+- ✅ AuthContext configurado para detectar login OAuth via onAuthStateChange
+- ✅ Página AuthCallback.tsx criada para processar callback do Google
+- ✅ Rota /auth/callback adicionada no App.tsx
 - ✅ Script SQL do trigger criado
 - ⏳ **Falta configurar no Google Cloud Console e Supabase Dashboard**
 
@@ -116,11 +118,12 @@ Se algo não funcionar:
 - O arquivo `.env.local` já está no .gitignore
 
 ✅ **O que já está pronto no código**:
-- Login com Google (Login.tsx)
-- Registro com Google (Registro.tsx)
-- AuthContext detecta sessão OAuth
-- Redirecionamento automático para dashboard
+- Login com Google (Login.tsx) - redireciona para /auth/callback
+- Registro com Google (Registro.tsx) - redireciona para /auth/callback
+- AuthContext detecta sessão OAuth via onAuthStateChange
+- Página AuthCallback.tsx processa o callback e redireciona para /dashboard
 - Toast notifications
+- Rota /auth/callback configurada
 
 🔧 **O que você precisa fazer**:
 - Configurar credenciais no Google Cloud Console
