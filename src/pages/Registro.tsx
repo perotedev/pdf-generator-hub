@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { FileText } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { authApi, supabase } from "@/lib/supabase";
 
@@ -17,6 +17,26 @@ const Registro = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState({ score: 0, label: "", color: "" });
+
+  useEffect(() => {
+    const calculateStrength = (pwd: string) => {
+      if (!pwd) return { score: 0, label: "", color: "" };
+      
+      let score = 0;
+      if (pwd.length >= 8) score += 1;
+      if (/[A-Z]/.test(pwd)) score += 1;
+      if (/[a-z]/.test(pwd)) score += 1;
+      if (/[0-9]/.test(pwd)) score += 1;
+      if (/[@$!%*?&]/.test(pwd)) score += 1;
+
+      if (score <= 2) return { score, label: "Fraca", color: "bg-destructive" };
+      if (score <= 4) return { score, label: "Média", color: "bg-yellow-500" };
+      return { score, label: "Forte", color: "bg-green-500" };
+    };
+
+    setPasswordStrength(calculateStrength(password));
+  }, [password]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,10 +50,11 @@ const Registro = () => {
       return;
     }
 
-    if (password.length < 8) {
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!passwordRegex.test(password)) {
       toast({
-        title: "Erro",
-        description: "A senha deve ter pelo menos 8 caracteres.",
+        title: "Senha Insegura",
+        description: "A senha deve ter no mínimo 8 caracteres, incluindo letras maiúsculas, minúsculas, números e caracteres especiais.",
         variant: "destructive",
       });
       return;
@@ -165,11 +186,24 @@ const Registro = () => {
               <Input
                 id="password"
                 type="password"
-                placeholder="Mínimo 8 caracteres"
+                placeholder="Mínimo 8 caracteres (letras, números e símbolos)"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
+              {password && (
+                <div className="mt-2 space-y-1">
+                  <div className="flex h-1.5 w-full gap-1 overflow-hidden rounded-full bg-secondary">
+                    <div 
+                      className={`h-full transition-all duration-300 ${passwordStrength.color}`} 
+                      style={{ width: `${(passwordStrength.score / 5) * 100}%` }}
+                    />
+                  </div>
+                  <p className={`text-xs font-medium ${passwordStrength.label === "Fraca" ? "text-destructive" : passwordStrength.label === "Média" ? "text-yellow-600" : "text-green-600"}`}>
+                    Força da senha: {passwordStrength.label}
+                  </p>
+                </div>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Confirmar senha</Label>
