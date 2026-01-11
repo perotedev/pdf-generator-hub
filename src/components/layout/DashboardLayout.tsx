@@ -13,7 +13,7 @@ import {
   Settings,
   Users,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 
 const DashboardLayout = () => {
@@ -21,6 +21,55 @@ const DashboardLayout = () => {
   const navigate = useNavigate();
   const { user, logout, isAdmin } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [currentDateTime, setCurrentDateTime] = useState(new Date());
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentDateTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const formatDateTime = (date: Date) => {
+    const diasSemana = [
+      "Domingo",
+      "Segunda-feira",
+      "Terça-feira",
+      "Quarta-feira",
+      "Quinta-feira",
+      "Sexta-feira",
+      "Sábado",
+    ];
+    const meses = [
+      "Janeiro",
+      "Fevereiro",
+      "Março",
+      "Abril",
+      "Maio",
+      "Junho",
+      "Julho",
+      "Agosto",
+      "Setembro",
+      "Outubro",
+      "Novembro",
+      "Dezembro",
+    ];
+
+    const diaSemana = diasSemana[date.getDay()];
+    const dia = date.getDate();
+    const mes = meses[date.getMonth()];
+    const ano = date.getFullYear();
+    const horas = String(date.getHours()).padStart(2, "0");
+    const minutos = String(date.getMinutes()).padStart(2, "0");
+
+    return {
+      data: `${diaSemana}, ${dia} de ${mes} de ${ano}`,
+      hora: `${horas}:${minutos}`,
+    };
+  };
+
+  const { data, hora } = formatDateTime(currentDateTime);
 
   const navLinks = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -154,14 +203,23 @@ const DashboardLayout = () => {
       <div className="flex-1 flex flex-col">
         {/* Top Bar */}
         <header className="flex h-16 items-center justify-between border-b border-border bg-card px-4 lg:px-6">
-          <button
-            className="lg:hidden p-2"
-            onClick={() => setSidebarOpen(true)}
-          >
-            <Menu className="h-6 w-6" />
-          </button>
+          <div className="flex items-center gap-4">
+            <button
+              className="lg:hidden p-2"
+              onClick={() => setSidebarOpen(true)}
+            >
+              <Menu className="h-6 w-6" />
+            </button>
 
-          <div className="flex-1" />
+            <div className="hidden md:block">
+              <div className="text-sm font-medium text-foreground">
+                {data}
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {hora}
+              </div>
+            </div>
+          </div>
 
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
