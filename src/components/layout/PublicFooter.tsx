@@ -9,10 +9,15 @@ const PublicFooter = () => {
           {/* Brand */}
           <div className="space-y-4">
             <Link to="/" className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-                <FileText className="h-5 w-5 text-primary-foreground" />
-              </div>
-              <span className="text-xl font-bold text-foreground">PDF Generator</span>
+              <img 
+                src="/imgs/pdf_generator.png" 
+                alt="PDF Generator" 
+                className="h-9 w-9"
+              />
+                <span className="text-xl font-bold">
+                <span style={{ color: "#FD8216" }}>PDF</span>
+                <span style={{ color: "#1470BB" }}> GENERATOR</span>
+                </span>
             </Link>
             <p className="text-sm text-muted-foreground">
               A solução completa para geração de PDFs profissionais de forma rápida e segura.
