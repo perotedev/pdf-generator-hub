@@ -143,33 +143,6 @@ const Home = () => {
             <Card
               className="border-border overflow-hidden group hover:shadow-lg transition-shadow cursor-pointer"
               onClick={() => setSelectedScreenshot({
-                image: "/screenshots/perfil-documento.png",
-                title: "Editor Visual de Documentos",
-                description: "Clique diretamente no PDF para posicionar campos e personalize estilos. O editor visual permite que você configure exatamente onde cada informação da planilha deve aparecer no documento final, com controle total sobre fontes, tamanhos e formatação."
-              })}
-            >
-              <CardContent className="p-0">
-                <div className="relative overflow-hidden">
-                  <img
-                    src="/screenshots/perfil-documento.png"
-                    alt="Editor visual de perfil de documento"
-                    className="w-full h-48 object-cover transition-transform group-hover:scale-105"
-                  />
-                </div>
-                <div className="p-4">
-                  <h3 className="text-base font-semibold text-foreground mb-2">
-                    Editor Visual de Documentos
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Clique diretamente no PDF para posicionar campos e personalize estilos.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card
-              className="border-border overflow-hidden group hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() => setSelectedScreenshot({
                 image: "/screenshots/perfil-planilha.png",
                 title: "Mapeamento de Planilhas",
                 description: "Configure uma vez e reutilize o perfil quantas vezes quiser. Defina quais colunas da sua planilha Excel contêm os dados que serão inseridos nos documentos. O sistema memoriza suas configurações para futuras gerações."
@@ -194,6 +167,33 @@ const Home = () => {
               </CardContent>
             </Card>
 
+            <Card
+              className="border-border overflow-hidden group hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => setSelectedScreenshot({
+                image: "/screenshots/perfil-documento.png",
+                title: "Editor Visual de Documentos",
+                description: "Clique diretamente no PDF para posicionar campos e personalize estilos. O editor visual permite que você configure exatamente onde cada informação da planilha deve aparecer no documento final, com controle total sobre fontes, tamanhos e formatação."
+              })}
+            >
+              <CardContent className="p-0">
+                <div className="relative overflow-hidden">
+                  <img
+                    src="/screenshots/perfil-documento.png"
+                    alt="Editor visual de perfil de documento"
+                    className="w-full h-48 object-cover transition-transform group-hover:scale-105"
+                  />
+                </div>
+                <div className="p-4">
+                  <h3 className="text-base font-semibold text-foreground mb-2">
+                    Editor Visual de Documentos
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Clique diretamente no PDF para posicionar campos e personalize estilos.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+            
             <Card
               className="border-border overflow-hidden group hover:shadow-lg transition-shadow cursor-pointer"
               onClick={() => setSelectedScreenshot({
