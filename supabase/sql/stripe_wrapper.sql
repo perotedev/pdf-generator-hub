@@ -181,7 +181,11 @@ left join stripe_payment_intents spi on p.stripe_payment_intent_id = spi.id;
 
 -- 6. Função para sincronizar dados do Stripe com o banco local
 create or replace function public.sync_stripe_subscription(p_subscription_id uuid)
-returns void as $$
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
 declare
   v_stripe_sub_id text;
   v_stripe_data record;
@@ -220,11 +224,25 @@ begin
     updated_at = now()
   where id = p_subscription_id;
 end;
-$$ language plpgsql security definer;
+$$;
 
--- Grant permissions
-grant select on stripe_customers to authenticated;
-grant select on stripe_subscriptions to authenticated;
-grant select on stripe_products to authenticated;
-grant select on stripe_prices to authenticated;
+-- 7. Configurar permissões de segurança
+
+-- IMPORTANTE: Foreign tables do Stripe NÃO devem ser acessíveis via API
+-- Elas não respeitam RLS e contêm dados sensíveis
+-- Acesso deve ser apenas via service_role (Edge Functions)
+
+-- Revogar todo acesso público às foreign tables
+revoke all on stripe_customers from public, anon, authenticated;
+revoke all on stripe_subscriptions from public, anon, authenticated;
+revoke all on stripe_products from public, anon, authenticated;
+revoke all on stripe_prices from public, anon, authenticated;
+revoke all on stripe_payment_intents from public, anon, authenticated;
+revoke all on stripe_invoices from public, anon, authenticated;
+
+-- Conceder SELECT nas views (que respeitam RLS) para authenticated users
+grant select on public.subscriptions_with_stripe to authenticated;
+grant select on public.payments_with_stripe to authenticated;
+
+-- Conceder execução da função de sincronização para authenticated users
 grant execute on function public.sync_stripe_subscription to authenticated;

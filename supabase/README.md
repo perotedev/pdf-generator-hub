@@ -404,6 +404,31 @@ WHERE schemaname = 'public'
 
 Se a definição contiver `WITH (security_invoker='true')`, está correto!
 
+### Aviso: "Function has a role mutable search_path"
+
+**Problema:** Função `sync_stripe_subscription` não tem search_path definido
+
+**Solução:**
+- Execute o script `supabase/sql/fix_security_issues.sql`
+- Isso recria a função com `set search_path = public`
+- Previne ataques de injeção via search_path
+
+### Aviso: "Foreign table is accessible over APIs"
+
+**Problema:** Foreign tables do Stripe (stripe_customers, stripe_subscriptions, etc.) são acessíveis via API
+
+**Por que é um problema:**
+- Foreign tables não respeitam Row Level Security (RLS)
+- Usuários poderiam acessar dados sensíveis do Stripe diretamente
+
+**Solução Aplicada:**
+- Execute o script `supabase/sql/fix_security_issues.sql`
+- Remove todo acesso público às foreign tables
+- Mantém acesso apenas via service_role (Edge Functions)
+- Usuários acessam dados do Stripe apenas através das views seguras:
+  - `subscriptions_with_stripe` (com RLS)
+  - `payments_with_stripe` (com RLS)
+
 ### Erro: "invalid secret id" no Stripe Wrapper
 
 **Problema:** `ERROR: HV000: invalid secret id "stripe_secret_key": failed to parse a UUID`
