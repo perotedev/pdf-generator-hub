@@ -39,11 +39,19 @@ const Admin = () => {
         .select('*')
         .order('billing_cycle');
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
 
-      if (plans) {
+      console.log('Plans fetched from database:', plans);
+
+      if (plans && plans.length > 0) {
         const monthlyPlan = plans.find(p => p.billing_cycle === 'MONTHLY');
         const annualPlan = plans.find(p => p.billing_cycle === 'YEARLY');
+
+        console.log('Monthly plan:', monthlyPlan);
+        console.log('Annual plan:', annualPlan);
 
         if (monthlyPlan) {
           setMonthlyPrice(monthlyPlan.price.toString());
@@ -56,6 +64,13 @@ const Admin = () => {
           setInitialAnnualPrice(annualPlan.price.toString());
           setAnnualPlanId(annualPlan.id);
         }
+      } else {
+        console.warn('No plans found in database');
+        toast({
+          title: "Nenhum plano encontrado",
+          description: "Verifique se há planos cadastrados no banco de dados.",
+          variant: "destructive",
+        });
       }
     } catch (error: any) {
       console.error('Error fetching plans:', error);
