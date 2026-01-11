@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-export type UserRole = 'ADMIN' | 'USER';
+export type UserRole = 'ADMIN' | 'MANAGER' | 'USER';
 
 export interface User {
   id: string;
@@ -14,6 +14,8 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isAdmin: boolean;
+  isManager: boolean;
+  canManageUsers: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   updateUser: (user: User) => void;
@@ -36,12 +38,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Simulação de login - em produção, isso seria uma chamada à API
     await new Promise(resolve => setTimeout(resolve, 1000));
 
-    // Para demonstração: se o email contém "admin", é admin
+    // Para demonstração: se o email contém "admin", é admin; se contém "manager", é gerente
+    let role: UserRole = 'USER';
+    let name = 'João Silva';
+
+    if (email.includes('admin')) {
+      role = 'ADMIN';
+      name = 'Administrador';
+    } else if (email.includes('manager') || email.includes('gerente')) {
+      role = 'MANAGER';
+      name = 'Gerente';
+    }
+
     const mockUser: User = {
       id: '1',
-      name: email.includes('admin') ? 'Administrador' : 'João Silva',
+      name: name,
       email: email,
-      role: email.includes('admin') ? 'ADMIN' : 'USER',
+      role: role,
     };
 
     setUser(mockUser);
@@ -62,6 +75,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user,
     isAuthenticated: !!user,
     isAdmin: user?.role === 'ADMIN',
+    isManager: user?.role === 'MANAGER',
+    canManageUsers: user?.role === 'ADMIN' || user?.role === 'MANAGER',
     login,
     logout,
     updateUser,

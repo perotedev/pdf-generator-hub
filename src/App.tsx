@@ -56,8 +56,22 @@ const App = () => (
               <Route path="assinaturas/mudar-plano" element={<MudarPlano />} />
               <Route path="pagamentos" element={<HistoricoPagamentos />} />
               <Route path="downloads" element={<Downloads />} />
-              <Route path="admin" element={<Admin />} />
-              <Route path="admin/usuarios" element={<AdminUsers />} />
+              <Route
+                path="admin"
+                element={
+                  <ProtectedRoute requireAdmin>
+                    <Admin />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="admin/usuarios"
+                element={
+                  <ProtectedRoute requireManager>
+                    <AdminUsers />
+                  </ProtectedRoute>
+                }
+              />
             </Route>
 
             {/* Catch-all */}

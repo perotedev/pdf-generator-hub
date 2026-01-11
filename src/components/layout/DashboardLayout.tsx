@@ -19,7 +19,7 @@ import { useAuth } from "@/contexts/AuthContext";
 const DashboardLayout = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout, isAdmin } = useAuth();
+  const { user, logout, isAdmin, isManager, canManageUsers } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
 
@@ -71,14 +71,20 @@ const DashboardLayout = () => {
 
   const { data, hora } = formatDateTime(currentDateTime);
 
-  const navLinks = [
-    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/dashboard/assinaturas", label: "Minhas Assinaturas", icon: CreditCard },
-    { href: "/dashboard/pagamentos", label: "Pagamentos", icon: Receipt },
-    { href: "/dashboard/downloads", label: "Downloads", icon: Download },
-    { href: "/dashboard/admin", label: "Configurações", icon: Settings },
-    { href: "/dashboard/admin/usuarios", label: "Gerenciar Usuários", icon: Users },
+  const allNavLinks = [
+    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, requiresPermission: false },
+    { href: "/dashboard/assinaturas", label: "Minhas Assinaturas", icon: CreditCard, requiresPermission: false },
+    { href: "/dashboard/pagamentos", label: "Pagamentos", icon: Receipt, requiresPermission: false },
+    { href: "/dashboard/downloads", label: "Downloads", icon: Download, requiresPermission: false },
+    { href: "/dashboard/admin", label: "Configurações", icon: Settings, requiresAdmin: true },
+    { href: "/dashboard/admin/usuarios", label: "Gerenciar Usuários", icon: Users, requiresManager: true },
   ];
+
+  const navLinks = allNavLinks.filter(link => {
+    if (link.requiresAdmin) return isAdmin;
+    if (link.requiresManager) return canManageUsers;
+    return true;
+  });
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -233,6 +239,11 @@ const DashboardLayout = () => {
                 {isAdmin && (
                   <div className="text-xs text-muted-foreground">
                     Administrador
+                  </div>
+                )}
+                {isManager && (
+                  <div className="text-xs text-muted-foreground">
+                    Gerente
                   </div>
                 )}
               </div>

@@ -44,9 +44,9 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { Label } from '@/components/ui/label';
-import { Search, UserCog, Shield, Trash2, Laptop, Key, CreditCard, Receipt, Calendar, DollarSign } from 'lucide-react';
+import { Search, UserCog, Shield, Trash2, Laptop, Key, CreditCard, Receipt, Calendar, DollarSign, Users2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { UserRole } from '@/contexts/AuthContext';
+import { UserRole, useAuth } from '@/contexts/AuthContext';
 
 interface Device {
   id: string;
@@ -96,6 +96,7 @@ interface SystemUser {
 }
 
 export default function AdminUsers() {
+  const { isAdmin } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
@@ -259,6 +260,16 @@ export default function AdminUsers() {
         },
       ],
     },
+    {
+      id: '6',
+      name: 'Fernanda Costa',
+      email: 'fernanda.costa@email.com',
+      role: 'MANAGER',
+      status: 'Ativo',
+      createdAt: '2024-02-18',
+      lastLogin: '2026-01-11 10:30',
+      subscriptions: [],
+    },
   ]);
 
   const filteredUsers = users.filter((user) => {
@@ -277,8 +288,9 @@ export default function AdminUsers() {
       prev.map((u) => (u.id === editingUser.id ? editingUser : u))
     );
 
+    const roleText = editingUser.role === 'ADMIN' ? 'Administrador' : editingUser.role === 'MANAGER' ? 'Gerente' : 'Usuário';
     toast.success('Permissão atualizada', {
-      description: `${editingUser.name} agora é ${editingUser.role === 'ADMIN' ? 'Administrador' : 'Usuário'}`,
+      description: `${editingUser.name} agora é ${roleText}`,
     });
     setEditingUser(null);
   };
@@ -385,14 +397,23 @@ export default function AdminUsers() {
   };
 
   const getRoleBadge = (role: UserRole) => {
-    return role === 'ADMIN' ? (
-      <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-200">
-        <Shield className="w-3 h-3 mr-1" />
-        Admin
-      </Badge>
-    ) : (
-      <Badge variant="secondary">Usuário</Badge>
-    );
+    if (role === 'ADMIN') {
+      return (
+        <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-200">
+          <Shield className="w-3 h-3 mr-1" />
+          Admin
+        </Badge>
+      );
+    } else if (role === 'MANAGER') {
+      return (
+        <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-200">
+          <Users2 className="w-3 h-3 mr-1" />
+          Gerente
+        </Badge>
+      );
+    } else {
+      return <Badge variant="secondary">Usuário</Badge>;
+    }
   };
 
   const getStatusBadge = (status: SystemUser['status']) => {
@@ -508,6 +529,7 @@ export default function AdminUsers() {
               <SelectContent>
                 <SelectItem value="all">Todas as permissões</SelectItem>
                 <SelectItem value="ADMIN">Administradores</SelectItem>
+                <SelectItem value="MANAGER">Gerentes</SelectItem>
                 <SelectItem value="USER">Usuários</SelectItem>
               </SelectContent>
             </Select>
@@ -904,20 +926,29 @@ export default function AdminUsers() {
                 onValueChange={(value: UserRole) =>
                   setEditingUser((prev) => (prev ? { ...prev, role: value } : null))
                 }
+                disabled={!isAdmin}
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="USER">Usuário</SelectItem>
+                  <SelectItem value="MANAGER">Gerente</SelectItem>
                   <SelectItem value="ADMIN">Administrador</SelectItem>
                 </SelectContent>
               </Select>
               <p className="text-sm text-muted-foreground">
                 {editingUser?.role === 'ADMIN'
                   ? 'Administradores têm acesso completo ao sistema, incluindo gerenciamento de usuários e configurações.'
+                  : editingUser?.role === 'MANAGER'
+                  ? 'Gerentes podem gerenciar usuários, assinaturas e licenças, mas não podem alterar permissões de outros usuários.'
                   : 'Usuários têm acesso apenas às suas próprias assinaturas e downloads.'}
               </p>
+              {!isAdmin && (
+                <p className="text-sm text-amber-600 bg-amber-50 p-2 rounded border border-amber-200">
+                  Apenas administradores podem alterar permissões de usuários.
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label>Status da Conta</Label>
