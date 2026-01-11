@@ -10,8 +10,21 @@ import {
   Star,
   CheckCircle,
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { useState } from "react";
 
 const Home = () => {
+  const [selectedScreenshot, setSelectedScreenshot] = useState<{
+    image: string;
+    title: string;
+    description: string;
+  } | null>(null);
   const features = [
     {
       icon: Zap,
@@ -127,7 +140,14 @@ const Home = () => {
           </div>
 
           <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
-            <Card className="border-border overflow-hidden group hover:shadow-lg transition-shadow">
+            <Card
+              className="border-border overflow-hidden group hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => setSelectedScreenshot({
+                image: "/screenshots/perfil-documento.png",
+                title: "Editor Visual de Documentos",
+                description: "Clique diretamente no PDF para posicionar campos e personalize estilos. O editor visual permite que você configure exatamente onde cada informação da planilha deve aparecer no documento final, com controle total sobre fontes, tamanhos e formatação."
+              })}
+            >
               <CardContent className="p-0">
                 <div className="relative overflow-hidden">
                   <img
@@ -147,7 +167,14 @@ const Home = () => {
               </CardContent>
             </Card>
 
-            <Card className="border-border overflow-hidden group hover:shadow-lg transition-shadow">
+            <Card
+              className="border-border overflow-hidden group hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => setSelectedScreenshot({
+                image: "/screenshots/perfil-planilha.png",
+                title: "Mapeamento de Planilhas",
+                description: "Configure uma vez e reutilize o perfil quantas vezes quiser. Defina quais colunas da sua planilha Excel contêm os dados que serão inseridos nos documentos. O sistema memoriza suas configurações para futuras gerações."
+              })}
+            >
               <CardContent className="p-0">
                 <div className="relative overflow-hidden">
                   <img
@@ -167,7 +194,14 @@ const Home = () => {
               </CardContent>
             </Card>
 
-            <Card className="border-border overflow-hidden group hover:shadow-lg transition-shadow">
+            <Card
+              className="border-border overflow-hidden group hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => setSelectedScreenshot({
+                image: "/screenshots/geracao-pdfs-lote.png",
+                title: "Geração em Lote",
+                description: "Gere centenas de documentos personalizados com apenas um clique. Selecione seu perfil de planilha e documento, escolha o arquivo Excel, e o sistema processará automaticamente todas as linhas, criando um PDF personalizado para cada registro."
+              })}
+            >
               <CardContent className="p-0">
                 <div className="relative overflow-hidden">
                   <img
@@ -187,7 +221,14 @@ const Home = () => {
               </CardContent>
             </Card>
 
-            <Card className="border-border overflow-hidden group hover:shadow-lg transition-shadow">
+            <Card
+              className="border-border overflow-hidden group hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => setSelectedScreenshot({
+                image: "/screenshots/pdfs-gerados.png",
+                title: "Gerenciamento Completo",
+                description: "Visualize, organize e gerencie todos os documentos gerados. A interface de gerenciamento permite buscar, filtrar, visualizar e organizar todos os PDFs criados, facilitando o acesso e controle dos seus documentos."
+              })}
+            >
               <CardContent className="p-0">
                 <div className="relative overflow-hidden">
                   <img
@@ -315,6 +356,25 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+      {/* Screenshot Dialog */}
+      <Dialog open={!!selectedScreenshot} onOpenChange={() => setSelectedScreenshot(null)}>
+        <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{selectedScreenshot?.title}</DialogTitle>
+            <DialogDescription>
+              {selectedScreenshot?.description}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-4">
+            <img
+              src={selectedScreenshot?.image}
+              alt={selectedScreenshot?.title}
+              className="w-full h-auto rounded-lg border border-border"
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
