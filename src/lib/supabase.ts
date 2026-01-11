@@ -26,10 +26,9 @@ export interface Plan {
   id: string
   name: string
   description: string | null
-  price_monthly: number
-  price_yearly: number
-  stripe_price_id_monthly: string | null
-  stripe_price_id_yearly: string | null
+  price: number
+  billing_cycle: 'MONTHLY' | 'YEARLY'
+  stripe_price_id: string | null
   stripe_product_id: string | null
   features: any
   is_active: boolean

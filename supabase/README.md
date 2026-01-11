@@ -99,27 +99,32 @@ Execute o script `supabase/sql/stripe_wrapper.sql` no SQL Editor.
 - Views combinando dados locais com Stripe
 - Função de sincronização
 
-### 4. Criar Produtos e Preços no Stripe
+### 4. Criar Produto e Preços no Stripe
 
 No Stripe Dashboard, crie:
 
-1. **Produtos:**
-   - Básico
-   - Profissional
-   - Empresarial
+1. **Produto:**
+   - Nome: **PDF Generator Hub**
+   - Descrição: Acesso completo ao sistema de geração de PDFs
 
-2. **Preços para cada produto:**
-   - Monthly (mensal)
-   - Yearly (anual)
+2. **Preços para o produto:**
+   - **Monthly (mensal)**: R$ 49,90/mês
+   - **Yearly (anual)**: R$ 499,00/ano
 
-3. Anote os IDs dos preços e atualize a tabela `plans`:
+3. Anote os IDs e atualize a tabela `plans`:
 
 ```sql
+-- Atualizar plano mensal
 UPDATE plans SET
   stripe_product_id = 'prod_xxx',
-  stripe_price_id_monthly = 'price_xxx',
-  stripe_price_id_yearly = 'price_yyy'
-WHERE name = 'Profissional';
+  stripe_price_id = 'price_monthly_xxx'
+WHERE billing_cycle = 'MONTHLY';
+
+-- Atualizar plano anual
+UPDATE plans SET
+  stripe_product_id = 'prod_xxx',
+  stripe_price_id = 'price_yearly_xxx'
+WHERE billing_cycle = 'YEARLY';
 ```
 
 ## 🎯 Deploy das Edge Functions

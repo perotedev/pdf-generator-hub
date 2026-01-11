@@ -3,17 +3,16 @@ create table if not exists public.plans (
   id uuid not null default gen_random_uuid(),
   name text not null,
   description text null,
-  price_monthly numeric(10, 2) not null,
-  price_yearly numeric(10, 2) not null,
-  stripe_price_id_monthly text null,
-  stripe_price_id_yearly text null,
+  price numeric(10, 2) not null,
+  billing_cycle text not null check (billing_cycle in ('MONTHLY', 'YEARLY')),
+  stripe_price_id text null,
   stripe_product_id text null,
   features jsonb null,
   is_active boolean not null default true,
   created_at timestamp with time zone not null default now(),
   updated_at timestamp with time zone not null default now(),
   constraint plans_pkey primary key (id),
-  constraint plans_name_key unique (name)
+  constraint plans_name_billing_cycle_key unique (name, billing_cycle)
 ) tablespace pg_default;
 
 -- Tabela de assinaturas
@@ -161,28 +160,21 @@ create policy "Only admins can manage standalone licenses"
     )
   );
 
--- Inserir planos iniciais
-insert into public.plans (name, description, price_monthly, price_yearly, features)
+-- Inserir planos iniciais (Mensal e Anual)
+insert into public.plans (name, description, price, billing_cycle, features)
 values
   (
-    'Básico',
-    'Plano ideal para começar',
-    29.00,
-    290.00,
-    '{"max_documents": 100, "support": "email", "features": ["Geração em lote", "Templates personalizados"]}'::jsonb
+    'PDF Generator Hub',
+    'Plano Mensal - Acesso completo ao sistema',
+    49.90,
+    'MONTHLY',
+    '{"features": ["Geração ilimitada de PDFs", "Templates personalizados", "Suporte prioritário", "Atualizações automáticas"]}'::jsonb
   ),
   (
-    'Profissional',
-    'Para uso profissional',
-    49.00,
-    468.00,
-    '{"max_documents": 500, "support": "priority", "features": ["Geração em lote", "Templates personalizados", "Suporte prioritário", "API Access"]}'::jsonb
-  ),
-  (
-    'Empresarial',
-    'Solução completa para empresas',
-    99.00,
-    990.00,
-    '{"max_documents": -1, "support": "dedicated", "features": ["Documentos ilimitados", "Templates personalizados", "Suporte dedicado", "API Access", "White label"]}'::jsonb
+    'PDF Generator Hub',
+    'Plano Anual - Acesso completo ao sistema com desconto',
+    499.00,
+    'YEARLY',
+    '{"features": ["Geração ilimitada de PDFs", "Templates personalizados", "Suporte prioritário", "Atualizações automáticas", "2 meses grátis"]}'::jsonb
   )
-on conflict (name) do nothing;
+on conflict (name, billing_cycle) do nothing;

@@ -5,25 +5,41 @@
 create extension if not exists wrappers with schema extensions;
 
 -- 2. Criar o Foreign Data Wrapper para Stripe
--- NOTA: Você precisa substituir 'YOUR_STRIPE_SECRET_KEY' pela sua chave secreta do Stripe
--- Isso deve ser feito via interface do Supabase ou variáveis de ambiente
+-- NOTA: A secret key deve ser configurada no Vault do Supabase
+-- Se já existir, o comando DROP não fará nada (usando cascade apenas se necessário)
 
-create foreign data wrapper if not exists stripe_wrapper
-  handler stripe_fdw_handler
-  validator stripe_fdw_validator;
+do $$
+begin
+  if not exists (
+    select 1 from pg_foreign_data_wrapper where fdwname = 'stripe_wrapper'
+  ) then
+    create foreign data wrapper stripe_wrapper
+      handler stripe_fdw_handler
+      validator stripe_fdw_validator;
+  end if;
+end $$;
 
 -- 3. Criar o servidor Stripe
--- IMPORTANTE: Configure a secret key nas variáveis de ambiente do Supabase
-create server if not exists stripe_server
-  foreign data wrapper stripe_wrapper
-  options (
-    api_key_id 'stripe_secret_key'  -- Referência para a chave armazenada no Vault do Supabase
-  );
+-- IMPORTANTE: Configure a secret key 'stripe_secret_key' no Vault do Supabase antes de executar
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_foreign_server where srvname = 'stripe_server'
+  ) then
+    create server stripe_server
+      foreign data wrapper stripe_wrapper
+      options (
+        api_key_id 'stripe_secret_key'
+      );
+  end if;
+end $$;
 
 -- 4. Criar tabelas estrangeiras para acessar dados do Stripe
 
 -- Customers do Stripe
-create foreign table if not exists stripe_customers (
+drop foreign table if exists stripe_customers cascade;
+create foreign table stripe_customers (
   id text,
   email text,
   name text,
@@ -37,7 +53,8 @@ options (
 );
 
 -- Subscriptions do Stripe
-create foreign table if not exists stripe_subscriptions (
+drop foreign table if exists stripe_subscriptions cascade;
+create foreign table stripe_subscriptions (
   id text,
   customer text,
   status text,
@@ -54,7 +71,8 @@ options (
 );
 
 -- Products do Stripe
-create foreign table if not exists stripe_products (
+drop foreign table if exists stripe_products cascade;
+create foreign table stripe_products (
   id text,
   name text,
   description text,
@@ -68,7 +86,8 @@ options (
 );
 
 -- Prices do Stripe
-create foreign table if not exists stripe_prices (
+drop foreign table if exists stripe_prices cascade;
+create foreign table stripe_prices (
   id text,
   product text,
   active boolean,
@@ -84,7 +103,8 @@ options (
 );
 
 -- Payment Intents do Stripe
-create foreign table if not exists stripe_payment_intents (
+drop foreign table if exists stripe_payment_intents cascade;
+create foreign table stripe_payment_intents (
   id text,
   customer text,
   amount bigint,
@@ -99,7 +119,8 @@ options (
 );
 
 -- Invoices do Stripe
-create foreign table if not exists stripe_invoices (
+drop foreign table if exists stripe_invoices cascade;
+create foreign table stripe_invoices (
   id text,
   customer text,
   subscription text,
@@ -123,8 +144,10 @@ select
   s.id,
   s.user_id,
   s.plan_id,
+  p.name as plan_name,
+  p.billing_cycle,
+  p.price,
   s.status as local_status,
-  s.billing_cycle,
   s.current_period_start,
   s.current_period_end,
   s.cancel_at_period_end,
@@ -132,6 +155,7 @@ select
   ss.status as stripe_status,
   ss.attrs as stripe_data
 from public.subscriptions s
+left join public.plans p on s.plan_id = p.id
 left join stripe_subscriptions ss on s.stripe_subscription_id = ss.id;
 
 -- View de pagamentos com dados do Stripe
