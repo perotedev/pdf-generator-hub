@@ -65,11 +65,40 @@ const Registro = () => {
     setIsLoading(true);
 
     try {
-      await authApi.register(email, password, name);
+      // Criar usuário no Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name: name,
+          },
+        },
+      });
+
+      if (authError) throw authError;
+
+      if (authData.user) {
+        // Criar registro na tabela public.users
+        const { error: dbError } = await supabase
+          .from('users')
+          .insert({
+            id: authData.user.id,
+            email: email,
+            name: name,
+            password_hash: 'hashed', // placeholder, a senha real está no auth.users
+            role: 'USER',
+            status: 'ACTIVE',
+          });
+
+        if (dbError) {
+          console.error('Error creating user in database:', dbError);
+        }
+      }
 
       toast({
         title: "Conta criada com sucesso!",
-        description: "Redirecionando para o login...",
+        description: "Você já pode fazer login.",
       });
 
       navigate("/login");
@@ -99,10 +128,8 @@ const Registro = () => {
         throw error;
       }
 
-      toast({
-        title: "Conta criada com Google!",
-        description: "Redirecionando para o dashboard...",
-      });
+      // Não mostrar toast aqui, pois o usuário será redirecionado para o Google
+      // O toast será mostrado apenas se houver erro
     } catch (error) {
       toast({
         title: "Erro ao registrar com Google",

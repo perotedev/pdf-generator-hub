@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { FileText } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
@@ -13,10 +13,17 @@ import { supabase } from "@/lib/supabase";
 const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  // Redirecionar se já estiver autenticado
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,10 +64,8 @@ const Login = () => {
         throw error;
       }
 
-      toast({
-        title: "Login com Google realizado!",
-        description: "Redirecionando para o dashboard...",
-      });
+      // Não mostrar toast aqui, pois o usuário será redirecionado para o Google
+      // O toast será mostrado apenas se houver erro
     } catch (error) {
       toast({
         title: "Erro ao fazer login com Google",

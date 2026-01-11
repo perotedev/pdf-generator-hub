@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { FileText } from "lucide-react";
+import { LINKS } from "@/lib/constants";
 
 const PublicFooter = () => {
   return (
@@ -63,14 +64,14 @@ const PublicFooter = () => {
             <h4 className="text-sm font-semibold text-foreground">Legal</h4>
             <ul className="space-y-2">
               <li>
-                <Link target="_blank" to="https://lppqqjivhmlqnkhdfnib.supabase.co/storage/v1/object/sign/pdf_generator/Termos_de_Uso_do_Sistema_PDF_Generator.pdf?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9mNjVjNmZjYi1jZDcxLTRiMGYtYmM4Yy02MTE4YThmNzMxYzYiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwZGZfZ2VuZXJhdG9yL1Rlcm1vc19kZV9Vc29fZG9fU2lzdGVtYV9QREZfR2VuZXJhdG9yLnBkZiIsImlhdCI6MTc2ODE2NzEwMiwiZXhwIjoxNzk5NzAzMTAyfQ.kBnZO51IoU2zYWVgKfw3ppNK09n3Ui3HQzyL9kBMk9Q" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                <a target="_blank" rel="noopener noreferrer" href={LINKS.termsOfService} className="text-sm text-muted-foreground hover:text-primary transition-colors">
                   Termos de Uso
-                </Link>
+                </a>
               </li>
               <li>
-                <Link target="_blank" to="https://lppqqjivhmlqnkhdfnib.supabase.co/storage/v1/object/sign/pdf_generator/Politica_de_Privacidade_PDF_Generator.pdf?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9mNjVjNmZjYi1jZDcxLTRiMGYtYmM4Yy02MTE4YThmNzMxYzYiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwZGZfZ2VuZXJhdG9yL1BvbGl0aWNhX2RlX1ByaXZhY2lkYWRlX1BERl9HZW5lcmF0b3IucGRmIiwiaWF0IjoxNzY4MTY3MTQ4LCJleHAiOjE3OTk3MDMxNDh9.H3HduGatTU8XZqvbr5QV9hMYnM2xdmZoIC-UnHOwYHA" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                <a target="_blank" rel="noopener noreferrer" href={LINKS.privacyPolicy} className="text-sm text-muted-foreground hover:text-primary transition-colors">
                   Política de Privacidade
-                </Link>
+                </a>
               </li>
             </ul>
           </div>

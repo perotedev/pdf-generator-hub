@@ -2,10 +2,12 @@ import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { FileText, Menu, X } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const PublicHeader = () => {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { isAuthenticated } = useAuth();
 
   const navLinks = [
     { href: "/", label: "Home" },
@@ -49,14 +51,22 @@ const PublicHeader = () => {
 
         {/* Desktop Auth Buttons */}
         <div className="hidden md:flex items-center gap-3">
-          <Link to="/login">
-            <Button variant="ghost" size="sm">
-              Entrar
-            </Button>
-          </Link>
-          <Link to="/registro">
-            <Button size="sm">Criar Conta</Button>
-          </Link>
+          {isAuthenticated ? (
+            <Link to="/dashboard">
+              <Button size="sm">Acessar Dashboard</Button>
+            </Link>
+          ) : (
+            <>
+              <Link to="/login">
+                <Button variant="ghost" size="sm">
+                  Entrar
+                </Button>
+              </Link>
+              <Link to="/registro">
+                <Button size="sm">Criar Conta</Button>
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -91,14 +101,22 @@ const PublicHeader = () => {
               </Link>
             ))}
             <div className="flex flex-col gap-2 pt-4 border-t border-border">
-              <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
-                <Button variant="ghost" className="w-full">
-                  Entrar
-                </Button>
-              </Link>
-              <Link to="/registro" onClick={() => setMobileMenuOpen(false)}>
-                <Button className="w-full">Criar Conta</Button>
-              </Link>
+              {isAuthenticated ? (
+                <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)}>
+                  <Button className="w-full">Acessar Dashboard</Button>
+                </Link>
+              ) : (
+                <>
+                  <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
+                    <Button variant="ghost" className="w-full">
+                      Entrar
+                    </Button>
+                  </Link>
+                  <Link to="/registro" onClick={() => setMobileMenuOpen(false)}>
+                    <Button className="w-full">Criar Conta</Button>
+                  </Link>
+                </>
+              )}
             </div>
           </nav>
         </div>
