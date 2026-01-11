@@ -35,18 +35,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const { data: { session } } = await supabase.auth.getSession();
 
-        if (session?.access_token) {
-          // Fetch user data from database
-          const userData = await authApi.getCurrentUser(session.access_token);
+        if (session?.user) {
+          // Buscar dados do usuário diretamente do banco via Supabase Client
+          // Isso funciona tanto para usuários OAuth quanto para login com email/senha
+          const { data: userData, error } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
 
-          const mappedUser: User = {
-            id: userData.id,
-            name: userData.name,
-            email: userData.email,
-            role: userData.role as UserRole,
-          };
+          if (error) {
+            console.error('Error fetching user data:', error);
+            throw error;
+          }
 
-          setUser(mappedUser);
+          if (userData) {
+            const mappedUser: User = {
+              id: userData.id,
+              name: userData.name,
+              email: userData.email,
+              role: userData.role as UserRole,
+            };
+
+            setUser(mappedUser);
+          }
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
@@ -59,18 +71,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.access_token) {
+      if (event === 'SIGNED_IN' && session?.user) {
         try {
-          const userData = await authApi.getCurrentUser(session.access_token);
+          // Buscar dados do usuário diretamente do banco via Supabase Client
+          const { data: userData, error } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
 
-          const mappedUser: User = {
-            id: userData.id,
-            name: userData.name,
-            email: userData.email,
-            role: userData.role as UserRole,
-          };
+          if (error) {
+            console.error('Error fetching user data:', error);
+            throw error;
+          }
 
-          setUser(mappedUser);
+          if (userData) {
+            const mappedUser: User = {
+              id: userData.id,
+              name: userData.name,
+              email: userData.email,
+              role: userData.role as UserRole,
+            };
+
+            setUser(mappedUser);
+          }
         } catch (error) {
           console.error('Error fetching user data:', error);
         }
