@@ -252,8 +252,8 @@ const Planos = () => {
                   Posso trocar de plano a qualquer momento?
                 </h3>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  Sim! Você pode fazer upgrade ou downgrade do seu plano a
-                  qualquer momento. O valor será calculado proporcionalmente.
+                  Não. A troca de plano só pode ser realizada após o término do período da assinatura vigente. 
+                  Após o fim da assinatura atual, você poderá contratar um novo plano de sua preferência.
                 </p>
               </CardContent>
             </Card>
