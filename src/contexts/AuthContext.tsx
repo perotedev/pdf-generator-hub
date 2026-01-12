@@ -100,13 +100,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
+      } else if (event === 'TOKEN_REFRESHED') {
+        console.log('Session token refreshed successfully');
       }
     });
 
+    // Listen for page visibility changes to refresh session
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState === 'visible') {
+        try {
+          // Refresh session when user returns to the tab
+          const { data: { session }, error } = await supabase.auth.getSession();
+
+          if (error) {
+            console.error('Error refreshing session:', error);
+            return;
+          }
+
+          if (!session) {
+            // Session expired, sign out
+            setUser(null);
+          }
+          // Note: We don't need to update user data here as onAuthStateChange handles it
+        } catch (error) {
+          console.error('Error handling visibility change:', error);
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     return () => {
       subscription.unsubscribe();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, []);
+  }, []); // Empty dependency array to avoid infinite loop
 
   const login = async (email: string, password: string) => {
     try {

@@ -24,14 +24,29 @@ const Planos = () => {
 
   useEffect(() => {
     let isMounted = true;
+    let timeoutId: NodeJS.Timeout;
 
-    const fetchPlans = async () => {
+    const fetchPlans = async (retryCount = 0) => {
+      if (!isMounted) return;
+
       try {
-        const { data: dbPlans, error } = await supabase
+        // Set a timeout for the request
+        const timeoutPromise = new Promise((_, reject) => {
+          timeoutId = setTimeout(() => reject(new Error('Request timeout')), 10000);
+        });
+
+        const fetchPromise = supabase
           .from('plans')
           .select('*')
           .eq('is_active', true)
           .order('billing_cycle');
+
+        const { data: dbPlans, error } = await Promise.race([
+          fetchPromise,
+          timeoutPromise
+        ]) as any;
+
+        clearTimeout(timeoutId);
 
         if (!isMounted) return;
 
@@ -95,53 +110,110 @@ const Planos = () => {
 
         if (isMounted) {
           setPlans(formattedPlans);
+          setLoading(false);
         }
+      } else if (isMounted) {
+        // No plans found, use fallback
+        console.warn('No plans found in database, using fallback values');
+        setPlans([
+          {
+            id: 'fallback-monthly',
+            name: "Mensal",
+            description: "Assinatura mensal do PDF Generator",
+            monthlyPrice: 49.90,
+            annualPrice: 49.90,
+            features: [
+              { text: "Geração ilimitada de PDFs", included: true },
+              { text: "Perfis ilimitados", included: true },
+              { text: "Templates ilimitados", included: true },
+              { text: "Assinaturas digitais", included: true },
+              { text: "Suporte por email", included: true },
+              { text: "Novas versões durante a validade", included: true },
+              { text: "Sem desconto", included: true, isDisadvantage: true },
+            ],
+            popular: false,
+            isMonthly: true,
+            billingCycle: 'MONTHLY',
+          },
+          {
+            id: 'fallback-yearly',
+            name: "Anual",
+            description: "Assinatura anual com desconto",
+            monthlyPrice: 41.58,
+            annualPrice: 499.00,
+            features: [
+              { text: "Geração ilimitada de PDFs", included: true },
+              { text: "Perfis ilimitados", included: true },
+              { text: "Templates ilimitados", included: true },
+              { text: "Assinaturas digitais", included: true },
+              { text: "Suporte prioritário", included: true },
+              { text: "Novas versões durante a validade", included: true },
+              { text: "Economia de 17%", included: true },
+            ],
+            popular: true,
+            isMonthly: false,
+            billingCycle: 'YEARLY',
+          },
+        ]);
+        setLoading(false);
       }
     } catch (error) {
       console.error('Error fetching plans:', error);
-      // Fallback to default values if API fails
-      setPlans([
-        {
-          id: 'fallback-monthly',
-          name: "Mensal",
-          description: "Assinatura mensal do PDF Generator",
-          monthlyPrice: 49.90,
-          annualPrice: 49.90,
-          features: [
-            { text: "Geração ilimitada de PDFs", included: true },
-            { text: "Perfis ilimitados", included: true },
-            { text: "Templates ilimitados", included: true },
-            { text: "Assinaturas digitais", included: true },
-            { text: "Suporte por email", included: true },
-            { text: "Novas versões durante a validade", included: true },
-            { text: "Sem desconto", included: true, isDisadvantage: true },
-          ],
-          popular: false,
-          isMonthly: true,
-          billingCycle: 'MONTHLY',
-        },
-        {
-          id: 'fallback-yearly',
-          name: "Anual",
-          description: "Assinatura anual com desconto",
-          monthlyPrice: 41.58,
-          annualPrice: 499.00,
-          features: [
-            { text: "Geração ilimitada de PDFs", included: true },
-            { text: "Perfis ilimitados", included: true },
-            { text: "Templates ilimitados", included: true },
-            { text: "Assinaturas digitais", included: true },
-            { text: "Suporte prioritário", included: true },
-            { text: "Novas versões durante a validade", included: true },
-            { text: "Economia de 17%", included: true },
-          ],
-          popular: true,
-          isMonthly: false,
-          billingCycle: 'YEARLY',
-        },
-      ]);
-    } finally {
+
+      // Retry logic - try up to 3 times
+      if (retryCount < 2 && isMounted) {
+        console.log(`Retrying... attempt ${retryCount + 2} of 3`);
+        setTimeout(() => {
+          if (isMounted) {
+            fetchPlans(retryCount + 1);
+          }
+        }, 2000 * (retryCount + 1)); // Exponential backoff
+        return;
+      }
+
+      // Fallback to default values if all retries fail
       if (isMounted) {
+        console.warn('All retry attempts failed, using fallback values');
+        setPlans([
+          {
+            id: 'fallback-monthly',
+            name: "Mensal",
+            description: "Assinatura mensal do PDF Generator",
+            monthlyPrice: 49.90,
+            annualPrice: 49.90,
+            features: [
+              { text: "Geração ilimitada de PDFs", included: true },
+              { text: "Perfis ilimitados", included: true },
+              { text: "Templates ilimitados", included: true },
+              { text: "Assinaturas digitais", included: true },
+              { text: "Suporte por email", included: true },
+              { text: "Novas versões durante a validade", included: true },
+              { text: "Sem desconto", included: true, isDisadvantage: true },
+            ],
+            popular: false,
+            isMonthly: true,
+            billingCycle: 'MONTHLY',
+          },
+          {
+            id: 'fallback-yearly',
+            name: "Anual",
+            description: "Assinatura anual com desconto",
+            monthlyPrice: 41.58,
+            annualPrice: 499.00,
+            features: [
+              { text: "Geração ilimitada de PDFs", included: true },
+              { text: "Perfis ilimitados", included: true },
+              { text: "Templates ilimitados", included: true },
+              { text: "Assinaturas digitais", included: true },
+              { text: "Suporte prioritário", included: true },
+              { text: "Novas versões durante a validade", included: true },
+              { text: "Economia de 17%", included: true },
+            ],
+            popular: true,
+            isMonthly: false,
+            billingCycle: 'YEARLY',
+          },
+        ]);
         setLoading(false);
       }
     }
@@ -151,6 +223,9 @@ const Planos = () => {
 
     return () => {
       isMounted = false;
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
     };
   }, []);
 

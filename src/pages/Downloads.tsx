@@ -32,46 +32,91 @@ const Downloads = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    let isMounted = true;
+    let timeoutId: NodeJS.Timeout;
+
+    const loadData = async (retryCount = 0) => {
+      if (!isMounted) return;
+
+      setIsLoading(true);
+      try {
+        // Set a timeout for the request
+        const timeoutPromise = new Promise((_, reject) => {
+          timeoutId = setTimeout(() => reject(new Error('Request timeout')), 10000);
+        });
+
+        const dataPromise = (async () => {
+          // Load versions
+          const allVersions = await db.systemVersions.getAll();
+          const activeVersions = allVersions.filter((v) => v.is_active);
+
+          const latest = activeVersions.find((v) => v.is_latest);
+          const previous = activeVersions
+            .filter((v) => !v.is_latest)
+            .sort((a, b) => new Date(b.release_date).getTime() - new Date(a.release_date).getTime())
+            .slice(0, 5);
+
+          // Load system settings
+          const settings = await db.systemSettings.getAll();
+          const userManual = settings.find((s) => s.key === "user_manual_url");
+          const systemDoc = settings.find((s) => s.key === "system_documentation_url");
+          const infoVideo = settings.find((s) => s.key === "info_video_url");
+
+          return {
+            latest,
+            previous,
+            settings: {
+              userManualUrl: userManual?.value || "",
+              systemDocUrl: systemDoc?.value || "",
+              infoVideoUrl: infoVideo?.value || "",
+            }
+          };
+        })();
+
+        const result = await Promise.race([dataPromise, timeoutPromise]) as Awaited<typeof dataPromise>;
+
+        clearTimeout(timeoutId);
+
+        if (isMounted) {
+          setLatestVersion(result.latest || null);
+          setPreviousVersions(result.previous);
+          setSystemSettings(result.settings);
+          setIsLoading(false);
+        }
+      } catch (error) {
+        console.error('Error loading downloads data:', error);
+
+        // Retry logic - try up to 2 times
+        if (retryCount < 1 && isMounted) {
+          console.log(`Retrying downloads load... attempt ${retryCount + 2} of 2`);
+          setTimeout(() => {
+            if (isMounted) {
+              loadData(retryCount + 1);
+            }
+          }, 2000);
+          return;
+        }
+
+        if (isMounted) {
+          toast({
+            title: "Erro ao carregar dados",
+            description: error instanceof Error ? error.message : "Não foi possível carregar as informações de download",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+        }
+      }
+    };
+
     loadData();
-  }, []);
 
-  const loadData = async () => {
-    setIsLoading(true);
-    try {
-      // Load versions
-      const allVersions = await db.systemVersions.getAll();
-      const activeVersions = allVersions.filter((v) => v.is_active);
-
-      const latest = activeVersions.find((v) => v.is_latest);
-      const previous = activeVersions
-        .filter((v) => !v.is_latest)
-        .sort((a, b) => new Date(b.release_date).getTime() - new Date(a.release_date).getTime())
-        .slice(0, 5);
-
-      setLatestVersion(latest || null);
-      setPreviousVersions(previous);
-
-      // Load system settings
-      const settings = await db.systemSettings.getAll();
-      const userManual = settings.find((s) => s.key === "user_manual_url");
-      const systemDoc = settings.find((s) => s.key === "system_documentation_url");
-      const infoVideo = settings.find((s) => s.key === "info_video_url");
-
-      setSystemSettings({
-        userManualUrl: userManual?.value || "",
-        systemDocUrl: systemDoc?.value || "",
-        infoVideoUrl: infoVideo?.value || "",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Erro ao carregar dados",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    return () => {
+      isMounted = false;
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [toast]);
 
   if (isLoading) {
     return (
