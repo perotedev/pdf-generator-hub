@@ -4,9 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { db, type SystemVersion } from "@/lib/supabase";
-import { Plus, RefreshCw, Save, Edit, Trash2, X, Check } from "lucide-react";
+import { Plus, RefreshCw, Save, Edit, Trash2, X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -14,15 +15,8 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
+import ReactMarkdown from "react-markdown";
 
 const VersoesDoSistema = () => {
   const { toast } = useToast();
@@ -182,11 +176,11 @@ const VersoesDoSistema = () => {
   }
 
   return (
-    <div className="container py-8">
-      <div className="mb-8 flex justify-between items-center">
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Versões do Sistema</h1>
-          <p className="text-muted-foreground mt-2">
+          <h1 className="text-2xl font-bold">Versões do Sistema</h1>
+          <p className="text-muted-foreground">
             Gerencie as versões disponíveis para download
           </p>
         </div>
@@ -196,81 +190,105 @@ const VersoesDoSistema = () => {
         </Button>
       </div>
 
-      <Card>
-        <CardHeader>
-          <div className="flex justify-between items-center">
-            <CardTitle>Lista de Versões</CardTitle>
-            <Button variant="outline" size="sm" onClick={loadVersions}>
-              <RefreshCw className="h-4 w-4" />
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Versão</TableHead>
-                <TableHead>Data de Lançamento</TableHead>
-                <TableHead>Tamanho</TableHead>
-                <TableHead className="text-center">Mais Recente</TableHead>
-                <TableHead className="text-center">Ativa</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {versions.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground">
-                    Nenhuma versão cadastrada
-                  </TableCell>
-                </TableRow>
-              ) : (
-                versions.map((version) => (
-                  <TableRow key={version.id}>
-                    <TableCell className="font-medium">{version.version}</TableCell>
-                    <TableCell>
-                      {new Date(version.release_date).toLocaleDateString('pt-BR')}
-                    </TableCell>
-                    <TableCell>{version.file_size || "-"}</TableCell>
-                    <TableCell className="text-center">
-                      {version.is_latest ? (
-                        <Check className="h-4 w-4 text-green-600 mx-auto" />
-                      ) : (
-                        <X className="h-4 w-4 text-gray-400 mx-auto" />
-                      )}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {version.is_active ? (
-                        <Check className="h-4 w-4 text-green-600 mx-auto" />
-                      ) : (
-                        <X className="h-4 w-4 text-gray-400 mx-auto" />
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-semibold">Lista de Versões</h2>
+          <Button variant="outline" size="sm" onClick={loadVersions}>
+            <RefreshCw className="h-4 w-4" />
+          </Button>
+        </div>
+
+        {versions.length === 0 ? (
+          <Card>
+            <CardContent className="py-12 text-center text-muted-foreground">
+              Nenhuma versão cadastrada
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-4">
+            {versions.map((version) => (
+              <Card
+                key={version.id}
+                className={version.is_latest ? "border-primary/50 bg-gradient-to-br from-primary/5 to-transparent" : ""}
+              >
+                <CardContent className="p-6">
+                  <div className="space-y-3">
+                    {/* Header with Version and Actions */}
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="text-lg font-semibold">v{version.version}</h3>
+                        {version.is_latest && (
+                          <Badge className="bg-primary text-primary-foreground">
+                            Mais Recente
+                          </Badge>
+                        )}
+                        {version.is_active ? (
+                          <Badge variant="outline" className="border-green-600 text-green-600">
+                            Ativa
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="border-gray-400 text-gray-400">
+                            Inativa
+                          </Badge>
+                        )}
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex gap-2 shrink-0">
                         <Button
                           variant="ghost"
-                          size="sm"
+                          size="icon"
                           onClick={() => openEditDialog(version)}
+                          title="Editar versão"
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
-                          size="sm"
+                          size="icon"
                           onClick={() => handleDelete(version.id)}
+                          title="Excluir versão"
                         >
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                    </div>
+
+                    {/* Date and Size */}
+                    <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        <span className="font-medium">Data:</span>
+                        {new Date(version.release_date).toLocaleDateString('pt-BR')}
+                      </div>
+                      {version.file_size && (
+                        <div className="flex items-center gap-1">
+                          <span className="font-medium">Tamanho:</span>
+                          {version.file_size}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Collapsible Release Notes */}
+                    {version.release_notes && (
+                      <div className="rounded-lg border bg-muted/30 p-3">
+                        <details className="group">
+                          <summary className="cursor-pointer list-none flex items-center justify-between text-sm font-semibold">
+                            <span>Notas de Lançamento</span>
+                            <span className="text-muted-foreground group-open:rotate-90 transition-transform">▶</span>
+                          </summary>
+                          <div className="mt-3 prose prose-sm max-w-none text-muted-foreground [&>*]:text-sm [&_ul]:mt-2 [&_ul]:mb-0">
+                            <ReactMarkdown>{version.release_notes}</ReactMarkdown>
+                          </div>
+                        </details>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Dialog para criar/editar versão */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
