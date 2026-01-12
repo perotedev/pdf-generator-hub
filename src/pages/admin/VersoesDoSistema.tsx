@@ -39,6 +39,7 @@ const VersoesDoSistema = () => {
   const [formFileSize, setFormFileSize] = useState("");
   const [formReleaseNotes, setFormReleaseNotes] = useState("");
   const [formMinRequirements, setFormMinRequirements] = useState("");
+  const [formMinProcessor, setFormMinProcessor] = useState("");
   const [formIsLatest, setFormIsLatest] = useState(false);
   const [formIsActive, setFormIsActive] = useState(true);
 
@@ -69,6 +70,7 @@ const VersoesDoSistema = () => {
     setFormFileSize("");
     setFormReleaseNotes("");
     setFormMinRequirements("");
+    setFormMinProcessor("");
     setFormIsLatest(false);
     setFormIsActive(true);
     setEditingVersion(null);
@@ -87,6 +89,7 @@ const VersoesDoSistema = () => {
     setFormFileSize(version.file_size || "");
     setFormReleaseNotes(version.release_notes || "");
     setFormMinRequirements(version.minimum_requirements || "");
+    setFormMinProcessor(version.minimum_processor || "");
     setFormIsLatest(version.is_latest);
     setFormIsActive(version.is_active);
     setIsDialogOpen(true);
@@ -104,6 +107,7 @@ const VersoesDoSistema = () => {
         file_size: formFileSize || null,
         release_notes: formReleaseNotes || null,
         minimum_requirements: formMinRequirements || null,
+        minimum_processor: formMinProcessor || null,
         is_latest: formIsLatest,
         is_active: formIsActive,
       };
@@ -332,15 +336,33 @@ const VersoesDoSistema = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="minRequirements">Requisitos Mínimos</Label>
+              <Label htmlFor="minProcessor">Processador Mínimo</Label>
+              <Input
+                id="minProcessor"
+                type="text"
+                placeholder="Intel Core i3 ou equivalente"
+                value={formMinProcessor}
+                onChange={(e) => setFormMinProcessor(e.target.value)}
+                disabled={isSaving}
+              />
+              <p className="text-xs text-muted-foreground">
+                Requisitos mínimos do processador
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="minRequirements">Outros Requisitos Mínimos</Label>
               <Textarea
                 id="minRequirements"
-                placeholder="Windows 10 ou superior&#10;4 GB RAM&#10;500 MB espaço em disco"
+                placeholder="Windows 10 ou superior, 4 GB RAM, 500 MB espaço em disco (separados por vírgula ou linha)"
                 value={formMinRequirements}
                 onChange={(e) => setFormMinRequirements(e.target.value)}
                 disabled={isSaving}
                 rows={3}
               />
+              <p className="text-xs text-muted-foreground">
+                Sistema operacional, RAM, espaço em disco, etc.
+              </p>
             </div>
 
             <div className="flex gap-6">

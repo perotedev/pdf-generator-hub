@@ -118,6 +118,13 @@ const Downloads = () => {
                 v{latestVersion.version}
               </Badge>
             </div>
+            <Button
+              className="gap-2"
+              onClick={() => window.open(latestVersion.download_url, "_blank")}
+            >
+              <Download className="h-4 w-4" />
+              Baixar
+            </Button>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -133,6 +140,12 @@ const Downloads = () => {
               <HardDrive className="h-4 w-4 text-muted-foreground" />
               <span className="text-muted-foreground">
                 {latestVersion.file_size || "N/A"}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Monitor className="h-4 w-4 text-muted-foreground" />
+              <span className="text-muted-foreground">
+                Windows (64-bit)
               </span>
             </div>
           </div>
@@ -152,74 +165,56 @@ const Downloads = () => {
             </div>
           )}
 
-          {/* Downloads Section */}
-          <div className="space-y-3">
-            {/* Instalador */}
-            <div>
-              <h4 className="text-sm font-semibold text-foreground mb-2">
-                Instalador
-              </h4>
+          {/* Recursos Adicionais */}
+          <div>
+            <h4 className="text-sm font-semibold text-foreground mb-2">
+              Recursos Adicionais
+            </h4>
+            <div className="flex flex-wrap gap-2">
               <Button
-                className="w-full gap-2"
-                onClick={() => window.open(latestVersion.download_url, "_blank")}
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => systemSettings.userManualUrl
+                  ? window.open(systemSettings.userManualUrl, "_blank")
+                  : null}
+                disabled={!systemSettings.userManualUrl}
               >
-                <Monitor className="h-4 w-4" />
-                Windows (64-bit)
-                <Download className="h-4 w-4" />
+                <BookOpen className="h-4 w-4" />
+                Manual
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => systemSettings.systemDocUrl
+                  ? window.open(systemSettings.systemDocUrl, "_blank")
+                  : null}
+                disabled={!systemSettings.systemDocUrl}
+              >
+                <FileText className="h-4 w-4" />
+                Documentação
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => systemSettings.infoVideoUrl
+                  ? window.open(systemSettings.infoVideoUrl, "_blank")
+                  : null}
+                disabled={!systemSettings.infoVideoUrl}
+              >
+                <Video className="h-4 w-4" />
+                Vídeo
               </Button>
             </div>
-
-            {/* Recursos Adicionais */}
-            <div>
-              <h4 className="text-sm font-semibold text-foreground mb-2">
-                Recursos Adicionais
-              </h4>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2"
-                  onClick={() => systemSettings.userManualUrl
-                    ? window.open(systemSettings.userManualUrl, "_blank")
-                    : null}
-                  disabled={!systemSettings.userManualUrl}
-                >
-                  <BookOpen className="h-4 w-4" />
-                  Manual
-                </Button>
-
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2"
-                  onClick={() => systemSettings.systemDocUrl
-                    ? window.open(systemSettings.systemDocUrl, "_blank")
-                    : null}
-                  disabled={!systemSettings.systemDocUrl}
-                >
-                  <FileText className="h-4 w-4" />
-                  Documentação
-                </Button>
-
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2"
-                  onClick={() => systemSettings.infoVideoUrl
-                    ? window.open(systemSettings.infoVideoUrl, "_blank")
-                    : null}
-                  disabled={!systemSettings.infoVideoUrl}
-                >
-                  <Video className="h-4 w-4" />
-                  Vídeo
-                </Button>
-              </div>
-              {!systemSettings.userManualUrl && !systemSettings.systemDocUrl && !systemSettings.infoVideoUrl && (
-                <p className="text-xs text-muted-foreground mt-2">
-                  Recursos serão disponibilizados em breve
-                </p>
-              )}
-            </div>
+            {!systemSettings.userManualUrl && !systemSettings.systemDocUrl && !systemSettings.infoVideoUrl && (
+              <p className="text-xs text-muted-foreground mt-2">
+                Recursos serão disponibilizados em breve
+              </p>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -268,7 +263,7 @@ const Downloads = () => {
       )}
 
       {/* System Requirements */}
-      {latestVersion.minimum_requirements && (
+      {(latestVersion.minimum_requirements || latestVersion.minimum_processor) && (
         <Card className="border-border">
           <CardHeader>
             <CardTitle>Requisitos do Sistema</CardTitle>
@@ -280,8 +275,14 @@ const Downloads = () => {
                 Windows
               </h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
+                {latestVersion.minimum_processor && (
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary mt-1">•</span>
+                    <span><strong>Processador:</strong> {latestVersion.minimum_processor}</span>
+                  </li>
+                )}
                 {latestVersion.minimum_requirements
-                  .split(/[,\n]/)
+                  ?.split(/[,\n]/)
                   .map(req => req.trim())
                   .filter(req => req.length > 0)
                   .map((requirement, index) => (
