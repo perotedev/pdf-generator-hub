@@ -8,6 +8,7 @@ import { FileText, Eye, EyeOff, CheckCircle2, XCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { authApi, supabase } from "@/lib/supabase";
+import { LINKS } from "@/lib/constants";
 
 const Registro = () => {
   const navigate = useNavigate();
@@ -24,13 +25,13 @@ const Registro = () => {
   useEffect(() => {
     const calculateStrength = (pwd: string) => {
       if (!pwd) return { score: 0, label: "", color: "" };
-      
+
       let score = 0;
       if (pwd.length >= 8) score += 1;
       if (/[A-Z]/.test(pwd)) score += 1;
       if (/[a-z]/.test(pwd)) score += 1;
       if (/[0-9]/.test(pwd)) score += 1;
-      if (/[@$!%*?&]/.test(pwd)) score += 1;
+      if (/[^A-Za-z0-9]/.test(pwd)) score += 1; // Qualquer caractere especial
 
       if (score <= 2) return { score, label: "Fraca", color: "bg-destructive" };
       if (score <= 4) return { score, label: "Média", color: "bg-yellow-500" };
@@ -52,8 +53,14 @@ const Registro = () => {
       return;
     }
 
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-    if (!passwordRegex.test(password)) {
+    // Validar requisitos mínimos de senha
+    const hasMinLength = password.length >= 8;
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumber = /\d/.test(password);
+    const hasSpecialChar = /[^A-Za-z0-9]/.test(password);
+
+    if (!hasMinLength || !hasUpperCase || !hasLowerCase || !hasNumber || !hasSpecialChar) {
       toast({
         title: "Senha Insegura",
         description: "A senha deve ter no mínimo 8 caracteres, incluindo letras maiúsculas, minúsculas, números e caracteres especiais.",
@@ -94,14 +101,31 @@ const Registro = () => {
         if (dbError) {
           console.error('Error creating user in database:', dbError);
         }
+
+        // Fazer login automaticamente após registro bem-sucedido
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (signInError) {
+          console.error('Error signing in after registration:', signInError);
+          // Se falhar o login automático, redirecionar para página de login
+          toast({
+            title: "Conta criada com sucesso!",
+            description: "Por favor, faça login.",
+          });
+          navigate("/login");
+          return;
+        }
+
+        // Login bem-sucedido, redirecionar para dashboard
+        toast({
+          title: "Conta criada com sucesso!",
+          description: "Bem-vindo ao PDF Generator!",
+        });
+        navigate("/dashboard");
       }
-
-      toast({
-        title: "Conta criada com sucesso!",
-        description: "Você já pode fazer login.",
-      });
-
-      navigate("/login");
     } catch (error: any) {
       toast({
         title: "Erro ao criar conta",
@@ -198,6 +222,7 @@ const Registro = () => {
                 autoComplete="off"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                disabled={isLoading}
                 required
               />
             </div>
@@ -210,6 +235,7 @@ const Registro = () => {
                 autoComplete="off"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                disabled={isLoading}
                 required
               />
             </div>
@@ -223,12 +249,14 @@ const Registro = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="pr-10"
+                  disabled={isLoading}
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  disabled={isLoading}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -257,12 +285,14 @@ const Registro = () => {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className="pr-10"
+                  disabled={isLoading}
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  disabled={isLoading}
                 >
                   {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -297,13 +327,13 @@ const Registro = () => {
 
           <p className="text-center text-xs text-muted-foreground">
             Ao criar uma conta, você concorda com nossos{" "}
-            <Link target="_blank" to="https://lppqqjivhmlqnkhdfnib.supabase.co/storage/v1/object/sign/pdf_generator/Termos_de_Uso_do_Sistema_PDF_Generator.pdf?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9mNjVjNmZjYi1jZDcxLTRiMGYtYmM4Yy02MTE4YThmNzMxYzYiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwZGZfZ2VuZXJhdG9yL1Rlcm1vc19kZV9Vc29fZG9fU2lzdGVtYV9QREZfR2VuZXJhdG9yLnBkZiIsImlhdCI6MTc2ODE2NzEwMiwiZXhwIjoxNzk5NzAzMTAyfQ.kBnZO51IoU2zYWVgKfw3ppNK09n3Ui3HQzyL9kBMk9Q" className="underline hover:text-primary">
+            <a target="_blank" rel="noopener noreferrer" href={LINKS.termsOfService} className="underline hover:text-primary">
               Termos de Uso
-            </Link>{" "}
+            </a>{" "}
             e{" "}
-            <Link target="_blank" to="https://lppqqjivhmlqnkhdfnib.supabase.co/storage/v1/object/sign/pdf_generator/Politica_de_Privacidade_PDF_Generator.pdf?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9mNjVjNmZjYi1jZDcxLTRiMGYtYmM4Yy02MTE4YThmNzMxYzYiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwZGZfZ2VuZXJhdG9yL1BvbGl0aWNhX2RlX1ByaXZhY2lkYWRlX1BERl9HZW5lcmF0b3IucGRmIiwiaWF0IjoxNzY4MTY3MTQ4LCJleHAiOjE3OTk3MDMxNDh9.H3HduGatTU8XZqvbr5QV9hMYnM2xdmZoIC-UnHOwYHA" className="underline hover:text-primary">
+            <a target="_blank" rel="noopener noreferrer" href={LINKS.privacyPolicy} className="underline hover:text-primary">
               Política de Privacidade
-            </Link>
+            </a>
             .
           </p>
         </CardContent>
