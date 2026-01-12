@@ -39,7 +39,8 @@ serve(async (req) => {
   }
 
   try {
-    const supabase = createClient(
+    // Cliente para operações no banco de dados
+    const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
@@ -52,17 +53,34 @@ serve(async (req) => {
       )
     }
 
-    const token = authHeader.replace('Bearer ', '')
-    const { data: { user: authUser }, error: authError } = await supabase.auth.getUser(token)
+    // Criar cliente com o token do usuário para validação
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: {
+            Authorization: authHeader,
+          },
+        },
+      }
+    )
+
+    // Validar o token usando o cliente com anon key
+    const { data: { user: authUser }, error: authError } = await supabaseClient.auth.getUser()
 
     if (authError || !authUser) {
+      console.error('Auth error:', authError)
       return new Response(
-        JSON.stringify({ error: 'Invalid token' }),
+        JSON.stringify({ code: 401, message: 'Invalid JWT' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
       )
     }
 
-    const currentUserId = authUser.user_metadata?.user_id
+    const currentUserId = authUser.id
+
+    // Usar supabaseAdmin para todas as operações no banco
+    const supabase = supabaseAdmin
 
     const url = new URL(req.url)
     const action = url.searchParams.get('action')
