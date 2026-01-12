@@ -54,24 +54,24 @@ const Home = () => {
 
   const testimonials = [
     {
-      name: "Maria Santos",
-      role: "CTO, TechCorp",
+      name: "Mayk Renner",
+      role: "CEO da MS Company",
       content:
-        "O PDF Generator transformou nossa operação. Geramos milhares de relatórios diariamente sem problemas.",
+        "O PDF Generator transformou nossa operação. Geramos muitos formulários preenchidos diariamente sem problemas.",
       rating: 5,
     },
     {
-      name: "Carlos Oliveira",
-      role: "Desenvolvedor Sênior",
+      name: "Milca Nagata",
+      role: "Fisioterapeuta",
       content:
-        "API simples, documentação excelente e suporte responsivo. Exatamente o que precisávamos.",
+        "Excelente, ajudou a automatizar muitos documentos da clínica de maneira fácil e rápida.",
       rating: 5,
     },
     {
-      name: "Ana Costa",
-      role: "Product Manager",
+      name: "Rodrigo Mascarenhas",
+      role: "Desenvolvedor na CKR LTDA",
       content:
-        "A facilidade de integração e a qualidade dos PDFs gerados superou nossas expectativas.",
+        "Ferramenta indispensável para nossa equipe. Automatizamos certificados com eficiência.",
       rating: 5,
     },
   ];
