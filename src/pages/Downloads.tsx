@@ -263,35 +263,40 @@ const Downloads = () => {
       )}
 
       {/* System Requirements */}
-      {(latestVersion.minimum_requirements || latestVersion.minimum_processor) && (
+      {(latestVersion.minimum_os || latestVersion.minimum_processor || latestVersion.minimum_ram || latestVersion.minimum_storage || latestVersion.minimum_requirements) && (
         <Card className="border-border">
           <CardHeader>
             <CardTitle>Requisitos do Sistema</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="max-w-2xl">
-              <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2">
-                <Monitor className="h-5 w-5" />
-                Windows
-              </h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                {latestVersion.minimum_processor && (
-                  <li className="flex items-start gap-2">
-                    <span className="text-primary mt-1">•</span>
-                    <span><strong>Processador:</strong> {latestVersion.minimum_processor}</span>
-                  </li>
+              <div className="space-y-2 text-sm text-muted-foreground">
+                {latestVersion.minimum_os && (
+                  <div>
+                    <strong>Sistema Operacional:</strong> {latestVersion.minimum_os}
+                  </div>
                 )}
-                {latestVersion.minimum_requirements
-                  ?.split(/[,\n]/)
-                  .map(req => req.trim())
-                  .filter(req => req.length > 0)
-                  .map((requirement, index) => (
-                    <li key={index} className="flex items-start gap-2">
-                      <span className="text-primary mt-1">•</span>
-                      <span>{requirement}</span>
-                    </li>
-                  ))}
-              </ul>
+                {latestVersion.minimum_processor && (
+                  <div>
+                    <strong>Processador:</strong> {latestVersion.minimum_processor}
+                  </div>
+                )}
+                {latestVersion.minimum_ram && (
+                  <div>
+                    <strong>Memória RAM:</strong> {latestVersion.minimum_ram}
+                  </div>
+                )}
+                {latestVersion.minimum_storage && (
+                  <div>
+                    <strong>Armazenamento:</strong> {latestVersion.minimum_storage}
+                  </div>
+                )}
+                {latestVersion.minimum_requirements && (
+                  <div>
+                    <strong>Outros:</strong> {latestVersion.minimum_requirements}
+                  </div>
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>

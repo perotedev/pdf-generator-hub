@@ -533,6 +533,9 @@ export interface SystemVersion {
   is_active: boolean
   minimum_requirements: string | null
   minimum_processor: string | null
+  minimum_ram: string | null
+  minimum_storage: string | null
+  minimum_os: string | null
   created_at: string
   updated_at: string
 }

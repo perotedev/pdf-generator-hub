@@ -40,6 +40,9 @@ const VersoesDoSistema = () => {
   const [formReleaseNotes, setFormReleaseNotes] = useState("");
   const [formMinRequirements, setFormMinRequirements] = useState("");
   const [formMinProcessor, setFormMinProcessor] = useState("");
+  const [formMinRam, setFormMinRam] = useState("");
+  const [formMinStorage, setFormMinStorage] = useState("");
+  const [formMinOs, setFormMinOs] = useState("");
   const [formIsLatest, setFormIsLatest] = useState(false);
   const [formIsActive, setFormIsActive] = useState(true);
 
@@ -71,6 +74,9 @@ const VersoesDoSistema = () => {
     setFormReleaseNotes("");
     setFormMinRequirements("");
     setFormMinProcessor("");
+    setFormMinRam("");
+    setFormMinStorage("");
+    setFormMinOs("");
     setFormIsLatest(false);
     setFormIsActive(true);
     setEditingVersion(null);
@@ -90,6 +96,9 @@ const VersoesDoSistema = () => {
     setFormReleaseNotes(version.release_notes || "");
     setFormMinRequirements(version.minimum_requirements || "");
     setFormMinProcessor(version.minimum_processor || "");
+    setFormMinRam(version.minimum_ram || "");
+    setFormMinStorage(version.minimum_storage || "");
+    setFormMinOs(version.minimum_os || "");
     setFormIsLatest(version.is_latest);
     setFormIsActive(version.is_active);
     setIsDialogOpen(true);
@@ -108,6 +117,9 @@ const VersoesDoSistema = () => {
         release_notes: formReleaseNotes || null,
         minimum_requirements: formMinRequirements || null,
         minimum_processor: formMinProcessor || null,
+        minimum_ram: formMinRam || null,
+        minimum_storage: formMinStorage || null,
+        minimum_os: formMinOs || null,
         is_latest: formIsLatest,
         is_active: formIsActive,
       };
@@ -335,33 +347,68 @@ const VersoesDoSistema = () => {
               </p>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="minProcessor">Processador Mínimo</Label>
-              <Input
-                id="minProcessor"
-                type="text"
-                placeholder="Intel Core i3 ou equivalente"
-                value={formMinProcessor}
-                onChange={(e) => setFormMinProcessor(e.target.value)}
-                disabled={isSaving}
-              />
-              <p className="text-xs text-muted-foreground">
-                Requisitos mínimos do processador
-              </p>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="minOs">Sistema Operacional</Label>
+                <Input
+                  id="minOs"
+                  type="text"
+                  placeholder="Windows 10 ou superior"
+                  value={formMinOs}
+                  onChange={(e) => setFormMinOs(e.target.value)}
+                  disabled={isSaving}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="minProcessor">Processador</Label>
+                <Input
+                  id="minProcessor"
+                  type="text"
+                  placeholder="Intel Core i3 ou equivalente"
+                  value={formMinProcessor}
+                  onChange={(e) => setFormMinProcessor(e.target.value)}
+                  disabled={isSaving}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="minRam">Memória RAM</Label>
+                <Input
+                  id="minRam"
+                  type="text"
+                  placeholder="4 GB"
+                  value={formMinRam}
+                  onChange={(e) => setFormMinRam(e.target.value)}
+                  disabled={isSaving}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="minStorage">Armazenamento</Label>
+                <Input
+                  id="minStorage"
+                  type="text"
+                  placeholder="500 MB"
+                  value={formMinStorage}
+                  onChange={(e) => setFormMinStorage(e.target.value)}
+                  disabled={isSaving}
+                />
+              </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="minRequirements">Outros Requisitos Mínimos</Label>
-              <Textarea
+              <Label htmlFor="minRequirements">Outros Requisitos (Opcional)</Label>
+              <Input
                 id="minRequirements"
-                placeholder="Windows 10 ou superior, 4 GB RAM, 500 MB espaço em disco (separados por vírgula ou linha)"
+                type="text"
+                placeholder="Placa de vídeo dedicada, DirectX 11, etc."
                 value={formMinRequirements}
                 onChange={(e) => setFormMinRequirements(e.target.value)}
                 disabled={isSaving}
-                rows={3}
               />
               <p className="text-xs text-muted-foreground">
-                Sistema operacional, RAM, espaço em disco, etc.
+                Requisitos adicionais não contemplados acima
               </p>
             </div>
 
