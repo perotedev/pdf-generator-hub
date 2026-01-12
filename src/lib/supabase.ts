@@ -83,6 +83,7 @@ export interface License {
   user_id: string | null
   plan_type: string | null
   is_standalone: boolean
+  updated_at: string
 }
 
 // Funções auxiliares para autenticação
