@@ -110,7 +110,7 @@ const Downloads = () => {
 
       {/* Latest Version */}
       <Card className="border-primary/50 bg-gradient-to-br from-primary/5 to-transparent">
-        <CardHeader>
+        <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <CardTitle className="text-xl">Última Versão</CardTitle>
@@ -120,59 +120,47 @@ const Downloads = () => {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                <Calendar className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Data</p>
-                <p className="font-medium text-foreground">
-                  {new Date(latestVersion.release_date).toLocaleDateString("pt-BR")}
-                </p>
-              </div>
+        <CardContent className="space-y-4">
+          {/* Info Grid - Compacta */}
+          <div className="flex flex-wrap gap-4 text-sm">
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <span className="text-muted-foreground">
+                {new Date(latestVersion.release_date).toLocaleDateString("pt-BR")}
+              </span>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                <HardDrive className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Tamanho</p>
-                <p className="font-medium text-foreground">
-                  {latestVersion.file_size || "N/A"}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                <FileText className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Tipo</p>
-                <p className="font-medium text-foreground">Instalador</p>
-              </div>
+            <div className="flex items-center gap-2">
+              <HardDrive className="h-4 w-4 text-muted-foreground" />
+              <span className="text-muted-foreground">
+                {latestVersion.file_size || "N/A"}
+              </span>
             </div>
           </div>
 
+          {/* Release Notes - Colapsável */}
           {latestVersion.release_notes && (
-            <div>
-              <h4 className="text-sm font-semibold text-foreground mb-2">
-                Novidades nesta versão:
-              </h4>
-              <div className="prose prose-sm max-w-none text-muted-foreground">
-                <ReactMarkdown>{latestVersion.release_notes}</ReactMarkdown>
-              </div>
+            <div className="rounded-lg border bg-muted/30 p-3">
+              <details className="group">
+                <summary className="cursor-pointer list-none flex items-center justify-between text-sm font-semibold">
+                  <span>Novidades nesta versão</span>
+                  <span className="text-muted-foreground group-open:rotate-90 transition-transform">▶</span>
+                </summary>
+                <div className="mt-3 prose prose-sm max-w-none text-muted-foreground [&>*]:text-sm [&_ul]:mt-2 [&_ul]:mb-0">
+                  <ReactMarkdown>{latestVersion.release_notes}</ReactMarkdown>
+                </div>
+              </details>
             </div>
           )}
 
-          <div className="space-y-4">
+          {/* Downloads Section */}
+          <div className="space-y-3">
+            {/* Instalador */}
             <div>
-              <h4 className="text-sm font-semibold text-foreground mb-3">
-                Instalador:
+              <h4 className="text-sm font-semibold text-foreground mb-2">
+                Instalador
               </h4>
               <Button
-                className="gap-2"
+                className="w-full gap-2"
                 onClick={() => window.open(latestVersion.download_url, "_blank")}
               >
                 <Monitor className="h-4 w-4" />
@@ -181,13 +169,15 @@ const Downloads = () => {
               </Button>
             </div>
 
+            {/* Recursos Adicionais */}
             <div>
-              <h4 className="text-sm font-semibold text-foreground mb-3">
-                Recursos Adicionais:
+              <h4 className="text-sm font-semibold text-foreground mb-2">
+                Recursos Adicionais
               </h4>
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap gap-2">
                 <Button
                   variant="outline"
+                  size="sm"
                   className="gap-2"
                   onClick={() => systemSettings.userManualUrl
                     ? window.open(systemSettings.userManualUrl, "_blank")
@@ -195,12 +185,12 @@ const Downloads = () => {
                   disabled={!systemSettings.userManualUrl}
                 >
                   <BookOpen className="h-4 w-4" />
-                  Manual do Usuário (PDF)
-                  <Download className="h-4 w-4" />
+                  Manual
                 </Button>
 
                 <Button
                   variant="outline"
+                  size="sm"
                   className="gap-2"
                   onClick={() => systemSettings.systemDocUrl
                     ? window.open(systemSettings.systemDocUrl, "_blank")
@@ -208,12 +198,12 @@ const Downloads = () => {
                   disabled={!systemSettings.systemDocUrl}
                 >
                   <FileText className="h-4 w-4" />
-                  Documentação Técnica (PDF)
-                  <Download className="h-4 w-4" />
+                  Documentação
                 </Button>
 
                 <Button
                   variant="outline"
+                  size="sm"
                   className="gap-2"
                   onClick={() => systemSettings.infoVideoUrl
                     ? window.open(systemSettings.infoVideoUrl, "_blank")
@@ -221,12 +211,12 @@ const Downloads = () => {
                   disabled={!systemSettings.infoVideoUrl}
                 >
                   <Video className="h-4 w-4" />
-                  Vídeo Instrutivo
+                  Vídeo
                 </Button>
               </div>
               {!systemSettings.userManualUrl && !systemSettings.systemDocUrl && !systemSettings.infoVideoUrl && (
                 <p className="text-xs text-muted-foreground mt-2">
-                  Os recursos adicionais serão disponibilizados em breve.
+                  Recursos serão disponibilizados em breve
                 </p>
               )}
             </div>
@@ -284,14 +274,23 @@ const Downloads = () => {
             <CardTitle>Requisitos do Sistema</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="max-w-md">
+            <div className="max-w-2xl">
               <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2">
                 <Monitor className="h-5 w-5" />
                 Windows
               </h4>
-              <div className="text-sm text-muted-foreground whitespace-pre-line">
-                {latestVersion.minimum_requirements}
-              </div>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                {latestVersion.minimum_requirements
+                  .split(/[,\n]/)
+                  .map(req => req.trim())
+                  .filter(req => req.length > 0)
+                  .map((requirement, index) => (
+                    <li key={index} className="flex items-start gap-2">
+                      <span className="text-primary mt-1">•</span>
+                      <span>{requirement}</span>
+                    </li>
+                  ))}
+              </ul>
             </div>
           </CardContent>
         </Card>
