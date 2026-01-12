@@ -15,7 +15,7 @@ export interface User {
   email: string
   name: string
   role: 'USER' | 'MANAGER' | 'ADMIN'
-  status: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED'
+  status: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED' | 'PENDING'
   stripe_customer_id: string | null
   created_at: string
   updated_at: string
@@ -406,5 +406,207 @@ export const db = {
       if (error) throw error
       return data as License[]
     },
+  },
+
+  systemSettings: {
+    async getAll() {
+      const { data, error } = await supabase
+        .from('system_settings')
+        .select('*')
+
+      if (error) throw error
+      return data as SystemSetting[]
+    },
+
+    async getByKey(key: string) {
+      const { data, error } = await supabase
+        .from('system_settings')
+        .select('*')
+        .eq('key', key)
+        .single()
+
+      if (error) throw error
+      return data as SystemSetting
+    },
+
+    async update(key: string, value: string) {
+      const { data, error } = await supabase
+        .from('system_settings')
+        .update({ value })
+        .eq('key', key)
+        .select()
+        .single()
+
+      if (error) throw error
+      return data as SystemSetting
+    },
+  },
+
+  systemVersions: {
+    async getAll() {
+      const { data, error } = await supabase
+        .from('system_versions')
+        .select('*')
+        .eq('is_active', true)
+        .order('release_date', { ascending: false })
+
+      if (error) throw error
+      return data as SystemVersion[]
+    },
+
+    async getLatest() {
+      const { data, error } = await supabase
+        .from('system_versions')
+        .select('*')
+        .eq('is_latest', true)
+        .eq('is_active', true)
+        .single()
+
+      if (error) throw error
+      return data as SystemVersion
+    },
+
+    async create(version: Omit<SystemVersion, 'id' | 'created_at' | 'updated_at'>) {
+      const { data, error } = await supabase
+        .from('system_versions')
+        .insert(version)
+        .select()
+        .single()
+
+      if (error) throw error
+      return data as SystemVersion
+    },
+
+    async update(id: string, updates: Partial<SystemVersion>) {
+      const { data, error } = await supabase
+        .from('system_versions')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single()
+
+      if (error) throw error
+      return data as SystemVersion
+    },
+
+    async delete(id: string) {
+      const { error } = await supabase
+        .from('system_versions')
+        .delete()
+        .eq('id', id)
+
+      if (error) throw error
+    },
+  },
+}
+
+// Novos tipos
+export interface VerificationCode {
+  id: string
+  user_id: string
+  code: string
+  type: 'EMAIL_VERIFICATION' | 'PASSWORD_RESET'
+  email: string
+  expires_at: string
+  verified_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface SystemSetting {
+  id: string
+  key: string
+  value: string
+  description: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface SystemVersion {
+  id: string
+  version: string
+  release_date: string
+  download_url: string
+  file_size: string | null
+  release_notes: string | null
+  is_latest: boolean
+  is_active: boolean
+  minimum_requirements: string | null
+  created_at: string
+  updated_at: string
+}
+
+// Função para enviar email de verificação
+export const emailApi = {
+  async sendVerificationEmail(userId: string, email: string, name: string) {
+    const response = await fetch(`${supabaseUrl}/functions/v1/send-verification-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': supabaseAnonKey,
+      },
+      body: JSON.stringify({ userId, email, name }),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to send verification email')
+    }
+
+    return response.json()
+  },
+
+  async sendPasswordResetEmail(email: string) {
+    const response = await fetch(`${supabaseUrl}/functions/v1/send-password-reset-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': supabaseAnonKey,
+      },
+      body: JSON.stringify({ email }),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to send password reset email')
+    }
+
+    return response.json()
+  },
+
+  async verifyEmailCode(code: string, userId: string) {
+    const response = await fetch(`${supabaseUrl}/functions/v1/verify-email-code`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': supabaseAnonKey,
+      },
+      body: JSON.stringify({ code, userId }),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to verify email code')
+    }
+
+    return response.json()
+  },
+
+  async verifyPasswordResetCode(code: string, email: string, newPassword: string) {
+    const response = await fetch(`${supabaseUrl}/functions/v1/verify-password-reset-code`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': supabaseAnonKey,
+      },
+      body: JSON.stringify({ code, email, newPassword }),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to verify password reset code')
+    }
+
+    return response.json()
   },
 }
