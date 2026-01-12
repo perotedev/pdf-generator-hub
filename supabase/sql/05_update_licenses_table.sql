@@ -73,12 +73,21 @@ CREATE INDEX IF NOT EXISTS idx_licenses_expire_date ON public.licenses USING btr
 CREATE INDEX IF NOT EXISTS idx_licenses_company ON public.licenses USING btree (company);
 
 -- ============================================
+-- Atualizar dados existentes
+-- ============================================
+
+-- Marcar todas as licenças existentes (sem subscription_id) como standalone
+UPDATE public.licenses
+SET is_standalone = true
+WHERE subscription_id IS NULL AND is_standalone = false;
+
+-- ============================================
 -- Adicionar constraints de consistência
 -- ============================================
 
 -- Garantir consistência entre is_standalone e subscription_id
--- Se is_standalone=true, então subscription_id deve ser NULL
 -- Se is_standalone=false, então subscription_id deve ser NOT NULL
+-- Se subscription_id IS NOT NULL, então is_standalone deve ser false
 DO $$
 BEGIN
   IF NOT EXISTS (
