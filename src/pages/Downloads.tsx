@@ -181,47 +181,55 @@ const Downloads = () => {
               </Button>
             </div>
 
-            {(systemSettings.userManualUrl || systemSettings.systemDocUrl || systemSettings.infoVideoUrl) && (
-              <div>
-                <h4 className="text-sm font-semibold text-foreground mb-3">
-                  Recursos Adicionais:
-                </h4>
-                <div className="flex flex-wrap gap-3">
-                  {systemSettings.userManualUrl && (
-                    <Button
-                      variant="outline"
-                      className="gap-2"
-                      onClick={() => window.open(systemSettings.userManualUrl, "_blank")}
-                    >
-                      <BookOpen className="h-4 w-4" />
-                      Manual do Usuário (PDF)
-                      <Download className="h-4 w-4" />
-                    </Button>
-                  )}
-                  {systemSettings.systemDocUrl && (
-                    <Button
-                      variant="outline"
-                      className="gap-2"
-                      onClick={() => window.open(systemSettings.systemDocUrl, "_blank")}
-                    >
-                      <FileText className="h-4 w-4" />
-                      Documentação Técnica (PDF)
-                      <Download className="h-4 w-4" />
-                    </Button>
-                  )}
-                  {systemSettings.infoVideoUrl && (
-                    <Button
-                      variant="outline"
-                      className="gap-2"
-                      onClick={() => window.open(systemSettings.infoVideoUrl, "_blank")}
-                    >
-                      <Video className="h-4 w-4" />
-                      Vídeo Instrutivo
-                    </Button>
-                  )}
-                </div>
+            <div>
+              <h4 className="text-sm font-semibold text-foreground mb-3">
+                Recursos Adicionais:
+              </h4>
+              <div className="flex flex-wrap gap-3">
+                <Button
+                  variant="outline"
+                  className="gap-2"
+                  onClick={() => systemSettings.userManualUrl
+                    ? window.open(systemSettings.userManualUrl, "_blank")
+                    : null}
+                  disabled={!systemSettings.userManualUrl}
+                >
+                  <BookOpen className="h-4 w-4" />
+                  Manual do Usuário (PDF)
+                  <Download className="h-4 w-4" />
+                </Button>
+
+                <Button
+                  variant="outline"
+                  className="gap-2"
+                  onClick={() => systemSettings.systemDocUrl
+                    ? window.open(systemSettings.systemDocUrl, "_blank")
+                    : null}
+                  disabled={!systemSettings.systemDocUrl}
+                >
+                  <FileText className="h-4 w-4" />
+                  Documentação Técnica (PDF)
+                  <Download className="h-4 w-4" />
+                </Button>
+
+                <Button
+                  variant="outline"
+                  className="gap-2"
+                  onClick={() => systemSettings.infoVideoUrl
+                    ? window.open(systemSettings.infoVideoUrl, "_blank")
+                    : null}
+                  disabled={!systemSettings.infoVideoUrl}
+                >
+                  <Video className="h-4 w-4" />
+                  Vídeo Instrutivo
+                </Button>
               </div>
-            )}
+              {!systemSettings.userManualUrl && !systemSettings.systemDocUrl && !systemSettings.infoVideoUrl && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  Os recursos adicionais serão disponibilizados em breve.
+                </p>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
