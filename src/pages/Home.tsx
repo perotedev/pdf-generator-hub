@@ -57,7 +57,7 @@ const Home = () => {
       name: "Mayk Renner",
       role: "CEO da MS Company",
       content:
-        "O PDF Generator transformou nossa operação. Geramos muitos formulários preenchidos diariamente sem problemas.",
+        "Transformou nossa operação. Muitos formulários gerados diariamente.",
       rating: 5,
     },
     {
