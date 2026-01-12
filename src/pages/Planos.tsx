@@ -6,17 +6,41 @@ import { Check, X, RefreshCw } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase, type Plan as DbPlan } from "@/lib/supabase";
 
+interface Feature {
+  text: string;
+  included: boolean;
+  isDisadvantage?: boolean;
+}
+
 interface PlanDisplay {
   id: string;
   name: string;
   description: string;
   monthlyPrice: number;
   annualPrice: number;
-  features: { text: string; included: boolean; isDisadvantage?: boolean }[];
+  features: Feature[];
   popular: boolean;
   isMonthly: boolean;
   billingCycle: 'MONTHLY' | 'YEARLY';
 }
+
+// Função para processar features e substituir placeholders
+const processFeatures = (
+  features: { features: Feature[] } | Feature[] | null | undefined,
+  monthlySavings: string
+): Feature[] => {
+  if (!features) return [];
+
+  // Aceita tanto { features: [...] } quanto [...]
+  const featureList = Array.isArray(features) ? features : features.features;
+
+  if (!Array.isArray(featureList)) return [];
+
+  return featureList.map((feature) => ({
+    ...feature,
+    text: feature.text.replace('{monthlySavings}', monthlySavings),
+  }));
+};
 
 const Planos = () => {
   const [plans, setPlans] = useState<PlanDisplay[]>([]);
@@ -59,102 +83,39 @@ const Planos = () => {
         const monthlyPlan = dbPlans.find((p: DbPlan) => p.billing_cycle === 'MONTHLY');
         const yearlyPlan = dbPlans.find((p: DbPlan) => p.billing_cycle === 'YEARLY');
 
-        const formattedPlans: PlanDisplay[] = [];
-
-        if (monthlyPlan) {
-          formattedPlans.push({
-            id: monthlyPlan.id,
-            name: "Mensal",
-            description: monthlyPlan.description || "Assinatura mensal do PDF Generator",
-            monthlyPrice: monthlyPlan.price,
-            annualPrice: monthlyPlan.price,
-            features: [
-              { text: "Geração ilimitada de PDFs", included: true },
-              { text: "Perfis ilimitados", included: true },
-              { text: "Templates ilimitados", included: true },
-              { text: "Assinaturas digitais", included: true },
-              { text: "Suporte por email", included: true },
-              { text: "Novas versões durante a validade", included: true },
-              { text: "Sem desconto", included: true, isDisadvantage: true },
-            ],
-            popular: false,
-            isMonthly: true,
-            billingCycle: 'MONTHLY',
-          });
-        }
-
-        if (yearlyPlan) {
+        // Calcular a porcentagem de economia do plano anual
+        let monthlySavings = "0";
+        if (monthlyPlan && yearlyPlan) {
           const monthlyEquivalent = yearlyPlan.price / 12;
-          const monthlySavings = monthlyPlan ? ((monthlyPlan.price - monthlyEquivalent) / monthlyPlan.price * 100).toFixed(0) : "20";
-
-          formattedPlans.push({
-            id: yearlyPlan.id,
-            name: "Anual",
-            description: yearlyPlan.description || "Assinatura anual com desconto",
-            monthlyPrice: Number(monthlyEquivalent.toFixed(2)),
-            annualPrice: yearlyPlan.price,
-            features: [
-              { text: "Geração ilimitada de PDFs", included: true },
-              { text: "Perfis ilimitados", included: true },
-              { text: "Templates ilimitados", included: true },
-              { text: "Assinaturas digitais", included: true },
-              { text: "Suporte prioritário", included: true },
-              { text: "Novas versões durante a validade", included: true },
-              { text: `Economia de ${monthlySavings}%`, included: true },
-            ],
-            popular: true,
-            isMonthly: false,
-            billingCycle: 'YEARLY',
-          });
+          monthlySavings = ((monthlyPlan.price - monthlyEquivalent) / monthlyPlan.price * 100).toFixed(0);
         }
+
+        // Processar todos os planos do banco de dados
+        const formattedPlans: PlanDisplay[] = dbPlans.map((plan: DbPlan) => {
+          const isMonthly = plan.billing_cycle === 'MONTHLY';
+          const monthlyEquivalent = isMonthly ? plan.price : plan.price / 12;
+
+          return {
+            id: plan.id,
+            name: plan.name,
+            description: plan.description || (isMonthly ? "Assinatura mensal do PDF Generator" : "Assinatura anual com desconto"),
+            monthlyPrice: Number(monthlyEquivalent.toFixed(2)),
+            annualPrice: plan.price,
+            features: processFeatures(plan.features, monthlySavings),
+            popular: !isMonthly, // Plano anual é marcado como popular
+            isMonthly,
+            billingCycle: plan.billing_cycle,
+          };
+        });
 
         if (isMounted) {
           setPlans(formattedPlans);
           setLoading(false);
         }
       } else if (isMounted) {
-        // No plans found, use fallback
-        console.warn('No plans found in database, using fallback values');
-        setPlans([
-          {
-            id: 'fallback-monthly',
-            name: "Mensal",
-            description: "Assinatura mensal do PDF Generator",
-            monthlyPrice: 49.90,
-            annualPrice: 49.90,
-            features: [
-              { text: "Geração ilimitada de PDFs", included: true },
-              { text: "Perfis ilimitados", included: true },
-              { text: "Templates ilimitados", included: true },
-              { text: "Assinaturas digitais", included: true },
-              { text: "Suporte por email", included: true },
-              { text: "Novas versões durante a validade", included: true },
-              { text: "Sem desconto", included: true, isDisadvantage: true },
-            ],
-            popular: false,
-            isMonthly: true,
-            billingCycle: 'MONTHLY',
-          },
-          {
-            id: 'fallback-yearly',
-            name: "Anual",
-            description: "Assinatura anual com desconto",
-            monthlyPrice: 41.58,
-            annualPrice: 499.00,
-            features: [
-              { text: "Geração ilimitada de PDFs", included: true },
-              { text: "Perfis ilimitados", included: true },
-              { text: "Templates ilimitados", included: true },
-              { text: "Assinaturas digitais", included: true },
-              { text: "Suporte prioritário", included: true },
-              { text: "Novas versões durante a validade", included: true },
-              { text: "Economia de 17%", included: true },
-            ],
-            popular: true,
-            isMonthly: false,
-            billingCycle: 'YEARLY',
-          },
-        ]);
+        // No plans found, show empty state
+        console.warn('No plans found in database');
+        setPlans([]);
         setLoading(false);
       }
     } catch (error) {
@@ -171,49 +132,10 @@ const Planos = () => {
         return;
       }
 
-      // Fallback to default values if all retries fail
+      // Show error state if all retries fail
       if (isMounted) {
-        console.warn('All retry attempts failed, using fallback values');
-        setPlans([
-          {
-            id: 'fallback-monthly',
-            name: "Mensal",
-            description: "Assinatura mensal do PDF Generator",
-            monthlyPrice: 49.90,
-            annualPrice: 49.90,
-            features: [
-              { text: "Geração ilimitada de PDFs", included: true },
-              { text: "Perfis ilimitados", included: true },
-              { text: "Templates ilimitados", included: true },
-              { text: "Assinaturas digitais", included: true },
-              { text: "Suporte por email", included: true },
-              { text: "Novas versões durante a validade", included: true },
-              { text: "Sem desconto", included: true, isDisadvantage: true },
-            ],
-            popular: false,
-            isMonthly: true,
-            billingCycle: 'MONTHLY',
-          },
-          {
-            id: 'fallback-yearly',
-            name: "Anual",
-            description: "Assinatura anual com desconto",
-            monthlyPrice: 41.58,
-            annualPrice: 499.00,
-            features: [
-              { text: "Geração ilimitada de PDFs", included: true },
-              { text: "Perfis ilimitados", included: true },
-              { text: "Templates ilimitados", included: true },
-              { text: "Assinaturas digitais", included: true },
-              { text: "Suporte prioritário", included: true },
-              { text: "Novas versões durante a validade", included: true },
-              { text: "Economia de 17%", included: true },
-            ],
-            popular: true,
-            isMonthly: false,
-            billingCycle: 'YEARLY',
-          },
-        ]);
+        console.warn('All retry attempts failed');
+        setPlans([]);
         setLoading(false);
       }
     }
@@ -257,6 +179,13 @@ const Planos = () => {
           </p>
         </div>
 
+        {plans.length === 0 ? (
+          <div className="max-w-md mx-auto text-center py-12">
+            <p className="text-muted-foreground">
+              Nenhum plano disponível no momento. Por favor, tente novamente mais tarde.
+            </p>
+          </div>
+        ) : (
         <div className="grid gap-6 lg:grid-cols-2 max-w-4xl mx-auto">
           {plans.map((plan) => (
             <Card
@@ -327,6 +256,7 @@ const Planos = () => {
             </Card>
           ))}
         </div>
+        )}
 
         {/* FAQ Section */}
         <div className="mx-auto mt-16 max-w-2xl">
