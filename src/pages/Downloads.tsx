@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,48 +10,94 @@ import {
   HardDrive,
   BookOpen,
   Video,
+  RefreshCw,
 } from "lucide-react";
+import { db, type SystemVersion } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
+import ReactMarkdown from "react-markdown";
 
 const Downloads = () => {
-  const latestVersion = {
-    version: "2.5.3",
-    releaseDate: "08/01/2026",
-    size: "125 MB",
-    changelog: [
-      "Nova engine de renderização mais rápida",
-      "Suporte a novos templates de relatórios",
-      "Correção de bugs menores",
-      "Melhorias de performance",
-    ],
+  const { toast } = useToast();
+  const [latestVersion, setLatestVersion] = useState<SystemVersion | null>(null);
+  const [previousVersions, setPreviousVersions] = useState<SystemVersion[]>([]);
+  const [systemSettings, setSystemSettings] = useState<{
+    userManualUrl: string;
+    systemDocUrl: string;
+    infoVideoUrl: string;
+  }>({
+    userManualUrl: "",
+    systemDocUrl: "",
+    infoVideoUrl: "",
+  });
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    setIsLoading(true);
+    try {
+      // Load versions
+      const allVersions = await db.systemVersions.getAll();
+      const activeVersions = allVersions.filter((v) => v.is_active);
+
+      const latest = activeVersions.find((v) => v.is_latest);
+      const previous = activeVersions
+        .filter((v) => !v.is_latest)
+        .sort((a, b) => new Date(b.release_date).getTime() - new Date(a.release_date).getTime())
+        .slice(0, 5);
+
+      setLatestVersion(latest || null);
+      setPreviousVersions(previous);
+
+      // Load system settings
+      const settings = await db.systemSettings.getAll();
+      const userManual = settings.find((s) => s.key === "user_manual_url");
+      const systemDoc = settings.find((s) => s.key === "system_documentation_url");
+      const infoVideo = settings.find((s) => s.key === "info_video_url");
+
+      setSystemSettings({
+        userManualUrl: userManual?.value || "",
+        systemDocUrl: systemDoc?.value || "",
+        infoVideoUrl: infoVideo?.value || "",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erro ao carregar dados",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const previousVersions = [
-    {
-      version: "2.5.2",
-      releaseDate: "15/12/2025",
-      size: "122 MB",
-    },
-    {
-      version: "2.5.1",
-      releaseDate: "01/12/2025",
-      size: "120 MB",
-    },
-    {
-      version: "2.5.0",
-      releaseDate: "15/11/2025",
-      size: "118 MB",
-    },
-    {
-      version: "2.4.5",
-      releaseDate: "01/11/2025",
-      size: "115 MB",
-    },
-    {
-      version: "2.4.4",
-      releaseDate: "15/10/2025",
-      size: "112 MB",
-    },
-  ];
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <RefreshCw className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!latestVersion) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Downloads</h1>
+          <p className="text-muted-foreground">
+            Baixe a versão mais recente do PDF Generator ou versões anteriores
+          </p>
+        </div>
+        <Card>
+          <CardContent className="py-12 text-center text-muted-foreground">
+            Nenhuma versão disponível para download no momento.
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -82,7 +129,7 @@ const Downloads = () => {
               <div>
                 <p className="text-xs text-muted-foreground">Data</p>
                 <p className="font-medium text-foreground">
-                  {latestVersion.releaseDate}
+                  {new Date(latestVersion.release_date).toLocaleDateString("pt-BR")}
                 </p>
               </div>
             </div>
@@ -93,7 +140,7 @@ const Downloads = () => {
               <div>
                 <p className="text-xs text-muted-foreground">Tamanho</p>
                 <p className="font-medium text-foreground">
-                  {latestVersion.size}
+                  {latestVersion.file_size || "N/A"}
                 </p>
               </div>
             </div>
@@ -108,116 +155,139 @@ const Downloads = () => {
             </div>
           </div>
 
-          <div>
-            <h4 className="text-sm font-semibold text-foreground mb-2">
-              Novidades nesta versão:
-            </h4>
-            <ul className="space-y-1">
-              {latestVersion.changelog.map((item, index) => (
-                <li
-                  key={index}
-                  className="text-sm text-muted-foreground flex items-start gap-2"
-                >
-                  <span className="text-primary">•</span>
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
+          {latestVersion.release_notes && (
+            <div>
+              <h4 className="text-sm font-semibold text-foreground mb-2">
+                Novidades nesta versão:
+              </h4>
+              <div className="prose prose-sm max-w-none text-muted-foreground">
+                <ReactMarkdown>{latestVersion.release_notes}</ReactMarkdown>
+              </div>
+            </div>
+          )}
 
           <div className="space-y-4">
             <div>
               <h4 className="text-sm font-semibold text-foreground mb-3">
                 Instalador:
               </h4>
-              <Button className="gap-2">
+              <Button
+                className="gap-2"
+                onClick={() => window.open(latestVersion.download_url, "_blank")}
+              >
                 <Monitor className="h-4 w-4" />
                 Windows (64-bit)
                 <Download className="h-4 w-4" />
               </Button>
             </div>
 
-            <div>
-              <h4 className="text-sm font-semibold text-foreground mb-3">
-                Recursos Adicionais:
-              </h4>
-              <div className="flex flex-wrap gap-3">
-                <Button variant="outline" className="gap-2">
-                  <BookOpen className="h-4 w-4" />
-                  Manual do Usuário (PDF)
-                  <Download className="h-4 w-4" />
-                </Button>
-                <Button variant="outline" className="gap-2">
-                  <FileText className="h-4 w-4" />
-                  Documentação Técnica (PDF)
-                  <Download className="h-4 w-4" />
-                </Button>
-                <Button variant="outline" className="gap-2">
-                  <Video className="h-4 w-4" />
-                  Vídeo Instrutivo
-                </Button>
+            {(systemSettings.userManualUrl || systemSettings.systemDocUrl || systemSettings.infoVideoUrl) && (
+              <div>
+                <h4 className="text-sm font-semibold text-foreground mb-3">
+                  Recursos Adicionais:
+                </h4>
+                <div className="flex flex-wrap gap-3">
+                  {systemSettings.userManualUrl && (
+                    <Button
+                      variant="outline"
+                      className="gap-2"
+                      onClick={() => window.open(systemSettings.userManualUrl, "_blank")}
+                    >
+                      <BookOpen className="h-4 w-4" />
+                      Manual do Usuário (PDF)
+                      <Download className="h-4 w-4" />
+                    </Button>
+                  )}
+                  {systemSettings.systemDocUrl && (
+                    <Button
+                      variant="outline"
+                      className="gap-2"
+                      onClick={() => window.open(systemSettings.systemDocUrl, "_blank")}
+                    >
+                      <FileText className="h-4 w-4" />
+                      Documentação Técnica (PDF)
+                      <Download className="h-4 w-4" />
+                    </Button>
+                  )}
+                  {systemSettings.infoVideoUrl && (
+                    <Button
+                      variant="outline"
+                      className="gap-2"
+                      onClick={() => window.open(systemSettings.infoVideoUrl, "_blank")}
+                    >
+                      <Video className="h-4 w-4" />
+                      Vídeo Instrutivo
+                    </Button>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </CardContent>
       </Card>
 
       {/* Previous Versions */}
-      <Card className="border-border">
-        <CardHeader>
-          <CardTitle>Versões Anteriores</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {previousVersions.map((version) => (
-              <div
-                key={version.version}
-                className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg border border-border p-4"
-              >
-                <div className="flex items-center gap-4">
-                  <Badge variant="secondary">v{version.version}</Badge>
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <Calendar className="h-4 w-4" />
-                      {version.releaseDate}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <HardDrive className="h-4 w-4" />
-                      {version.size}
-                    </span>
+      {previousVersions.length > 0 && (
+        <Card className="border-border">
+          <CardHeader>
+            <CardTitle>Versões Anteriores</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {previousVersions.map((version) => (
+                <div
+                  key={version.id}
+                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg border border-border p-4"
+                >
+                  <div className="flex items-center gap-4">
+                    <Badge variant="secondary">v{version.version}</Badge>
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Calendar className="h-4 w-4" />
+                        {new Date(version.release_date).toLocaleDateString("pt-BR")}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <HardDrive className="h-4 w-4" />
+                        {version.file_size || "N/A"}
+                      </span>
+                    </div>
                   </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="gap-1"
+                    onClick={() => window.open(version.download_url, "_blank")}
+                  >
+                    <Monitor className="h-4 w-4" />
+                    Windows
+                    <Download className="h-3 w-3" />
+                  </Button>
                 </div>
-                <Button variant="ghost" size="sm" className="gap-1">
-                  <Monitor className="h-4 w-4" />
-                  Windows
-                  <Download className="h-3 w-3" />
-                </Button>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* System Requirements */}
-      <Card className="border-border">
-        <CardHeader>
-          <CardTitle>Requisitos do Sistema</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="max-w-md">
-            <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2">
-              <Monitor className="h-5 w-5" />
-              Windows
-            </h4>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li>• Windows 10 (64-bit) ou superior</li>
-              <li>• 4 GB de RAM (8 GB recomendado)</li>
-              <li>• 500 MB de espaço em disco</li>
-              <li>• Processador Intel Core i3 ou equivalente</li>
-            </ul>
-          </div>
-        </CardContent>
-      </Card>
+      {latestVersion.minimum_requirements && (
+        <Card className="border-border">
+          <CardHeader>
+            <CardTitle>Requisitos do Sistema</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="max-w-md">
+              <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+                <Monitor className="h-5 w-5" />
+                Windows
+              </h4>
+              <div className="text-sm text-muted-foreground whitespace-pre-line">
+                {latestVersion.minimum_requirements}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

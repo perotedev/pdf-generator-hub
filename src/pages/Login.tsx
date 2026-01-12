@@ -32,6 +32,29 @@ const Login = () => {
     try {
       await login(email, password);
 
+      // Verificar se o usuário tem status PENDING
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (user) {
+        const { data: userData } = await supabase
+          .from('users')
+          .select('status, name')
+          .eq('id', user.id)
+          .single();
+
+        if (userData?.status === 'PENDING') {
+          // Email não verificado, redirecionar para verificação
+          toast({
+            title: "Email não verificado",
+            description: "Verifique seu email para ativar sua conta.",
+            variant: "destructive",
+          });
+
+          navigate(`/verificar-email?userId=${user.id}&email=${encodeURIComponent(email)}&name=${encodeURIComponent(userData.name || '')}`);
+          return;
+        }
+      }
+
       toast({
         title: "Login realizado com sucesso!",
         description: "Redirecionando para o dashboard...",

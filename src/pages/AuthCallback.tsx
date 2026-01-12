@@ -24,7 +24,32 @@ const AuthCallback = () => {
 
         if (session) {
           console.log('OAuth session established for:', session.user.email);
-          // A sessão foi estabelecida, o AuthContext vai detectar via onAuthStateChange
+
+          // Verificar se o usuário já existe na tabela users
+          const { data: existingUser } = await supabase
+            .from('users')
+            .select('id, status')
+            .eq('id', session.user.id)
+            .single();
+
+          // Se não existe, criar com status ACTIVE (OAuth já validou o email)
+          if (!existingUser) {
+            const { error: insertError } = await supabase
+              .from('users')
+              .insert({
+                id: session.user.id,
+                email: session.user.email!,
+                name: session.user.user_metadata.name || session.user.email!.split('@')[0],
+                password_hash: 'oauth',
+                role: 'USER',
+                status: 'ACTIVE', // OAuth não precisa verificação
+              });
+
+            if (insertError) {
+              console.error('Error creating user in database:', insertError);
+            }
+          }
+
           // Redireciona para o dashboard
           navigate('/dashboard', { replace: true });
         } else {

@@ -7,7 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { FileText, Eye, EyeOff, CheckCircle2, XCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { authApi, supabase } from "@/lib/supabase";
+import { authApi, supabase, emailApi } from "@/lib/supabase";
 import { LINKS } from "@/lib/constants";
 
 const Registro = () => {
@@ -86,7 +86,7 @@ const Registro = () => {
       if (authError) throw authError;
 
       if (authData.user) {
-        // Criar registro na tabela public.users
+        // Criar registro na tabela public.users com status PENDING
         const { error: dbError } = await supabase
           .from('users')
           .insert({
@@ -95,36 +95,36 @@ const Registro = () => {
             name: name,
             password_hash: 'hashed', // placeholder, a senha real está no auth.users
             role: 'USER',
-            status: 'ACTIVE',
+            status: 'PENDING', // Requer verificação de email
           });
 
         if (dbError) {
           console.error('Error creating user in database:', dbError);
         }
 
-        // Fazer login automaticamente após registro bem-sucedido
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
+        // Enviar email de verificação
+        try {
+          await emailApi.sendVerificationEmail(authData.user.id, email, name);
 
-        if (signInError) {
-          console.error('Error signing in after registration:', signInError);
-          // Se falhar o login automático, redirecionar para página de login
           toast({
-            title: "Conta criada com sucesso!",
-            description: "Por favor, faça login.",
+            title: "Conta criada!",
+            description: "Verifique seu email para ativar sua conta.",
           });
-          navigate("/login");
-          return;
-        }
 
-        // Login bem-sucedido, redirecionar para dashboard
-        toast({
-          title: "Conta criada com sucesso!",
-          description: "Bem-vindo ao PDF Generator!",
-        });
-        navigate("/dashboard");
+          // Redirecionar para página de verificação
+          navigate(`/verificar-email?userId=${authData.user.id}&email=${encodeURIComponent(email)}&name=${encodeURIComponent(name)}`);
+        } catch (emailError) {
+          console.error('Error sending verification email:', emailError);
+
+          // Se falhar o envio do email, permitir que o usuário tente novamente
+          toast({
+            title: "Conta criada!",
+            description: "Erro ao enviar email. Você será redirecionado para tentar novamente.",
+            variant: "destructive",
+          });
+
+          navigate(`/verificar-email?userId=${authData.user.id}&email=${encodeURIComponent(email)}&name=${encodeURIComponent(name)}`);
+        }
       }
     } catch (error: any) {
       toast({

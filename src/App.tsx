@@ -21,7 +21,10 @@ import HistoricoPagamentos from "./pages/HistoricoPagamentos";
 import Admin from "./pages/Admin";
 import AdminUsers from "./pages/AdminUsers";
 import AdminLicenses from "./pages/AdminLicenses";
+import VersoesDoSistema from "./pages/admin/VersoesDoSistema";
 import AuthCallback from "./pages/AuthCallback";
+import VerificarEmail from "./pages/VerificarEmail";
+import RecuperarSenha from "./pages/RecuperarSenha";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,6 +40,10 @@ const App = () => (
           <Routes>
             {/* Auth Callback Route (must be before PublicLayout) */}
             <Route path="/auth/callback" element={<AuthCallback />} />
+
+            {/* Email Verification and Password Recovery Routes */}
+            <Route path="/verificar-email" element={<VerificarEmail />} />
+            <Route path="/recuperar-senha" element={<RecuperarSenha />} />
 
             {/* Public Routes */}
             <Route element={<PublicLayout />}>
@@ -82,6 +89,14 @@ const App = () => (
                 element={
                   <ProtectedRoute requireAdmin>
                     <AdminLicenses />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="admin/versoes"
+                element={
+                  <ProtectedRoute requireAdmin>
+                    <VersoesDoSistema />
                   </ProtectedRoute>
                 }
               />
