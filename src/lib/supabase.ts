@@ -9,6 +9,51 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
+// Função helper para obter um token válido (faz refresh se necessário)
+export async function getValidAccessToken(): Promise<string | null> {
+  try {
+    // Primeiro, tentar obter a sessão atual
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+
+    if (sessionError) {
+      console.error('Error getting session:', sessionError)
+      return null
+    }
+
+    if (!session) {
+      console.log('No session found')
+      return null
+    }
+
+    // Verificar se o token está prestes a expirar (menos de 60 segundos)
+    const expiresAt = session.expires_at
+    const now = Math.floor(Date.now() / 1000)
+    const timeUntilExpiry = expiresAt ? expiresAt - now : 0
+
+    if (timeUntilExpiry < 60) {
+      console.log('Token expiring soon, refreshing...')
+      // Forçar refresh do token
+      const { data: { session: newSession }, error: refreshError } = await supabase.auth.refreshSession()
+
+      if (refreshError) {
+        console.error('Error refreshing session:', refreshError)
+        // Se falhar o refresh, tentar usar o token atual mesmo assim
+        return session.access_token
+      }
+
+      if (newSession) {
+        console.log('Token refreshed successfully')
+        return newSession.access_token
+      }
+    }
+
+    return session.access_token
+  } catch (error) {
+    console.error('Error in getValidAccessToken:', error)
+    return null
+  }
+}
+
 // Tipos para o banco de dados
 export interface User {
   id: string

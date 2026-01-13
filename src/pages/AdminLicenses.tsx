@@ -33,7 +33,7 @@ import {
 import { Search, Key, Plus, Edit2, Trash2, Laptop, CheckCircle, XCircle, RefreshCw, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase, licenseApi, type License } from '@/lib/supabase';
+import { supabase, licenseApi, getValidAccessToken, type License } from '@/lib/supabase';
 
 export default function AdminLicenses() {
   const { isAdmin } = useAuth();
@@ -58,16 +58,17 @@ export default function AdminLicenses() {
     try {
       setLoading(true);
 
-      const { data: { session } } = await supabase.auth.getSession();
+      const token = await getValidAccessToken();
 
-      if (!session?.access_token) {
+      if (!token) {
         toast.error('Sessão expirada', {
           description: 'Por favor, faça login novamente.',
         });
         return;
       }
 
-      const licensesData = await licenseApi.getLicenses(session.access_token);
+      const response = await licenseApi.getLicenses(token);
+      const licensesData = response.licenses || response;
 
       // Filter only standalone licenses
       const standaloneLicenses = licensesData.filter((l: License) => l.is_standalone);
@@ -108,9 +109,9 @@ export default function AdminLicenses() {
 
   const handleCreateLicense = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const token = await getValidAccessToken();
 
-      if (!session?.access_token) {
+      if (!token) {
         toast.error('Sessão expirada');
         return;
       }
@@ -119,7 +120,7 @@ export default function AdminLicenses() {
       const expireDate = new Date();
       expireDate.setDate(expireDate.getDate() + parseInt(newLicense.expire_days));
 
-      await licenseApi.createLicense(session.access_token, {
+      await licenseApi.createLicense(token, {
         code: generatedCode,
         client: newLicense.client || null,
         company: newLicense.company,
@@ -154,14 +155,14 @@ export default function AdminLicenses() {
     if (!editingLicense) return;
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const token = await getValidAccessToken();
 
-      if (!session?.access_token) {
+      if (!token) {
         toast.error('Sessão expirada');
         return;
       }
 
-      await licenseApi.updateLicense(session.access_token, editingLicense.id, {
+      await licenseApi.updateLicense(token, editingLicense.id, {
         client: editingLicense.client,
         company: editingLicense.company,
         plan_type: editingLicense.plan_type,
@@ -187,14 +188,14 @@ export default function AdminLicenses() {
     if (!deletingLicense) return;
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const token = await getValidAccessToken();
 
-      if (!session?.access_token) {
+      if (!token) {
         toast.error('Sessão expirada');
         return;
       }
 
-      await licenseApi.deleteLicense(session.access_token, deletingLicense.id);
+      await licenseApi.deleteLicense(token, deletingLicense.id);
 
       await fetchLicenses();
 
@@ -212,14 +213,14 @@ export default function AdminLicenses() {
 
   const handleUnbindDevice = async (license: License) => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const token = await getValidAccessToken();
 
-      if (!session?.access_token) {
+      if (!token) {
         toast.error('Sessão expirada');
         return;
       }
 
-      await licenseApi.updateLicense(session.access_token, license.id, {
+      await licenseApi.updateLicense(token, license.id, {
         is_used: false,
         device_id: null,
         device_type: null,

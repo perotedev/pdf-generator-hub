@@ -47,7 +47,7 @@ import { Label } from '@/components/ui/label';
 import { Search, UserCog, Shield, Trash2, Laptop, Key, CreditCard, Receipt, Users2, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { UserRole, useAuth } from '@/contexts/AuthContext';
-import { supabase, userApi, type User as DbUser, type Subscription, type License, type Payment } from '@/lib/supabase';
+import { supabase, userApi, getValidAccessToken, type User as DbUser, type Subscription, type License, type Payment } from '@/lib/supabase';
 
 interface SystemUser extends DbUser {
   subscriptions?: (Subscription & { plans?: any })[];
@@ -73,16 +73,17 @@ export default function AdminUsers() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const { data: { session } } = await supabase.auth.getSession();
+      const token = await getValidAccessToken();
 
-      if (!session?.access_token) {
+      if (!token) {
         toast.error('Sessão expirada', {
           description: 'Por favor, faça login novamente.',
         });
         return;
       }
 
-      const usersData = await userApi.getUsers(session.access_token);
+      const response = await userApi.getUsers(token);
+      const usersData = response.users || response;
 
       // Fetch additional data for each user
       const usersWithDetails = await Promise.all(
@@ -137,14 +138,14 @@ export default function AdminUsers() {
     if (!editingUser) return;
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const token = await getValidAccessToken();
 
-      if (!session?.access_token) {
+      if (!token) {
         toast.error('Sessão expirada');
         return;
       }
 
-      await userApi.updateUser(session.access_token, editingUser.id, {
+      await userApi.updateUser(token, editingUser.id, {
         role: editingUser.role,
       });
 
@@ -164,14 +165,14 @@ export default function AdminUsers() {
 
   const handleUpdateStatus = async (userId: string, newStatus: DbUser['status']) => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const token = await getValidAccessToken();
 
-      if (!session?.access_token) {
+      if (!token) {
         toast.error('Sessão expirada');
         return;
       }
 
-      await userApi.updateUser(session.access_token, userId, {
+      await userApi.updateUser(token, userId, {
         status: newStatus,
       });
 
@@ -192,14 +193,14 @@ export default function AdminUsers() {
     if (!deletingUser) return;
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const token = await getValidAccessToken();
 
-      if (!session?.access_token) {
+      if (!token) {
         toast.error('Sessão expirada');
         return;
       }
 
-      await userApi.deleteUser(session.access_token, deletingUser.id);
+      await userApi.deleteUser(token, deletingUser.id);
 
       await fetchUsers();
 
