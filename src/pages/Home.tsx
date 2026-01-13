@@ -50,7 +50,7 @@ const Home = () => {
       title: "Mapeie o Documento",
       shortTitle: "Documento",
       description: "Clique diretamente no PDF para posicionar os campos. Vincule cada campo a uma coluna da planilha.",
-      details: "Interface visual drag-and-drop. Personalize fontes, tamanhos e estilos de cada campo individualmente.",
+      details: "Interface visual com mapeamento por clique. Personalize fontes, tamanhos e estilos de cada campo individualmente.",
       image: "/screenshots/perfil-documento.png",
       color: "from-purple-500 to-purple-600",
     },
@@ -82,7 +82,7 @@ const Home = () => {
 
     const interval = setInterval(() => {
       setActiveStep((prev) => (prev + 1) % workflowSteps.length);
-    }, 4000);
+    }, 5000);
 
     return () => clearInterval(interval);
   }, [isAutoPlaying, workflowSteps.length]);
@@ -336,6 +336,8 @@ const Home = () => {
 
                 {/* Screenshot */}
                 <div className="relative aspect-video overflow-hidden">
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-transparent to-black/10"></div>
+
                   <img
                     src={workflowSteps[activeStep].image}
                     alt={workflowSteps[activeStep].title}
