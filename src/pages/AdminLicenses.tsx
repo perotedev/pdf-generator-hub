@@ -67,7 +67,7 @@ export default function AdminLicenses() {
         return;
       }
 
-      const response = await licenseApi.getLicenses(token);
+      const response = await licenseApi.getLicenses(token, true);
       const licensesData = response.licenses || response;
 
       // Filter only standalone licenses
