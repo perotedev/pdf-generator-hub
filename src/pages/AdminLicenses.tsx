@@ -376,7 +376,7 @@ export default function AdminLicenses() {
               <TableHead>Cliente</TableHead>
               <TableHead>Empresa</TableHead>
               <TableHead>Plano</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead>OS</TableHead>
               <TableHead>Validade</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
@@ -396,12 +396,7 @@ export default function AdminLicenses() {
                 <TableRow key={license.id}>
                   <TableCell>
                     <code className="text-xs font-mono">{license.code}</code>
-                  </TableCell>
-                  <TableCell>{license.client || 'N/A'}</TableCell>
-                  <TableCell>{license.company}</TableCell>
-                  <TableCell>{license.plan_type || 'N/A'}</TableCell>
-                  <TableCell>
-                    <div className="flex flex-col gap-1">
+                    <div className="flex gap-2 mt-2">
                       <Badge variant={license.is_used ? 'default' : 'secondary'}>
                         {license.is_used ? 'Ativa' : 'Disponível'}
                       </Badge>
@@ -410,8 +405,15 @@ export default function AdminLicenses() {
                           Vendida
                         </Badge>
                       )}
+                    </div>
+                  </TableCell>
+                  <TableCell>{license.client || 'N/A'}</TableCell>
+                  <TableCell>{license.company}</TableCell>
+                  <TableCell>{license.plan_type || 'N/A'}</TableCell>
+                  <TableCell>
+                    <div className="flex flex-col gap-1">
                       {license.is_used && license.device_id && (
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                        <div className="flex items-center gap-1 text-muted-foreground">
                           <Laptop className="h-3 w-3" />
                           {license.device_type}
                         </div>
@@ -431,8 +433,7 @@ export default function AdminLicenses() {
                           size="sm"
                           onClick={() => handleUnbindDevice(license)}
                         >
-                          <Laptop className="h-4 w-4 mr-1" />
-                          Desvincular
+                          <Laptop className="h-4 w-4" />
                         </Button>
                       )}
                       <Button
