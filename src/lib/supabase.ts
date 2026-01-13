@@ -204,15 +204,24 @@ export const authApi = {
 export const userApi = {
   async getUsers(token: string) {
     const response = await fetch(`${supabaseUrl}/functions/v1/user-management`, {
+      method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
         'apikey': supabaseAnonKey,
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
       },
     })
 
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Failed to fetch users')
+      const errorText = await response.text()
+      let error
+      try {
+        error = JSON.parse(errorText)
+      } catch {
+        error = { error: errorText || `HTTP ${response.status}` }
+      }
+      throw new Error(error.error || error.message || 'Failed to fetch users')
     }
 
     return response.json()
@@ -220,15 +229,24 @@ export const userApi = {
 
   async getUser(token: string, userId: string) {
     const response = await fetch(`${supabaseUrl}/functions/v1/user-management?userId=${userId}`, {
+      method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
         'apikey': supabaseAnonKey,
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
       },
     })
 
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Failed to fetch user')
+      const errorText = await response.text()
+      let error
+      try {
+        error = JSON.parse(errorText)
+      } catch {
+        error = { error: errorText || `HTTP ${response.status}` }
+      }
+      throw new Error(error.error || error.message || 'Failed to fetch user')
     }
 
     return response.json()
@@ -239,15 +257,22 @@ export const userApi = {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
         'apikey': supabaseAnonKey,
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify(data),
     })
 
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Failed to update user')
+      const errorText = await response.text()
+      let error
+      try {
+        error = JSON.parse(errorText)
+      } catch {
+        error = { error: errorText || `HTTP ${response.status}` }
+      }
+      throw new Error(error.error || error.message || 'Failed to update user')
     }
 
     return response.json()
@@ -259,12 +284,20 @@ export const userApi = {
       headers: {
         'Authorization': `Bearer ${token}`,
         'apikey': supabaseAnonKey,
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
       },
     })
 
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Failed to delete user')
+      const errorText = await response.text()
+      let error
+      try {
+        error = JSON.parse(errorText)
+      } catch {
+        error = { error: errorText || `HTTP ${response.status}` }
+      }
+      throw new Error(error.error || error.message || 'Failed to delete user')
     }
 
     return response.json()
@@ -276,15 +309,24 @@ export const licenseApi = {
   async getLicenses(token: string, standalone: boolean = false) {
     const url = `${supabaseUrl}/functions/v1/license-management${standalone ? '?standalone=true' : ''}`
     const response = await fetch(url, {
+      method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
         'apikey': supabaseAnonKey,
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
       },
     })
 
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Failed to fetch licenses')
+      const errorText = await response.text()
+      let error
+      try {
+        error = JSON.parse(errorText)
+      } catch {
+        error = { error: errorText || `HTTP ${response.status}` }
+      }
+      throw new Error(error.error || error.message || 'Failed to fetch licenses')
     }
 
     return response.json()
@@ -295,15 +337,22 @@ export const licenseApi = {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
         'apikey': supabaseAnonKey,
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify(data),
     })
 
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Failed to create license')
+      const errorText = await response.text()
+      let error
+      try {
+        error = JSON.parse(errorText)
+      } catch {
+        error = { error: errorText || `HTTP ${response.status}` }
+      }
+      throw new Error(error.error || error.message || 'Failed to create license')
     }
 
     return response.json()
@@ -314,15 +363,22 @@ export const licenseApi = {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
         'apikey': supabaseAnonKey,
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify(data),
     })
 
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Failed to update license')
+      const errorText = await response.text()
+      let error
+      try {
+        error = JSON.parse(errorText)
+      } catch {
+        error = { error: errorText || `HTTP ${response.status}` }
+      }
+      throw new Error(error.error || error.message || 'Failed to update license')
     }
 
     return response.json()
@@ -334,12 +390,20 @@ export const licenseApi = {
       headers: {
         'Authorization': `Bearer ${token}`,
         'apikey': supabaseAnonKey,
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
       },
     })
 
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Failed to unbind device')
+      const errorText = await response.text()
+      let error
+      try {
+        error = JSON.parse(errorText)
+      } catch {
+        error = { error: errorText || `HTTP ${response.status}` }
+      }
+      throw new Error(error.error || error.message || 'Failed to unbind device')
     }
 
     return response.json()
@@ -351,12 +415,20 @@ export const licenseApi = {
       headers: {
         'Authorization': `Bearer ${token}`,
         'apikey': supabaseAnonKey,
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
       },
     })
 
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Failed to delete license')
+      const errorText = await response.text()
+      let error
+      try {
+        error = JSON.parse(errorText)
+      } catch {
+        error = { error: errorText || `HTTP ${response.status}` }
+      }
+      throw new Error(error.error || error.message || 'Failed to delete license')
     }
 
     return response.json()

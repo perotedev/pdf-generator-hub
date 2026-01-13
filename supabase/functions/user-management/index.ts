@@ -4,7 +4,8 @@ import * as bcrypt from "https://deno.land/x/bcrypt@v0.4.1/mod.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, accept',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
 }
 
 // Função auxiliar para verificar permissões
@@ -46,27 +47,17 @@ serve(async (req) => {
       )
     }
 
-    // Criar cliente com o token do usuário para validação
+    // Extrair o token do header
     const token = authHeader.replace('Bearer ', '')
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: {
-            Authorization: authHeader,
-          },
-        },
-      }
-    )
 
-    // Validar o token usando o cliente com anon key
-    const { data: { user: authUser }, error: authError } = await supabaseClient.auth.getUser()
+    // Validar o token usando o supabaseAdmin com getUser(token)
+    // Isso é mais confiável do que criar um novo cliente
+    const { data: { user: authUser }, error: authError } = await supabaseAdmin.auth.getUser(token)
 
     if (authError || !authUser) {
-      console.error('Auth error:', authError)
+      console.error('Auth error:', authError?.message || 'No user found')
       return new Response(
-        JSON.stringify({ code: 401, message: 'Invalid JWT' }),
+        JSON.stringify({ code: 401, message: 'Invalid JWT', details: authError?.message }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
       )
     }
