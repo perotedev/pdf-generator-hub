@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Check, X, RefreshCw } from "lucide-react";
 import { useState, useEffect } from "react";
-import { supabase, type Plan as DbPlan } from "@/lib/supabase";
+import { plansApi, supabase, type Plan as DbPlan } from "@/lib/supabase";
 
 interface Feature {
   text: string;
@@ -48,61 +48,55 @@ const Planos = () => {
 
   useEffect(() => {
     let isMounted = true;
-    let timeoutId: NodeJS.Timeout;
 
-    const fetchPlans = async (retryCount = 0) => {
+    const fetchPlans = async () => {
       if (!isMounted) return;
 
       try {
-        // Set a timeout for the request
-        const timeoutPromise = new Promise((_, reject) => {
-          timeoutId = setTimeout(() => reject(new Error('Request timeout')), 10000);
-        });
+        setLoading(true);
 
-        const fetchPromise = supabase
-          .from('plans')
-          .select('*')
-          .eq('is_active', true)
-          .order('billing_cycle');
+        const response = await plansApi.getActivePlans();
+        const dbPlans: DbPlan[] = response.plans || response;
 
-        const { data: dbPlans, error } = await Promise.race([
-          fetchPromise,
-          timeoutPromise
-        ]) as any;
-
-        clearTimeout(timeoutId);
-
-        if (!isMounted) return;
-
-        if (error) {
-          console.error('Error fetching plans:', error);
-          throw error;
+        if (!dbPlans || dbPlans.length === 0) {
+          console.warn('No plans found');
+          setPlans([]);
+          return;
         }
 
-        if (dbPlans && dbPlans.length > 0) {
-        const monthlyPlan = dbPlans.find((p: DbPlan) => p.billing_cycle === 'MONTHLY');
-        const yearlyPlan = dbPlans.find((p: DbPlan) => p.billing_cycle === 'YEARLY');
+        // Encontrar planos mensal e anual
+        const monthlyPlan = dbPlans.find(p => p.billing_cycle === 'MONTHLY');
+        const yearlyPlan = dbPlans.find(p => p.billing_cycle === 'YEARLY');
 
-        // Calcular a porcentagem de economia do plano anual
-        let monthlySavings = "0";
+        // Calcular economia do plano anual
+        let monthlySavings = '0';
         if (monthlyPlan && yearlyPlan) {
           const monthlyEquivalent = yearlyPlan.price / 12;
-          monthlySavings = ((monthlyPlan.price - monthlyEquivalent) / monthlyPlan.price * 100).toFixed(0);
+          monthlySavings = (
+            ((monthlyPlan.price - monthlyEquivalent) / monthlyPlan.price) *
+            100
+          ).toFixed(0);
         }
 
-        // Processar todos os planos do banco de dados
-        const formattedPlans: PlanDisplay[] = dbPlans.map((plan: DbPlan) => {
+        // Formatar planos para exibição
+        const formattedPlans: PlanDisplay[] = dbPlans.map(plan => {
           const isMonthly = plan.billing_cycle === 'MONTHLY';
-          const monthlyEquivalent = isMonthly ? plan.price : plan.price / 12;
+          const monthlyEquivalent = isMonthly
+            ? plan.price
+            : plan.price / 12;
 
           return {
             id: plan.id,
             name: plan.name,
-            description: plan.description || (isMonthly ? "Assinatura mensal do PDF Generator" : "Assinatura anual com desconto"),
+            description:
+              plan.description ||
+              (isMonthly
+                ? 'Assinatura mensal do PDF Generator'
+                : 'Assinatura anual com desconto'),
             monthlyPrice: Number(monthlyEquivalent.toFixed(2)),
             annualPrice: plan.price,
             features: processFeatures(plan.features, monthlySavings),
-            popular: !isMonthly, // Plano anual é marcado como popular
+            popular: !isMonthly,
             isMonthly,
             billingCycle: plan.billing_cycle,
           };
@@ -110,46 +104,26 @@ const Planos = () => {
 
         if (isMounted) {
           setPlans(formattedPlans);
+        }
+      } catch (error) {
+        console.error('Error fetching plans:', error);
+        if (isMounted) {
+          setPlans([]);
+        }
+      } finally {
+        if (isMounted) {
           setLoading(false);
         }
-      } else if (isMounted) {
-        // No plans found, show empty state
-        console.warn('No plans found in database');
-        setPlans([]);
-        setLoading(false);
       }
-    } catch (error) {
-      console.error('Error fetching plans:', error);
-
-      // Retry logic - try up to 3 times
-      if (retryCount < 2 && isMounted) {
-        console.log(`Retrying... attempt ${retryCount + 2} of 3`);
-        setTimeout(() => {
-          if (isMounted) {
-            fetchPlans(retryCount + 1);
-          }
-        }, 2000 * (retryCount + 1)); // Exponential backoff
-        return;
-      }
-
-      // Show error state if all retries fail
-      if (isMounted) {
-        console.warn('All retry attempts failed');
-        setPlans([]);
-        setLoading(false);
-      }
-    }
-  };
+    };
 
     fetchPlans();
 
     return () => {
       isMounted = false;
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
     };
   }, []);
+
 
   if (loading) {
     return (

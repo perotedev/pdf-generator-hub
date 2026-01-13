@@ -461,6 +461,30 @@ export const checkoutApi = {
   },
 }
 
+// Funções para planos
+export const plansApi = {
+  async getActivePlans() {
+    const response = await fetch(
+      `${supabaseUrl}/functions/v1/plans-list`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': supabaseAnonKey,
+        },
+      }
+    )
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to fetch active plans')
+    }
+
+    return response.json()
+  },
+}
+
+
 // Funções para acessar dados diretamente via Supabase Client
 export const db = {
   plans: {
