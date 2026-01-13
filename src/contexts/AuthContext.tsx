@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { authApi, supabase } from '../lib/supabase';
 
 export type UserRole = 'ADMIN' | 'MANAGER' | 'USER';
@@ -18,9 +18,10 @@ interface AuthContextType {
   isManager: boolean;
   canManageUsers: boolean;
   login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   updateUser: (user: User) => void;
   loading: boolean;
+  sessionExpired: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -28,42 +29,82 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [sessionExpired, setSessionExpired] = useState(false);
+
+  // Função para limpar completamente o estado de autenticação
+  const clearAuthState = useCallback(() => {
+    setUser(null);
+    setSessionExpired(true);
+    localStorage.removeItem('user');
+  }, []);
+
+  // Função para buscar dados do usuário
+  const fetchUserData = useCallback(async (userId: string): Promise<User | null> => {
+    try {
+      const { data: userData, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching user data:', error);
+        return null;
+      }
+
+      if (userData) {
+        return {
+          id: userData.id,
+          name: userData.name,
+          email: userData.email,
+          role: userData.role as UserRole,
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      return null;
+    }
+  }, []);
 
   // Check for existing session on mount
   useEffect(() => {
+    let isMounted = true;
+
     const initAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session }, error } = await supabase.auth.getSession();
 
-        if (session?.user) {
-          // Buscar dados do usuário diretamente do banco via Supabase Client
-          // Isso funciona tanto para usuários OAuth quanto para login com email/senha
-          const { data: userData, error } = await supabase
-            .from('users')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-
-          if (error) {
-            console.error('Error fetching user data:', error);
-            throw error;
+        if (error) {
+          console.error('Error getting session:', error);
+          if (isMounted) {
+            clearAuthState();
+            setLoading(false);
           }
+          return;
+        }
 
-          if (userData) {
-            const mappedUser: User = {
-              id: userData.id,
-              name: userData.name,
-              email: userData.email,
-              role: userData.role as UserRole,
-            };
-
-            setUser(mappedUser);
+        if (session?.user && isMounted) {
+          const userData = await fetchUserData(session.user.id);
+          if (userData && isMounted) {
+            setUser(userData);
+            setSessionExpired(false);
+          } else if (isMounted) {
+            // Usuário não encontrado na tabela users
+            clearAuthState();
           }
+        } else if (isMounted) {
+          clearAuthState();
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
+        if (isMounted) {
+          clearAuthState();
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
@@ -71,70 +112,80 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event);
+
       if (event === 'SIGNED_IN' && session?.user) {
-        try {
-          // Buscar dados do usuário diretamente do banco via Supabase Client
-          const { data: userData, error } = await supabase
-            .from('users')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-
-          if (error) {
-            console.error('Error fetching user data:', error);
-            throw error;
-          }
-
-          if (userData) {
-            const mappedUser: User = {
-              id: userData.id,
-              name: userData.name,
-              email: userData.email,
-              role: userData.role as UserRole,
-            };
-
-            setUser(mappedUser);
-          }
-        } catch (error) {
-          console.error('Error fetching user data:', error);
+        const userData = await fetchUserData(session.user.id);
+        if (userData && isMounted) {
+          setUser(userData);
+          setSessionExpired(false);
         }
       } else if (event === 'SIGNED_OUT') {
-        setUser(null);
-      } else if (event === 'TOKEN_REFRESHED') {
+        if (isMounted) {
+          clearAuthState();
+        }
+      } else if (event === 'TOKEN_REFRESHED' && session?.user) {
         console.log('Session token refreshed successfully');
+        // Verificar se o usuário ainda é válido
+        const userData = await fetchUserData(session.user.id);
+        if (userData && isMounted) {
+          setUser(userData);
+          setSessionExpired(false);
+        }
       }
     });
 
     // Listen for page visibility changes to refresh session
     const handleVisibilityChange = async () => {
-      if (document.visibilityState === 'visible') {
+      if (document.visibilityState === 'visible' && isMounted) {
         try {
-          // Refresh session when user returns to the tab
           const { data: { session }, error } = await supabase.auth.getSession();
 
-          if (error) {
-            console.error('Error refreshing session:', error);
+          if (error || !session) {
+            console.log('Session expired or invalid');
+            clearAuthState();
             return;
           }
 
-          if (!session) {
-            // Session expired, sign out
-            setUser(null);
+          // Verificar se o usuário ainda existe no banco
+          const userData = await fetchUserData(session.user.id);
+          if (!userData && isMounted) {
+            console.log('User not found in database, clearing session');
+            await supabase.auth.signOut();
+            clearAuthState();
+          } else if (userData && isMounted) {
+            setUser(userData);
+            setSessionExpired(false);
           }
-          // Note: We don't need to update user data here as onAuthStateChange handles it
         } catch (error) {
           console.error('Error handling visibility change:', error);
+          if (isMounted) {
+            clearAuthState();
+          }
         }
       }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
+    // Verificar sessão periodicamente (a cada 5 minutos)
+    const sessionCheckInterval = setInterval(async () => {
+      if (!isMounted) return;
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session && user) {
+        console.log('Session check: session expired');
+        clearAuthState();
+      }
+    }, 5 * 60 * 1000);
+
     return () => {
+      isMounted = false;
       subscription.unsubscribe();
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      clearInterval(sessionCheckInterval);
     };
-  }, []); // Empty dependency array to avoid infinite loop
+  }, [clearAuthState, fetchUserData]);
 
   const login = async (email: string, password: string) => {
     try {
@@ -148,6 +199,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       };
 
       setUser(mappedUser);
+      setSessionExpired(false);
     } catch (error) {
       console.error('Login error:', error);
       throw error;
@@ -156,11 +208,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
-      await supabase.auth.signOut();
+      // Limpar estado local primeiro
       setUser(null);
+      setSessionExpired(false);
+      localStorage.removeItem('user');
+
+      // Depois fazer signOut no Supabase
+      await supabase.auth.signOut();
     } catch (error) {
       console.error('Logout error:', error);
-      throw error;
+      // Mesmo com erro, garantir que o estado local está limpo
+      setUser(null);
+      setSessionExpired(false);
+      localStorage.removeItem('user');
     }
   };
 
@@ -179,6 +239,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     logout,
     updateUser,
     loading,
+    sessionExpired,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

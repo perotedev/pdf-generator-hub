@@ -1,10 +1,13 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { RefreshCw } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 const AuthCallback = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const handleCallback = async () => {
@@ -14,10 +17,10 @@ const AuthCallback = () => {
         // Precisamos aguardar um pouco para a sessão ser estabelecida
         await new Promise(resolve => setTimeout(resolve, 100));
 
-        const { data: { session }, error } = await supabase.auth.getSession();
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
-        if (error) {
-          console.error('Error getting session:', error);
+        if (sessionError) {
+          console.error('Error getting session:', sessionError);
           navigate('/login', { replace: true });
           return;
         }
@@ -25,28 +28,67 @@ const AuthCallback = () => {
         if (session) {
           console.log('OAuth session established for:', session.user.email);
 
-          // Verificar se o usuário já existe na tabela users
-          const { data: existingUser } = await supabase
+          // Verificar se o usuário já existe na tabela users pelo ID (mesmo provider)
+          const { data: existingUserById } = await supabase
             .from('users')
-            .select('id, status')
+            .select('id, status, email')
             .eq('id', session.user.id)
             .single();
 
-          // Se não existe, criar com status ACTIVE (OAuth já validou o email)
-          if (!existingUser) {
-            const { error: insertError } = await supabase
-              .from('users')
-              .insert({
-                id: session.user.id,
-                email: session.user.email!,
-                name: session.user.user_metadata.name || session.user.email!.split('@')[0],
-                password_hash: 'oauth',
-                role: 'USER',
-                status: 'ACTIVE', // OAuth não precisa verificação
-              });
+          if (existingUserById) {
+            // Usuário já existe com este ID, fazer login normalmente
+            navigate('/dashboard', { replace: true });
+            return;
+          }
 
-            if (insertError) {
-              console.error('Error creating user in database:', insertError);
+          // Verificar se o email já existe na tabela users (pode ter sido criado via registro convencional)
+          const { data: existingUserByEmail } = await supabase
+            .from('users')
+            .select('id, email')
+            .eq('email', session.user.email!.toLowerCase())
+            .single();
+
+          if (existingUserByEmail) {
+            // Email já existe com outro método de autenticação
+            // Fazer logout do OAuth e informar o usuário
+            await supabase.auth.signOut();
+
+            setError('Este email já está cadastrado com outro método de login. Por favor, faça login com email e senha.');
+
+            toast({
+              title: "Email já cadastrado",
+              description: "Este email já está cadastrado com outro método de login. Por favor, faça login com email e senha.",
+              variant: "destructive",
+            });
+
+            setTimeout(() => {
+              navigate('/login', { replace: true });
+            }, 3000);
+            return;
+          }
+
+          // Se não existe, criar com status ACTIVE (OAuth já validou o email)
+          const { error: insertError } = await supabase
+            .from('users')
+            .insert({
+              id: session.user.id,
+              email: session.user.email!.toLowerCase(),
+              name: session.user.user_metadata.full_name || session.user.user_metadata.name || session.user.email!.split('@')[0],
+              password_hash: 'oauth',
+              role: 'USER',
+              status: 'ACTIVE', // OAuth não precisa verificação
+            });
+
+          if (insertError) {
+            console.error('Error creating user in database:', insertError);
+            // Se der erro de constraint (email duplicado), informar usuário
+            if (insertError.code === '23505') {
+              await supabase.auth.signOut();
+              setError('Este email já está cadastrado. Por favor, faça login com email e senha.');
+              setTimeout(() => {
+                navigate('/login', { replace: true });
+              }, 3000);
+              return;
             }
           }
 
@@ -56,14 +98,27 @@ const AuthCallback = () => {
           console.log('No session found after OAuth callback');
           navigate('/login', { replace: true });
         }
-      } catch (error) {
-        console.error('Error in auth callback:', error);
+      } catch (err) {
+        console.error('Error in auth callback:', err);
         navigate('/login', { replace: true });
       }
     };
 
     handleCallback();
-  }, [navigate]);
+  }, [navigate, toast]);
+
+  if (error) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center max-w-md px-4">
+          <div className="text-destructive text-5xl mb-4">!</div>
+          <p className="text-lg font-semibold text-destructive mb-2">Erro de autenticação</p>
+          <p className="text-muted-foreground">{error}</p>
+          <p className="text-sm text-muted-foreground mt-4">Redirecionando para login...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center">

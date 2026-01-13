@@ -72,6 +72,23 @@ const Registro = () => {
     setIsLoading(true);
 
     try {
+      // Verificar se o email já existe na tabela users (pode ter sido criado via Google OAuth)
+      const { data: existingUser } = await supabase
+        .from('users')
+        .select('id, email')
+        .eq('email', email.toLowerCase())
+        .single();
+
+      if (existingUser) {
+        toast({
+          title: "Email já cadastrado",
+          description: "Este email já está em uso. Tente fazer login ou use outro email.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
       // Criar usuário no Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
@@ -83,7 +100,19 @@ const Registro = () => {
         },
       });
 
-      if (authError) throw authError;
+      if (authError) {
+        // Verificar se é erro de email já existente no auth.users
+        if (authError.message.includes('already registered') || authError.message.includes('already exists')) {
+          toast({
+            title: "Email já cadastrado",
+            description: "Este email já está em uso. Tente fazer login ou recuperar sua senha.",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
+        }
+        throw authError;
+      }
 
       if (authData.user) {
         // Criar registro na tabela public.users com status PENDING
