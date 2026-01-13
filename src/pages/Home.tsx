@@ -9,6 +9,11 @@ import {
   ArrowRight,
   Star,
   CheckCircle,
+  ChevronRight,
+  Table2,
+  MousePointerClick,
+  Play,
+  FolderOpen,
 } from "lucide-react";
 import {
   Dialog,
@@ -17,7 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const Home = () => {
   const [selectedScreenshot, setSelectedScreenshot] = useState<{
@@ -25,6 +30,68 @@ const Home = () => {
     title: string;
     description: string;
   } | null>(null);
+  const [activeStep, setActiveStep] = useState(0);
+  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+
+  const workflowSteps = [
+    {
+      step: 1,
+      icon: Table2,
+      title: "Configure sua Planilha",
+      shortTitle: "Planilha",
+      description: "Importe sua planilha Excel e defina quais colunas contêm os dados que serão usados nos documentos.",
+      details: "O sistema detecta automaticamente as colunas da sua planilha. Basta nomear cada coluna para facilitar o mapeamento.",
+      image: "/screenshots/perfil-planilha.png",
+      color: "from-blue-500 to-blue-600",
+    },
+    {
+      step: 2,
+      icon: MousePointerClick,
+      title: "Mapeie o Documento",
+      shortTitle: "Documento",
+      description: "Clique diretamente no PDF para posicionar os campos. Vincule cada campo a uma coluna da planilha.",
+      details: "Interface visual drag-and-drop. Personalize fontes, tamanhos e estilos de cada campo individualmente.",
+      image: "/screenshots/perfil-documento.png",
+      color: "from-purple-500 to-purple-600",
+    },
+    {
+      step: 3,
+      icon: Play,
+      title: "Gere em Lote",
+      shortTitle: "Gerar",
+      description: "Com um clique, o sistema processa todas as linhas da planilha e gera um PDF personalizado para cada registro.",
+      details: "Processamento rápido e eficiente. Gere centenas de documentos em segundos, não em horas.",
+      image: "/screenshots/geracao-pdfs-lote.png",
+      color: "from-green-500 to-green-600",
+    },
+    {
+      step: 4,
+      icon: FolderOpen,
+      title: "Acesse os Resultados",
+      shortTitle: "Resultados",
+      description: "Todos os PDFs gerados ficam organizados e prontos para uso. Visualize, exporte ou compartilhe.",
+      details: "Gerenciamento completo dos documentos gerados. Busca, filtros e organização inteligente.",
+      image: "/screenshots/pdfs-gerados.png",
+      color: "from-orange-500 to-orange-600",
+    },
+  ];
+
+  // Auto-play dos steps
+  useEffect(() => {
+    if (!isAutoPlaying) return;
+
+    const interval = setInterval(() => {
+      setActiveStep((prev) => (prev + 1) % workflowSteps.length);
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [isAutoPlaying, workflowSteps.length]);
+
+  const handleStepClick = (index: number) => {
+    setActiveStep(index);
+    setIsAutoPlaying(false);
+  };
+
   const features = [
     {
       icon: Zap,
@@ -127,126 +194,172 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Sistema em Ação */}
-      <section className="py-20 bg-muted/30">
+      {/* Sistema em Ação - Fluxo Interativo */}
+      <section className="py-20 bg-muted/30 overflow-hidden">
         <div className="container">
           <div className="mx-auto mb-12 max-w-2xl text-center">
             <h2 className="mb-4 text-3xl font-bold text-foreground">
               Veja o sistema em ação
             </h2>
             <p className="text-muted-foreground">
-              Interface intuitiva e poderosa, projetada para máxima produtividade
+              4 passos simples para automatizar a geração de documentos
             </p>
           </div>
 
-          <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
-            <Card
-              className="border-border overflow-hidden group hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() => setSelectedScreenshot({
-                image: "/screenshots/perfil-planilha.png",
-                title: "Mapeamento de Planilhas",
-                description: "Configure uma vez e reutilize o perfil quantas vezes quiser. Defina quais colunas da sua planilha Excel contêm os dados que serão inseridos nos documentos. O sistema memoriza suas configurações para futuras gerações."
+          {/* Timeline Navigation */}
+          <div className="flex justify-center mb-8">
+            <div className="flex items-center gap-2 sm:gap-4 bg-card rounded-full p-2 shadow-lg border border-border">
+              {workflowSteps.map((step, index) => {
+                const Icon = step.icon;
+                const isActive = activeStep === index;
+                return (
+                  <button
+                    key={step.step}
+                    onClick={() => handleStepClick(index)}
+                    className={`
+                      relative flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full transition-all duration-300
+                      ${isActive
+                        ? 'bg-primary text-primary-foreground shadow-md'
+                        : 'hover:bg-muted text-muted-foreground hover:text-foreground'
+                      }
+                    `}
+                  >
+                    <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
+                    <span className="hidden sm:inline text-sm font-medium">{step.shortTitle}</span>
+                    <span className="sm:hidden text-xs font-bold">{step.step}</span>
+                    {isActive && isAutoPlaying && (
+                      <span className="absolute bottom-0 left-0 h-0.5 bg-primary-foreground/50 animate-[progress_4s_linear_infinite] rounded-full"
+                        style={{ width: '100%' }}
+                      />
+                    )}
+                  </button>
+                );
               })}
-            >
-              <CardContent className="p-0">
-                <div className="relative overflow-hidden">
-                  <img
-                    src="/screenshots/perfil-planilha.png"
-                    alt="Configuração de perfil de planilha"
-                    className="w-full h-48 object-cover transition-transform group-hover:scale-105"
-                  />
-                </div>
-                <div className="p-4">
-                  <h3 className="text-base font-semibold text-foreground mb-2">
-                    Mapeamento de Planilhas
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Configure uma vez e reutilize o perfil quantas vezes quiser.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            </div>
+          </div>
 
-            <Card
-              className="border-border overflow-hidden group hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() => setSelectedScreenshot({
-                image: "/screenshots/perfil-documento.png",
-                title: "Editor Visual de Documentos",
-                description: "Clique diretamente no PDF para posicionar campos e personalize estilos. O editor visual permite que você configure exatamente onde cada informação da planilha deve aparecer no documento final, com controle total sobre fontes, tamanhos e formatação."
-              })}
-            >
-              <CardContent className="p-0">
-                <div className="relative overflow-hidden">
-                  <img
-                    src="/screenshots/perfil-documento.png"
-                    alt="Editor visual de perfil de documento"
-                    className="w-full h-48 object-cover transition-transform group-hover:scale-105"
-                  />
+          {/* Main Content Area */}
+          <div className="grid lg:grid-cols-2 gap-8 items-center max-w-6xl mx-auto">
+            {/* Left Side - Step Info */}
+            <div className="order-2 lg:order-1">
+              <div className="space-y-6">
+                {/* Step Number */}
+                <div className={`inline-flex items-center gap-3 px-4 py-2 rounded-full bg-gradient-to-r ${workflowSteps[activeStep].color} text-white`}>
+                  <span className="text-lg font-bold">Passo {workflowSteps[activeStep].step}</span>
+                  <ChevronRight className="h-4 w-4" />
+                  <span className="text-sm opacity-90">{workflowSteps[activeStep].shortTitle}</span>
                 </div>
-                <div className="p-4">
-                  <h3 className="text-base font-semibold text-foreground mb-2">
-                    Editor Visual de Documentos
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Clique diretamente no PDF para posicionar campos e personalize estilos.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card
-              className="border-border overflow-hidden group hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() => setSelectedScreenshot({
-                image: "/screenshots/geracao-pdfs-lote.png",
-                title: "Geração em Lote",
-                description: "Gere centenas de documentos personalizados com apenas um clique. Selecione seu perfil de planilha e documento, escolha o arquivo Excel, e o sistema processará automaticamente todas as linhas, criando um PDF personalizado para cada registro."
-              })}
-            >
-              <CardContent className="p-0">
-                <div className="relative overflow-hidden">
-                  <img
-                    src="/screenshots/geracao-pdfs-lote.png"
-                    alt="Geração em lote de PDFs"
-                    className="w-full h-48 object-cover transition-transform group-hover:scale-105"
-                  />
-                </div>
-                <div className="p-4">
-                  <h3 className="text-base font-semibold text-foreground mb-2">
-                    Geração em Lote
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Gere centenas de documentos personalizados com apenas um clique.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
 
-            <Card
-              className="border-border overflow-hidden group hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() => setSelectedScreenshot({
-                image: "/screenshots/pdfs-gerados.png",
-                title: "Gerenciamento Completo",
-                description: "Visualize, organize e gerencie todos os documentos gerados. A interface de gerenciamento permite buscar, filtrar, visualizar e organizar todos os PDFs criados, facilitando o acesso e controle dos seus documentos."
-              })}
-            >
-              <CardContent className="p-0">
-                <div className="relative overflow-hidden">
-                  <img
-                    src="/screenshots/pdfs-gerados.png"
-                    alt="Lista de PDFs gerados"
-                    className="w-full h-48 object-cover transition-transform group-hover:scale-105"
-                  />
-                </div>
-                <div className="p-4">
-                  <h3 className="text-base font-semibold text-foreground mb-2">
-                    Gerenciamento Completo
-                  </h3>
+                {/* Title */}
+                <h3 className="text-2xl sm:text-3xl font-bold text-foreground">
+                  {workflowSteps[activeStep].title}
+                </h3>
+
+                {/* Description */}
+                <p className="text-lg text-muted-foreground">
+                  {workflowSteps[activeStep].description}
+                </p>
+
+                {/* Details */}
+                <div className="flex items-start gap-3 p-4 bg-card rounded-lg border border-border">
+                  <CheckCircle className="h-5 w-5 text-primary mt-0.5 shrink-0" />
                   <p className="text-sm text-muted-foreground">
-                    Visualize, organize e gerencie todos os documentos gerados.
+                    {workflowSteps[activeStep].details}
                   </p>
                 </div>
-              </CardContent>
-            </Card>
+
+                {/* Navigation Buttons */}
+                <div className="flex items-center gap-4 pt-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setActiveStep((prev) => (prev - 1 + workflowSteps.length) % workflowSteps.length);
+                      setIsAutoPlaying(false);
+                    }}
+                    disabled={activeStep === 0}
+                  >
+                    Anterior
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setActiveStep((prev) => (prev + 1) % workflowSteps.length);
+                      setIsAutoPlaying(false);
+                    }}
+                    disabled={activeStep === workflowSteps.length - 1}
+                  >
+                    Próximo
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsAutoPlaying(!isAutoPlaying)}
+                    className="ml-auto"
+                  >
+                    {isAutoPlaying ? 'Pausar' : 'Reproduzir'}
+                  </Button>
+                </div>
+
+                {/* Progress Dots */}
+                <div className="flex items-center gap-2 pt-2">
+                  {workflowSteps.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleStepClick(index)}
+                      className={`
+                        h-2 rounded-full transition-all duration-300
+                        ${activeStep === index
+                          ? 'w-8 bg-primary'
+                          : 'w-2 bg-muted-foreground/30 hover:bg-muted-foreground/50'
+                        }
+                      `}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Right Side - Screenshot */}
+            <div className="order-1 lg:order-2">
+              <div
+                className="relative rounded-xl overflow-hidden border border-border shadow-2xl bg-card cursor-pointer group"
+                onClick={() => setSelectedScreenshot({
+                  image: workflowSteps[activeStep].image,
+                  title: workflowSteps[activeStep].title,
+                  description: workflowSteps[activeStep].description + " " + workflowSteps[activeStep].details
+                })}
+              >
+                {/* Gradient Overlay */}
+                <div className={`absolute inset-0 bg-gradient-to-br ${workflowSteps[activeStep].color} opacity-5`} />
+
+                {/* Screenshot */}
+                <div className="relative aspect-video overflow-hidden">
+                  <img
+                    src={workflowSteps[activeStep].image}
+                    alt={workflowSteps[activeStep].title}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+
+                  {/* Hover Overlay */}
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                    <span className="opacity-0 group-hover:opacity-100 transition-opacity text-white bg-black/50 px-4 py-2 rounded-full text-sm font-medium">
+                      Clique para ampliar
+                    </span>
+                  </div>
+                </div>
+
+                {/* Step Badge */}
+                <div className="absolute top-4 left-4 flex items-center gap-2 bg-background/90 backdrop-blur-sm rounded-full px-3 py-1.5 text-sm font-medium">
+                  {(() => {
+                    const Icon = workflowSteps[activeStep].icon;
+                    return <Icon className="h-4 w-4 text-primary" />;
+                  })()}
+                  <span>Passo {workflowSteps[activeStep].step}</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>

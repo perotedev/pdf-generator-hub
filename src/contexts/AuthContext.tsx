@@ -38,8 +38,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('user');
   }, []);
 
+  // Função para atualizar last_login do usuário
+  const updateLastLogin = useCallback(async (userId: string) => {
+    try {
+      await supabase
+        .from('users')
+        .update({ last_login: new Date().toISOString() })
+        .eq('id', userId);
+      console.log('Last login updated for user:', userId);
+    } catch (error) {
+      console.error('Error updating last_login:', error);
+    }
+  }, []);
+
   // Função para buscar dados do usuário
-  const fetchUserData = useCallback(async (userId: string): Promise<User | null> => {
+  const fetchUserData = useCallback(async (userId: string, updateLogin: boolean = false): Promise<User | null> => {
     try {
       const { data: userData, error } = await supabase
         .from('users')
@@ -53,6 +66,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (userData) {
+        // Atualizar last_login se solicitado
+        if (updateLogin) {
+          updateLastLogin(userId);
+        }
+
         return {
           id: userData.id,
           name: userData.name,
@@ -65,7 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('Error fetching user data:', error);
       return null;
     }
-  }, []);
+  }, [updateLastLogin]);
 
   // Check for existing session on mount
   useEffect(() => {
@@ -115,7 +133,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('Auth state changed:', event);
 
       if (event === 'SIGNED_IN' && session?.user) {
-        const userData = await fetchUserData(session.user.id);
+        // Atualiza last_login quando o usuário faz login
+        const userData = await fetchUserData(session.user.id, true);
         if (userData && isMounted) {
           setUser(userData);
           setSessionExpired(false);
