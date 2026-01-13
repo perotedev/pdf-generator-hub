@@ -130,14 +130,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      // Ignorar INITIAL_SESSION pois já tratamos no initAuth
+      if (event === 'INITIAL_SESSION') {
+        return;
+      }
+
       console.log('Auth state changed:', event);
 
       if (event === 'SIGNED_IN' && session?.user) {
-        // Atualiza last_login quando o usuário faz login
-        const userData = await fetchUserData(session.user.id, true);
-        if (userData && isMounted) {
-          setUser(userData);
-          setSessionExpired(false);
+        // Só atualiza se realmente temos uma sessão válida
+        try {
+          const userData = await fetchUserData(session.user.id, true);
+          if (userData && isMounted) {
+            setUser(userData);
+            setSessionExpired(false);
+          }
+        } catch (error) {
+          console.error('Error fetching user on SIGNED_IN:', error);
         }
       } else if (event === 'SIGNED_OUT') {
         if (isMounted) {
@@ -145,11 +154,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } else if (event === 'TOKEN_REFRESHED' && session?.user) {
         console.log('Session token refreshed successfully');
-        // Verificar se o usuário ainda é válido
-        const userData = await fetchUserData(session.user.id);
-        if (userData && isMounted) {
-          setUser(userData);
-          setSessionExpired(false);
+        try {
+          const userData = await fetchUserData(session.user.id);
+          if (userData && isMounted) {
+            setUser(userData);
+            setSessionExpired(false);
+          }
+        } catch (error) {
+          console.error('Error fetching user on TOKEN_REFRESHED:', error);
         }
       }
     });
