@@ -41,7 +41,7 @@ const Home = () => {
       shortTitle: "Planilha",
       description: "Importe sua planilha Excel e defina quais colunas contêm os dados que serão usados nos documentos.",
       details: "O sistema detecta automaticamente as colunas da sua planilha. Basta nomear cada coluna para facilitar o mapeamento.",
-      image: "/screenshots/perfil-planilha.png",
+      image: "/art/planilha.png",
       color: "from-blue-500 to-blue-600",
     },
     {
@@ -51,7 +51,7 @@ const Home = () => {
       shortTitle: "Documento",
       description: "Clique diretamente no PDF para posicionar os campos. Vincule cada campo a uma coluna da planilha.",
       details: "Interface visual com mapeamento por clique. Personalize fontes, tamanhos e estilos de cada campo individualmente.",
-      image: "/screenshots/perfil-documento.png",
+      image: "/art/documento.png",
       color: "from-purple-500 to-purple-600",
     },
     {
@@ -335,13 +335,13 @@ const Home = () => {
                 <div className={`absolute inset-0 bg-gradient-to-br ${workflowSteps[activeStep].color} opacity-5`} />
 
                 {/* Screenshot */}
-                <div className="relative aspect-video overflow-hidden">
+                <div className="relative overflow-hidden">
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-transparent to-black/10"></div>
 
                   <img
                     src={workflowSteps[activeStep].image}
                     alt={workflowSteps[activeStep].title}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    className="h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
 
                   {/* Hover Overlay */}
