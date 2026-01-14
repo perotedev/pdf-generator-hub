@@ -375,8 +375,8 @@ export default function AdminLicenses() {
               <TableHead>Código</TableHead>
               <TableHead>Cliente</TableHead>
               <TableHead>Empresa</TableHead>
-              <TableHead>Plano</TableHead>
-              <TableHead>OS</TableHead>
+              <TableHead className="text-center">Plano</TableHead>
+              <TableHead className="text-center">OS</TableHead>
               <TableHead>Validade</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
@@ -409,8 +409,8 @@ export default function AdminLicenses() {
                   </TableCell>
                   <TableCell>{license.client || 'N/A'}</TableCell>
                   <TableCell>{license.company}</TableCell>
-                  <TableCell>{license.plan_type || 'N/A'}</TableCell>
-                  <TableCell>
+                  <TableCell className="text-center">{license.plan_type || 'N/A'}</TableCell>
+                  <TableCell className="text-center">
                     <div className="flex flex-col gap-1">
                       {license.is_used && license.device_id && (
                         <div className="flex items-center gap-1 text-muted-foreground">

@@ -816,8 +816,8 @@ const Documentacao = () => {
                 Como funciona o suporte?
               </h4>
               <p className="text-sm text-muted-foreground">
-                Oferecemos suporte por email para todos os planos. Planos Pro e Enterprise
-                têm prioridade no atendimento. O tempo de resposta é de até 24h em dias úteis.
+                Oferecemos suporte por email para todos os planos, o tempo de resposta é de até 24h em dias úteis.
+                NÃO é oferecido suporte das 18h de sexta-feira até as 18h de sábado.
               </p>
             </CardContent>
           </Card>
