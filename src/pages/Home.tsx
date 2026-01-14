@@ -61,7 +61,7 @@ const Home = () => {
       shortTitle: "Gerar",
       description: "Com um clique, o sistema processa todas as linhas da planilha e gera um PDF personalizado para cada registro.",
       details: "Processamento rápido e eficiente. Gere centenas de documentos em segundos, não em horas.",
-      image: "/screenshots/geracao-pdfs-lote.png",
+      image: "/art/pdf_lote.png",
       color: "from-green-500 to-green-600",
     },
     {
@@ -71,7 +71,7 @@ const Home = () => {
       shortTitle: "Resultados",
       description: "Todos os PDFs gerados ficam organizados e prontos para uso. Visualize, exporte ou compartilhe.",
       details: "Gerenciamento completo dos documentos gerados. Busca, filtros e organização inteligente.",
-      image: "/screenshots/pdfs-gerados.png",
+      image: "/art/pdf_list.png",
       color: "from-orange-500 to-orange-600",
     },
   ];
