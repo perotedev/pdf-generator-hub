@@ -12,7 +12,7 @@ import {
   Video,
   RefreshCw,
 } from "lucide-react";
-import { db, type SystemVersion } from "@/lib/supabase";
+import { systemApi, type SystemVersion } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import ReactMarkdown from "react-markdown";
 
@@ -46,21 +46,22 @@ const Downloads = () => {
         });
 
         const dataPromise = (async () => {
-          // Load versions
-          const allVersions = await db.systemVersions.getAll();
-          const activeVersions = allVersions.filter((v) => v.is_active);
+          // Load versions via API
+          const versionsResponse = await systemApi.getVersions();
+          const activeVersions = (versionsResponse.versions || []).filter((v: SystemVersion) => v.is_active);
 
-          const latest = activeVersions.find((v) => v.is_latest);
+          const latest = activeVersions.find((v: SystemVersion) => v.is_latest);
           const previous = activeVersions
-            .filter((v) => !v.is_latest)
-            .sort((a, b) => new Date(b.release_date).getTime() - new Date(a.release_date).getTime())
+            .filter((v: SystemVersion) => !v.is_latest)
+            .sort((a: SystemVersion, b: SystemVersion) => new Date(b.release_date).getTime() - new Date(a.release_date).getTime())
             .slice(0, 5);
 
-          // Load system settings
-          const settings = await db.systemSettings.getAll();
-          const userManual = settings.find((s) => s.key === "user_manual_url");
-          const systemDoc = settings.find((s) => s.key === "system_documentation_url");
-          const infoVideo = settings.find((s) => s.key === "info_video_url");
+          // Load system settings via API
+          const settingsResponse = await systemApi.getSettings();
+          const settings = settingsResponse.settings || [];
+          const userManual = settings.find((s: any) => s.key === "user_manual_url");
+          const systemDoc = settings.find((s: any) => s.key === "system_documentation_url");
+          const infoVideo = settings.find((s: any) => s.key === "info_video_url");
 
           return {
             latest,

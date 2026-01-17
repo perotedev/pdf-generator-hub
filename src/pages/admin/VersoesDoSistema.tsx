@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { db, type SystemVersion } from "@/lib/supabase";
+import { systemApi, getValidAccessToken, type SystemVersion } from "@/lib/supabase";
 import { Plus, RefreshCw, Save, Edit, Trash2, X } from "lucide-react";
 import {
   Dialog,
@@ -47,8 +47,19 @@ const VersoesDoSistema = () => {
   const loadVersions = async () => {
     setIsLoading(true);
     try {
-      const data = await db.systemVersions.getAll();
-      setVersions(data);
+      const token = await getValidAccessToken();
+
+      if (!token) {
+        toast({
+          title: "Sessão expirada",
+          description: "Por favor, faça login novamente.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const response = await systemApi.getAllVersions(token);
+      setVersions(response.versions || []);
     } catch (error: any) {
       toast({
         title: "Erro ao carregar versões",
@@ -103,6 +114,17 @@ const VersoesDoSistema = () => {
     setIsSaving(true);
 
     try {
+      const token = await getValidAccessToken();
+
+      if (!token) {
+        toast({
+          title: "Sessão expirada",
+          description: "Por favor, faça login novamente.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const versionData = {
         version: formVersion,
         release_date: formReleaseDate,
@@ -119,13 +141,13 @@ const VersoesDoSistema = () => {
       };
 
       if (editingVersion) {
-        await db.systemVersions.update(editingVersion.id, versionData);
+        await systemApi.updateVersion(token, editingVersion.id, versionData);
         toast({
           title: "Versão atualizada!",
           description: "As alterações foram salvas com sucesso.",
         });
       } else {
-        await db.systemVersions.create(versionData);
+        await systemApi.createVersion(token, versionData as any);
         toast({
           title: "Versão criada!",
           description: "A nova versão foi adicionada com sucesso.",
@@ -152,7 +174,18 @@ const VersoesDoSistema = () => {
     }
 
     try {
-      await db.systemVersions.delete(id);
+      const token = await getValidAccessToken();
+
+      if (!token) {
+        toast({
+          title: "Sessão expirada",
+          description: "Por favor, faça login novamente.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      await systemApi.deleteVersion(token, id);
       toast({
         title: "Versão excluída!",
         description: "A versão foi removida com sucesso.",

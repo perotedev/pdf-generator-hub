@@ -12,7 +12,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
-import { supabase, type Subscription, type License, type Payment } from "@/lib/supabase";
+import { dashboardApi, getValidAccessToken, type Subscription, type License, type Payment } from "@/lib/supabase";
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -27,40 +27,29 @@ const Dashboard = () => {
 
       try {
         setLoading(true);
+        const token = await getValidAccessToken();
+
+        if (!token) {
+          console.error('No valid token');
+          return;
+        }
 
         // Fetch active subscription
-        const { data: subData } = await supabase
-          .from('subscriptions')
-          .select('*, plans(*)')
-          .eq('user_id', user.id)
-          .eq('status', 'ACTIVE')
-          .single();
-
-        if (subData) {
-          setSubscription(subData as any);
+        const subResponse = await dashboardApi.getActiveSubscription(token);
+        if (subResponse.subscription) {
+          setSubscription(subResponse.subscription as any);
         }
 
         // Fetch licenses
-        const { data: licensesData } = await supabase
-          .from('licenses')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
-
-        if (licensesData) {
-          setLicenses(licensesData);
+        const licensesResponse = await dashboardApi.getLicenses(token);
+        if (licensesResponse.licenses) {
+          setLicenses(licensesResponse.licenses);
         }
 
         // Fetch recent payments
-        const { data: paymentsData } = await supabase
-          .from('payments')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(4);
-
-        if (paymentsData) {
-          setPayments(paymentsData);
+        const paymentsResponse = await dashboardApi.getPayments(token, 4);
+        if (paymentsResponse.payments) {
+          setPayments(paymentsResponse.payments);
         }
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
@@ -229,12 +218,6 @@ const Dashboard = () => {
               <Button variant="outline" className="w-full justify-start gap-2">
                 <CreditCard className="h-4 w-4" />
                 Gerenciar Assinatura
-              </Button>
-            </Link>
-            <Link to="/dashboard/licencas">
-              <Button variant="outline" className="w-full justify-start gap-2">
-                <Key className="h-4 w-4" />
-                Ver Minhas Licenças
               </Button>
             </Link>
             <Link to="/dashboard/downloads">

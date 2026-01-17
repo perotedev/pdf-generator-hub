@@ -190,12 +190,21 @@ serve(async (req) => {
         )
       }
 
-      const { error } = await supabase
+      // Deletar da tabela users
+      const { error: dbError } = await supabase
         .from('users')
         .delete()
         .eq('id', userId)
 
-      if (error) throw error
+      if (dbError) throw dbError
+
+      // Deletar do Supabase Auth
+      const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(userId)
+
+      if (authError) {
+        console.error('Error deleting auth user:', authError)
+        // Continua mesmo se falhar a deleção do auth, pois o registro do banco já foi deletado
+      }
 
       return new Response(
         JSON.stringify({ message: 'User deleted successfully' }),

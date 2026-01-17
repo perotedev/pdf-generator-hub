@@ -25,6 +25,7 @@ import VersoesDoSistema from "./pages/admin/VersoesDoSistema";
 import AuthCallback from "./pages/AuthCallback";
 import VerificarEmail from "./pages/VerificarEmail";
 import RecuperarSenha from "./pages/RecuperarSenha";
+import Checkout from "./pages/Checkout";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -50,6 +51,7 @@ const App = () => (
               <Route path="/" element={<Home />} />
               <Route path="/documentacao" element={<Documentacao />} />
               <Route path="/planos" element={<Planos />} />
+              <Route path="/checkout" element={<Checkout />} />
               <Route path="/login" element={<Login />} />
               <Route path="/registro" element={<Registro />} />
             </Route>

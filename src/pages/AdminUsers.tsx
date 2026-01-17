@@ -47,7 +47,7 @@ import { Label } from '@/components/ui/label';
 import { Search, UserCog, Shield, Trash2, Laptop, Key, CreditCard, Receipt, Users2, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { UserRole, useAuth } from '@/contexts/AuthContext';
-import { supabase, userApi, getValidAccessToken, type User as DbUser, type Subscription, type License, type Payment } from '@/lib/supabase';
+import { userApi, dashboardApi, getValidAccessToken, type User as DbUser, type Subscription, type License, type Payment } from '@/lib/supabase';
 
 interface SystemUser extends DbUser {
   subscriptions?: (Subscription & { plans?: any })[];
@@ -85,32 +85,25 @@ export default function AdminUsers() {
       const response = await userApi.getUsers(token);
       const usersData = response.users || response;
 
-      // Fetch additional data for each user
+      // Fetch additional data for each user via API
       const usersWithDetails = await Promise.all(
         usersData.map(async (user: DbUser) => {
-          const [subsData, licensesData, paymentsData] = await Promise.all([
-            supabase
-              .from('subscriptions')
-              .select('*, plans(*)')
-              .eq('user_id', user.id),
-            supabase
-              .from('licenses')
-              .select('*')
-              .eq('user_id', user.id)
-              .eq('is_standalone', false),
-            supabase
-              .from('payments')
-              .select('*')
-              .eq('user_id', user.id)
-              .order('created_at', { ascending: false })
-          ]);
-
-          return {
-            ...user,
-            subscriptions: subsData.data || [],
-            licenses: licensesData.data || [],
-            payments: paymentsData.data || [],
-          };
+          try {
+            const details = await dashboardApi.getUserDetails(token, user.id);
+            return {
+              ...user,
+              subscriptions: details.subscriptions || [],
+              licenses: details.licenses || [],
+              payments: details.payments || [],
+            };
+          } catch {
+            return {
+              ...user,
+              subscriptions: [],
+              licenses: [],
+              payments: [],
+            };
+          }
         })
       );
 

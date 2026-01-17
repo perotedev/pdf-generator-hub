@@ -33,7 +33,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase, checkoutApi, type Subscription, type License } from "@/lib/supabase";
+import { dashboardApi, checkoutApi, plansApi, getValidAccessToken, type Subscription, type License } from "@/lib/supabase";
 
 interface SubscriptionWithDetails extends Subscription {
   plans?: {
@@ -65,29 +65,36 @@ const Assinaturas = () => {
 
     try {
       setLoading(true);
+      const token = await getValidAccessToken();
+
+      if (!token) {
+        toast({
+          title: "Sessão expirada",
+          description: "Por favor, faça login novamente.",
+          variant: "destructive",
+        });
+        return;
+      }
 
       // Fetch user subscriptions with plan details
-      const { data: subsData, error: subsError } = await supabase
-        .from('subscriptions')
-        .select('*, plans(*)')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (subsError) throw subsError;
+      const subsResponse = await dashboardApi.getAllSubscriptions(token);
+      const subsData = subsResponse.subscriptions || [];
 
       // Fetch licenses for each subscription
       const subscriptionsWithLicenses = await Promise.all(
-        (subsData || []).map(async (sub) => {
-          const { data: licenseData } = await supabase
-            .from('licenses')
-            .select('*')
-            .eq('subscription_id', sub.id)
-            .single();
-
-          return {
-            ...sub,
-            license: licenseData,
-          };
+        subsData.map(async (sub: Subscription) => {
+          try {
+            const licenseResponse = await dashboardApi.getLicenseBySubscription(token, sub.id);
+            return {
+              ...sub,
+              license: licenseResponse.license,
+            };
+          } catch {
+            return {
+              ...sub,
+              license: null,
+            };
+          }
         })
       );
 
@@ -116,12 +123,18 @@ const Assinaturas = () => {
 
   const handleCancelRenewal = async (subId: string) => {
     try {
-      const { error } = await supabase
-        .from('subscriptions')
-        .update({ cancel_at_period_end: true })
-        .eq('id', subId);
+      const token = await getValidAccessToken();
 
-      if (error) throw error;
+      if (!token) {
+        toast({
+          title: "Sessão expirada",
+          description: "Por favor, faça login novamente.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      await dashboardApi.cancelSubscriptionRenewal(token, subId);
 
       await fetchSubscriptions();
 
@@ -141,17 +154,18 @@ const Assinaturas = () => {
 
   const handleDeactivateLicense = async (licenseId: string) => {
     try {
-      const { error } = await supabase
-        .from('licenses')
-        .update({
-          is_used: false,
-          device_id: null,
-          device_type: null,
-          activated_at: null,
-        })
-        .eq('id', licenseId);
+      const token = await getValidAccessToken();
 
-      if (error) throw error;
+      if (!token) {
+        toast({
+          title: "Sessão expirada",
+          description: "Por favor, faça login novamente.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      await dashboardApi.deactivateLicense(token, licenseId);
 
       await fetchSubscriptions();
 
@@ -170,12 +184,18 @@ const Assinaturas = () => {
 
   const handleSaveNickname = async (licenseId: string) => {
     try {
-      const { error } = await supabase
-        .from('licenses')
-        .update({ client: nicknameValue })
-        .eq('id', licenseId);
+      const token = await getValidAccessToken();
 
-      if (error) throw error;
+      if (!token) {
+        toast({
+          title: "Sessão expirada",
+          description: "Por favor, faça login novamente.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      await dashboardApi.updateLicenseNickname(token, licenseId, nicknameValue);
 
       await fetchSubscriptions();
 
@@ -195,9 +215,9 @@ const Assinaturas = () => {
 
   const handleReactivateSubscription = async (subId: string) => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const token = await getValidAccessToken();
 
-      if (!session?.access_token) {
+      if (!token) {
         toast({
           title: "Sessão expirada",
           description: "Por favor, faça login novamente.",
@@ -206,19 +226,17 @@ const Assinaturas = () => {
         return;
       }
 
-      // Get plan ID based on reactivatePlan
-      const { data: plans } = await supabase
-        .from('plans')
-        .select('*')
-        .eq('billing_cycle', reactivatePlan)
-        .single();
+      // Get plans from API
+      const plansResponse = await plansApi.getActivePlans();
+      const plansData = plansResponse.plans || plansResponse;
+      const selectedPlan = plansData.find((p: any) => p.billing_cycle === reactivatePlan);
 
-      if (!plans) throw new Error('Plano não encontrado');
+      if (!selectedPlan) throw new Error('Plano não encontrado');
 
       // Create checkout session
       const checkoutData = await checkoutApi.createCheckoutSession(
-        session.access_token,
-        plans.id,
+        token,
+        selectedPlan.id,
         `${window.location.origin}/dashboard/assinaturas`,
         `${window.location.origin}/dashboard/assinaturas`
       );

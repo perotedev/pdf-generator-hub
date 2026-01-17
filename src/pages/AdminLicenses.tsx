@@ -43,6 +43,10 @@ export default function AdminLicenses() {
   const [addDialog, setAddDialog] = useState(false);
   const [editingLicense, setEditingLicense] = useState<License | null>(null);
   const [deletingLicense, setDeletingLicense] = useState<License | null>(null);
+  const [savingCreate, setSavingCreate] = useState(false);
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [savingDelete, setSavingDelete] = useState(false);
+  const [unbindingDevice, setUnbindingDevice] = useState<string | null>(null);
   const [newLicense, setNewLicense] = useState({
     client: '',
     company: '',
@@ -109,6 +113,7 @@ export default function AdminLicenses() {
 
   const handleCreateLicense = async () => {
     try {
+      setSavingCreate(true);
       const token = await getValidAccessToken();
 
       if (!token) {
@@ -148,6 +153,8 @@ export default function AdminLicenses() {
       toast.error('Erro ao criar licença', {
         description: error.message || 'Tente novamente.',
       });
+    } finally {
+      setSavingCreate(false);
     }
   };
 
@@ -155,6 +162,7 @@ export default function AdminLicenses() {
     if (!editingLicense) return;
 
     try {
+      setSavingEdit(true);
       const token = await getValidAccessToken();
 
       if (!token) {
@@ -181,6 +189,8 @@ export default function AdminLicenses() {
       toast.error('Erro ao atualizar licença', {
         description: error.message || 'Tente novamente.',
       });
+    } finally {
+      setSavingEdit(false);
     }
   };
 
@@ -188,6 +198,7 @@ export default function AdminLicenses() {
     if (!deletingLicense) return;
 
     try {
+      setSavingDelete(true);
       const token = await getValidAccessToken();
 
       if (!token) {
@@ -208,11 +219,14 @@ export default function AdminLicenses() {
       toast.error('Erro ao excluir licença', {
         description: error.message || 'Tente novamente.',
       });
+    } finally {
+      setSavingDelete(false);
     }
   };
 
   const handleUnbindDevice = async (license: License) => {
     try {
+      setUnbindingDevice(license.id);
       const token = await getValidAccessToken();
 
       if (!token) {
@@ -236,6 +250,8 @@ export default function AdminLicenses() {
       toast.error('Erro ao desvincular dispositivo', {
         description: error.message || 'Tente novamente.',
       });
+    } finally {
+      setUnbindingDevice(null);
     }
   };
 
@@ -432,8 +448,13 @@ export default function AdminLicenses() {
                           variant="outline"
                           size="sm"
                           onClick={() => handleUnbindDevice(license)}
+                          disabled={unbindingDevice === license.id}
                         >
-                          <Laptop className="h-4 w-4" />
+                          {unbindingDevice === license.id ? (
+                            <RefreshCw className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Laptop className="h-4 w-4" />
+                          )}
                         </Button>
                       )}
                       <Button
@@ -512,11 +533,18 @@ export default function AdminLicenses() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setAddDialog(false)}>
+            <Button variant="outline" onClick={() => setAddDialog(false)} disabled={savingCreate}>
               Cancelar
             </Button>
-            <Button onClick={handleCreateLicense} disabled={!newLicense.company}>
-              Criar Licença
+            <Button onClick={handleCreateLicense} disabled={!newLicense.company || savingCreate}>
+              {savingCreate ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Criando...
+                </>
+              ) : (
+                'Criar Licença'
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -596,10 +624,19 @@ export default function AdminLicenses() {
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingLicense(null)}>
+            <Button variant="outline" onClick={() => setEditingLicense(null)} disabled={savingEdit}>
               Cancelar
             </Button>
-            <Button onClick={handleEditLicense}>Salvar Alterações</Button>
+            <Button onClick={handleEditLicense} disabled={savingEdit}>
+              {savingEdit ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Salvando...
+                </>
+              ) : (
+                'Salvar Alterações'
+              )}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -617,12 +654,20 @@ export default function AdminLicenses() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel disabled={savingDelete}>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteLicense}
               className="bg-destructive hover:bg-destructive/90"
+              disabled={savingDelete}
             >
-              Excluir
+              {savingDelete ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Excluindo...
+                </>
+              ) : (
+                'Excluir'
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

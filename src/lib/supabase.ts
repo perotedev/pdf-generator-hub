@@ -461,6 +461,322 @@ export const checkoutApi = {
   },
 }
 
+// Funções para dados do dashboard
+export const dashboardApi = {
+  async getActiveSubscription(token: string) {
+    const response = await fetch(`${supabaseUrl}/functions/v1/dashboard-data?action=subscription`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'apikey': supabaseAnonKey,
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to fetch subscription')
+    }
+
+    return response.json()
+  },
+
+  async getAllSubscriptions(token: string) {
+    const response = await fetch(`${supabaseUrl}/functions/v1/dashboard-data?action=subscriptions`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'apikey': supabaseAnonKey,
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to fetch subscriptions')
+    }
+
+    return response.json()
+  },
+
+  async getLicenses(token: string) {
+    const response = await fetch(`${supabaseUrl}/functions/v1/dashboard-data?action=licenses`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'apikey': supabaseAnonKey,
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to fetch licenses')
+    }
+
+    return response.json()
+  },
+
+  async getLicenseBySubscription(token: string, subscriptionId: string) {
+    const response = await fetch(`${supabaseUrl}/functions/v1/dashboard-data?action=license-by-subscription&subscriptionId=${subscriptionId}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'apikey': supabaseAnonKey,
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to fetch license')
+    }
+
+    return response.json()
+  },
+
+  async getPayments(token: string, limit?: number) {
+    const url = `${supabaseUrl}/functions/v1/dashboard-data?action=payments${limit ? `&limit=${limit}` : ''}`
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'apikey': supabaseAnonKey,
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to fetch payments')
+    }
+
+    return response.json()
+  },
+
+  async getUserDetails(token: string, targetUserId: string) {
+    const response = await fetch(`${supabaseUrl}/functions/v1/dashboard-data?action=user-details&targetUserId=${targetUserId}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'apikey': supabaseAnonKey,
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to fetch user details')
+    }
+
+    return response.json()
+  },
+
+  async cancelSubscriptionRenewal(token: string, subscriptionId: string) {
+    const response = await fetch(`${supabaseUrl}/functions/v1/dashboard-data?action=subscription-cancel-renewal&subscriptionId=${subscriptionId}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'apikey': supabaseAnonKey,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({}),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to cancel renewal')
+    }
+
+    return response.json()
+  },
+
+  async deactivateLicense(token: string, licenseId: string) {
+    const response = await fetch(`${supabaseUrl}/functions/v1/dashboard-data?action=license-deactivate&licenseId=${licenseId}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'apikey': supabaseAnonKey,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({}),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to deactivate license')
+    }
+
+    return response.json()
+  },
+
+  async updateLicenseNickname(token: string, licenseId: string, nickname: string) {
+    const response = await fetch(`${supabaseUrl}/functions/v1/dashboard-data?action=license-nickname&licenseId=${licenseId}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'apikey': supabaseAnonKey,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ nickname }),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to update nickname')
+    }
+
+    return response.json()
+  },
+}
+
+// Funções para system data (versões e settings)
+export const systemApi = {
+  async getVersions() {
+    const response = await fetch(`${supabaseUrl}/functions/v1/system-data?action=versions`, {
+      method: 'GET',
+      headers: {
+        'apikey': supabaseAnonKey,
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to fetch versions')
+    }
+
+    return response.json()
+  },
+
+  async getLatestVersion() {
+    const response = await fetch(`${supabaseUrl}/functions/v1/system-data?action=latest-version`, {
+      method: 'GET',
+      headers: {
+        'apikey': supabaseAnonKey,
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to fetch latest version')
+    }
+
+    return response.json()
+  },
+
+  async getSettings() {
+    const response = await fetch(`${supabaseUrl}/functions/v1/system-data?action=settings`, {
+      method: 'GET',
+      headers: {
+        'apikey': supabaseAnonKey,
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to fetch settings')
+    }
+
+    return response.json()
+  },
+
+  async getAllVersions(token: string) {
+    const response = await fetch(`${supabaseUrl}/functions/v1/system-data?action=all-versions`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'apikey': supabaseAnonKey,
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to fetch all versions')
+    }
+
+    return response.json()
+  },
+
+  async createVersion(token: string, versionData: Omit<SystemVersion, 'id' | 'created_at' | 'updated_at'>) {
+    const response = await fetch(`${supabaseUrl}/functions/v1/system-data?action=version`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'apikey': supabaseAnonKey,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(versionData),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to create version')
+    }
+
+    return response.json()
+  },
+
+  async updateVersion(token: string, versionId: string, updates: Partial<SystemVersion>) {
+    const response = await fetch(`${supabaseUrl}/functions/v1/system-data?action=version&versionId=${versionId}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'apikey': supabaseAnonKey,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(updates),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to update version')
+    }
+
+    return response.json()
+  },
+
+  async deleteVersion(token: string, versionId: string) {
+    const response = await fetch(`${supabaseUrl}/functions/v1/system-data?action=version&versionId=${versionId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'apikey': supabaseAnonKey,
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to delete version')
+    }
+
+    return response.json()
+  },
+
+  async updateSetting(token: string, key: string, value: string) {
+    const response = await fetch(`${supabaseUrl}/functions/v1/system-data?action=setting&key=${key}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'apikey': supabaseAnonKey,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ value }),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to update setting')
+    }
+
+    return response.json()
+  },
+}
+
 // Funções para planos
 export const plansApi = {
   async getActivePlans() {

@@ -26,7 +26,7 @@ import {
 import { Download, Calendar, CreditCard, FileText, DollarSign, Eye, RefreshCw } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase, type Payment } from "@/lib/supabase";
+import { dashboardApi, getValidAccessToken, type Payment } from "@/lib/supabase";
 
 const HistoricoPagamentos = () => {
   const { user } = useAuth();
@@ -46,16 +46,15 @@ const HistoricoPagamentos = () => {
 
     try {
       setLoading(true);
+      const token = await getValidAccessToken();
 
-      const { data, error } = await supabase
-        .from('payments')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+      if (!token) {
+        console.error('No valid token');
+        return;
+      }
 
-      if (error) throw error;
-
-      setPayments(data || []);
+      const response = await dashboardApi.getPayments(token);
+      setPayments(response.payments || []);
     } catch (error: any) {
       console.error('Error fetching payments:', error);
     } finally {

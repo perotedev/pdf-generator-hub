@@ -218,7 +218,7 @@ const Planos = () => {
                   ))}
                 </ul>
 
-                <Link to="/registro" className="block">
+                <Link to={`/checkout?plan=${plan.id}`} className="block">
                   <Button
                     className="w-full"
                     variant={plan.popular ? "default" : "outline"}
