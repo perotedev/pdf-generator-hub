@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { emailApi } from "@/lib/supabase";
-import { KeyRound, Mail, RefreshCw, Eye, EyeOff } from "lucide-react";
+import { KeyRound, Mail, RefreshCw, Eye, EyeOff, CheckCircle2, XCircle } from "lucide-react";
 
 type Step = "email" | "code" | "password";
 
@@ -21,10 +21,31 @@ const RecuperarSenha = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState({ score: 0, label: "", color: "" });
 
   const [isLoading, setIsLoading] = useState(false);
   const [canResend, setCanResend] = useState(false);
   const [countdown, setCountdown] = useState(60);
+
+  // Calcular força da senha
+  useEffect(() => {
+    const calculateStrength = (pwd: string) => {
+      if (!pwd) return { score: 0, label: "", color: "" };
+
+      let score = 0;
+      if (pwd.length >= 8) score += 1;
+      if (/[A-Z]/.test(pwd)) score += 1;
+      if (/[a-z]/.test(pwd)) score += 1;
+      if (/[0-9]/.test(pwd)) score += 1;
+      if (/[^A-Za-z0-9]/.test(pwd)) score += 1;
+
+      if (score <= 2) return { score, label: "Fraca", color: "bg-destructive" };
+      if (score <= 4) return { score, label: "Média", color: "bg-yellow-500" };
+      return { score, label: "Forte", color: "bg-green-500" };
+    };
+
+    setPasswordStrength(calculateStrength(newPassword));
+  }, [newPassword]);
 
   useEffect(() => {
     if (step === "code" && countdown > 0) {
@@ -252,7 +273,14 @@ const RecuperarSenha = () => {
               </div>
 
               <Button type="submit" className="w-full" disabled={isLoading || code.length !== 6}>
-                Verificar Código
+                {isLoading ? (
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                    Verificando...
+                  </>
+                ) : (
+                  "Verificar Código"
+                )}
               </Button>
 
               <div className="text-center space-y-2">
@@ -290,7 +318,7 @@ const RecuperarSenha = () => {
                   <Input
                     id="newPassword"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Mínimo 8 caracteres"
+                    placeholder="Mínimo 8 caracteres (letras, números e símbolos)"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     disabled={isLoading}
@@ -306,6 +334,19 @@ const RecuperarSenha = () => {
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
+                {newPassword && (
+                  <div className="mt-2 space-y-1">
+                    <div className="flex h-1.5 w-full gap-1 overflow-hidden rounded-full bg-secondary">
+                      <div
+                        className={`h-full transition-all duration-300 ${passwordStrength.color}`}
+                        style={{ width: `${(passwordStrength.score / 5) * 100}%` }}
+                      />
+                    </div>
+                    <p className={`text-xs font-medium ${passwordStrength.label === "Fraca" ? "text-destructive" : passwordStrength.label === "Média" ? "text-yellow-600" : "text-green-600"}`}>
+                      Força da senha: {passwordStrength.label}
+                    </p>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -330,9 +371,28 @@ const RecuperarSenha = () => {
                     {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
+                {confirmPassword && (
+                  <div className="flex items-center gap-1.5 mt-1">
+                    {newPassword === confirmPassword ? (
+                      <>
+                        <CheckCircle2 className="h-3.5 w-3.5 text-green-600" />
+                        <span className="text-xs text-green-600 font-medium">As senhas são iguais</span>
+                      </>
+                    ) : (
+                      <>
+                        <XCircle className="h-3.5 w-3.5 text-destructive" />
+                        <span className="text-xs text-destructive font-medium">As senhas não são iguais</span>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
 
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isLoading || passwordStrength.score < 5 || newPassword !== confirmPassword}
+              >
                 {isLoading ? (
                   <>
                     <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
