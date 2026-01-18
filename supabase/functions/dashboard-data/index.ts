@@ -234,6 +234,16 @@ serve(async (req) => {
             )
           }
 
+          // Buscar licença e dados do dispositivo antes de desativar
+          const { data: existingLicense } = await supabaseAdmin
+            .from('licenses')
+            .select('*, users(name, email)')
+            .eq('id', licenseId)
+            .single()
+
+          const deviceName = existingLicense?.device_type || 'Dispositivo'
+          const deviceId = existingLicense?.device_id
+
           const { data, error } = await supabaseAdmin
             .from('licenses')
             .update({
@@ -247,6 +257,40 @@ serve(async (req) => {
             .single()
 
           if (error) throw error
+
+          // Enviar email de notificação de desvinculação
+          if (existingLicense?.users?.email && deviceId) {
+            try {
+              const supabaseUrl = Deno.env.get('SUPABASE_URL')
+              const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+
+              await fetch(`${supabaseUrl}/functions/v1/send-transactional-email`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${supabaseServiceKey}`,
+                },
+                body: JSON.stringify({
+                  type: 'DEVICE_UNLINKED',
+                  to: existingLicense.users.email,
+                  data: {
+                    name: existingLicense.users.name,
+                    deviceName: deviceName,
+                    unlinkedAt: new Date().toLocaleDateString('pt-BR', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    }),
+                  },
+                }),
+              })
+            } catch (emailError) {
+              console.error('Error sending device unlinked email:', emailError)
+              // Não falhar por causa do email
+            }
+          }
 
           return new Response(
             JSON.stringify({ license: data, message: 'License deactivated' }),

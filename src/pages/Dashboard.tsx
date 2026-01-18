@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
 import { dashboardApi, type Subscription, type License, type Payment } from "@/lib/supabase";
+import { useStripeSync } from "@/hooks/useStripeSync";
 
 const Dashboard = () => {
   const { user, getAccessToken } = useAuth();
@@ -20,6 +21,9 @@ const Dashboard = () => {
   const [licenses, setLicenses] = useState<License[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Hook para sincronizar dados com Stripe automaticamente
+  useStripeSync();
 
   useEffect(() => {
     const fetchData = async () => {

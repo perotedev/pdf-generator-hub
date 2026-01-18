@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Settings, DollarSign, Package, ArrowRight, RefreshCw, Shield, Save, Users, Key } from "lucide-react";
+import { Settings, DollarSign, Package, ArrowRight, RefreshCw, Shield, Save, Users, Key, Building2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -232,7 +232,7 @@ const Admin = () => {
       </div>
 
       {/* Quick Access Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-4">
         <Link to="/dashboard/admin/usuarios">
           <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
             <CardContent className="p-6">
@@ -282,6 +282,25 @@ const Admin = () => {
                   <div>
                     <p className="font-medium">Versões</p>
                     <p className="text-xs text-muted-foreground">Versões do sistema</p>
+                  </div>
+                </div>
+                <ArrowRight className="h-4 w-4 text-muted-foreground" />
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link to="/dashboard/admin/orcamentos">
+          <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-chart-2/10">
+                    <Building2 className="h-5 w-5 text-chart-2" />
+                  </div>
+                  <div>
+                    <p className="font-medium">Enterprise</p>
+                    <p className="text-xs text-muted-foreground">Orçamentos corporativos</p>
                   </div>
                 </div>
                 <ArrowRight className="h-4 w-4 text-muted-foreground" />

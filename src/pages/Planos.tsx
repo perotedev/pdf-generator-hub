@@ -232,6 +232,26 @@ const Planos = () => {
         </div>
         )}
 
+        {/* Enterprise CTA */}
+        <div className="mx-auto mt-12 max-w-2xl">
+          <Card className="border-primary bg-gradient-to-r from-primary/5 to-primary/10">
+            <CardContent className="p-8 text-center">
+              <h2 className="text-2xl font-bold text-foreground mb-2">
+                Precisa de mais licenças?
+              </h2>
+              <p className="text-muted-foreground mb-6">
+                Planos corporativos com desconto progressivo, suporte dedicado e
+                gerenciamento centralizado para equipes de qualquer tamanho.
+              </p>
+              <Link to="/planos/enterprise">
+                <Button size="lg">
+                  Solicitar Orçamento Enterprise
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* FAQ Section */}
         <div className="mx-auto mt-16 max-w-2xl">
           <h2 className="mb-8 text-2xl font-bold text-center text-foreground">

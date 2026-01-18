@@ -7,6 +7,39 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, stripe-signature',
 }
 
+const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
+
+// Helper para enviar emails transacionais
+async function sendTransactionalEmail(type: string, to: string, data: Record<string, any>) {
+  if (!RESEND_API_KEY) {
+    console.log('RESEND_API_KEY not configured, skipping email')
+    return
+  }
+
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+
+    const response = await fetch(`${supabaseUrl}/functions/v1/send-transactional-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${supabaseServiceKey}`,
+      },
+      body: JSON.stringify({ type, to, data }),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      console.error('Error sending email:', error)
+    } else {
+      console.log(`Transactional email sent: ${type} to ${to}`)
+    }
+  } catch (error) {
+    console.error('Error sending transactional email:', error)
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -116,6 +149,7 @@ function stripeTimestampToISO(timestamp: number | undefined | null): string {
 async function handleSubscriptionCreated(supabase, subscription) {
   console.log('Processing customer.subscription.created:', subscription.id)
   console.log('Subscription metadata:', JSON.stringify(subscription.metadata))
+  console.log('Subscription status:', subscription.status)
   console.log('Subscription current_period_start:', subscription.current_period_start)
   console.log('Subscription current_period_end:', subscription.current_period_end)
 
@@ -169,7 +203,7 @@ async function handleSubscriptionCreated(supabase, subscription) {
   console.log('Period end:', periodEnd, '-> ', stripeTimestampToISO(periodEnd))
 
   // Mapear status do Stripe para status válido no banco
-  // Valores válidos: ACTIVE, CANCELED, EXPIRED, PAST_DUE
+  // Valores válidos: ACTIVE, CANCELED, EXPIRED, PAST_DUE, PENDING_PAYMENT
   const mapStripeStatus = (stripeStatus: string): string => {
     switch (stripeStatus) {
       case 'active':
@@ -181,13 +215,19 @@ async function handleSubscriptionCreated(supabase, subscription) {
       case 'unpaid':
         return 'PAST_DUE'
       case 'incomplete':
+        // Status incomplete = pagamento pendente (ex: boleto aguardando)
+        // Não liberamos a licença até o pagamento ser confirmado
+        return 'PENDING_PAYMENT'
       case 'incomplete_expired':
       default:
-        // Para status incomplete, usamos ACTIVE pois a subscription foi criada
-        // e será atualizada quando o pagamento for confirmado
-        return 'ACTIVE'
+        return 'EXPIRED'
     }
   }
+
+  const mappedStatus = mapStripeStatus(subscription.status)
+  const isPendingPayment = subscription.status === 'incomplete'
+
+  console.log('Mapped status:', mappedStatus, 'isPendingPayment:', isPendingPayment)
 
   // Criar a subscription no banco
   const { data: newSubscription, error: subError } = await supabase
@@ -197,7 +237,7 @@ async function handleSubscriptionCreated(supabase, subscription) {
       plan_id: planId,
       stripe_subscription_id: subscription.id,
       stripe_customer_id: customerId,
-      status: mapStripeStatus(subscription.status),
+      status: mappedStatus,
       billing_cycle: planData.billing_cycle,
       current_period_start: stripeTimestampToISO(periodStart),
       current_period_end: stripeTimestampToISO(periodEnd),
@@ -213,24 +253,15 @@ async function handleSubscriptionCreated(supabase, subscription) {
 
   console.log('Subscription created:', newSubscription.id)
 
-  // Criar a licença
-  // Campos da tabela licenses: code (NOT NULL), company (NOT NULL), is_standalone, subscription_id, user_id, expire_date, etc.
-  const licenseCode = generateLicenseCode()
-  console.log('Creating license with data:', JSON.stringify({
-    code: licenseCode,
-    user_id: userId,
-    subscription_id: newSubscription.id,
-    company: 'PDF Generator',
-    is_standalone: false,
-    is_used: false,
-    sold: true,
-    expire_date: stripeTimestampToISO(periodEnd),
-    plan_type: planData.billing_cycle,
-  }))
-
-  const { data: newLicense, error: licenseError } = await supabase
-    .from('licenses')
-    .insert({
+  // IMPORTANTE: Só criar licença se o pagamento já foi confirmado (status 'active')
+  // Para boletos, o status será 'incomplete' e a licença será criada quando o invoice.paid chegar
+  if (isPendingPayment) {
+    console.log('Payment pending (boleto/pix), license will be created when payment is confirmed')
+  } else {
+    // Criar a licença
+    // Campos da tabela licenses: code (NOT NULL), company (NOT NULL), is_standalone, subscription_id, user_id, expire_date, etc.
+    const licenseCode = generateLicenseCode()
+    console.log('Creating license with data:', JSON.stringify({
       code: licenseCode,
       user_id: userId,
       subscription_id: newSubscription.id,
@@ -240,15 +271,30 @@ async function handleSubscriptionCreated(supabase, subscription) {
       sold: true,
       expire_date: stripeTimestampToISO(periodEnd),
       plan_type: planData.billing_cycle,
-    })
-    .select()
-    .single()
+    }))
 
-  if (licenseError) {
-    console.error('Error creating license:', JSON.stringify(licenseError))
-    // Não lançar erro aqui para não bloquear o fluxo principal
-  } else {
-    console.log('License created:', newLicense.id, newLicense.code)
+    const { data: newLicense, error: licenseError } = await supabase
+      .from('licenses')
+      .insert({
+        code: licenseCode,
+        user_id: userId,
+        subscription_id: newSubscription.id,
+        company: 'PDF Generator',
+        is_standalone: false,
+        is_used: false,
+        sold: true,
+        expire_date: stripeTimestampToISO(periodEnd),
+        plan_type: planData.billing_cycle,
+      })
+      .select()
+      .single()
+
+    if (licenseError) {
+      console.error('Error creating license:', JSON.stringify(licenseError))
+      // Não lançar erro aqui para não bloquear o fluxo principal
+    } else {
+      console.log('License created:', newLicense.id, newLicense.code)
+    }
   }
 
   // Atualizar o usuário com o stripe_customer_id se não tiver
@@ -264,10 +310,11 @@ async function handleSubscriptionCreated(supabase, subscription) {
 // Quando uma subscription é atualizada
 async function handleSubscriptionUpdated(supabase, subscription) {
   console.log('Processing customer.subscription.updated:', subscription.id)
+  console.log('Subscription status:', subscription.status)
 
   const { data: existingSub } = await supabase
     .from('subscriptions')
-    .select('*')
+    .select('*, plans(*)')
     .eq('stripe_subscription_id', subscription.id)
     .single()
 
@@ -276,9 +323,30 @@ async function handleSubscriptionUpdated(supabase, subscription) {
     return
   }
 
-  const status = subscription.status === 'active' ? 'ACTIVE' :
-                 subscription.status === 'canceled' ? 'CANCELED' :
-                 subscription.status === 'past_due' ? 'PAST_DUE' : 'EXPIRED'
+  console.log('Existing subscription status:', existingSub.status)
+
+  // Mapear status do Stripe para status local
+  const mapStripeStatus = (stripeStatus: string): string => {
+    switch (stripeStatus) {
+      case 'active':
+      case 'trialing':
+        return 'ACTIVE'
+      case 'canceled':
+        return 'CANCELED'
+      case 'past_due':
+      case 'unpaid':
+        return 'PAST_DUE'
+      case 'incomplete':
+        return 'PENDING_PAYMENT'
+      case 'incomplete_expired':
+      default:
+        return 'EXPIRED'
+    }
+  }
+
+  const status = mapStripeStatus(subscription.status)
+  const wasPaymentPending = existingSub.status === 'PENDING_PAYMENT'
+  const isNowActive = status === 'ACTIVE'
 
   // Obter timestamps com fallback
   const periodStart = subscription.current_period_start ||
@@ -302,10 +370,53 @@ async function handleSubscriptionUpdated(supabase, subscription) {
   if (updateError) {
     console.error('Error updating subscription:', updateError)
   } else {
-    console.log('Subscription updated:', existingSub.id)
+    console.log('Subscription updated:', existingSub.id, 'status:', status)
   }
 
-  // Atualizar licença se necessário
+  // Se a assinatura mudou de PENDING_PAYMENT para ACTIVE (boleto pago),
+  // verificar se a licença já existe, senão criar
+  if (wasPaymentPending && isNowActive) {
+    console.log('Subscription changed from PENDING_PAYMENT to ACTIVE, checking license...')
+
+    const { data: existingLicense } = await supabase
+      .from('licenses')
+      .select('id')
+      .eq('subscription_id', existingSub.id)
+      .single()
+
+    if (!existingLicense) {
+      console.log('No license found, creating license for confirmed boleto payment')
+
+      const licenseCode = generateLicenseCode()
+      const expireDate = periodEnd ? stripeTimestampToISO(periodEnd) : existingSub.current_period_end
+
+      const { data: newLicense, error: licenseError } = await supabase
+        .from('licenses')
+        .insert({
+          code: licenseCode,
+          user_id: existingSub.user_id,
+          subscription_id: existingSub.id,
+          company: 'PDF Generator',
+          is_standalone: false,
+          is_used: false,
+          sold: true,
+          expire_date: expireDate,
+          plan_type: existingSub.billing_cycle,
+        })
+        .select()
+        .single()
+
+      if (licenseError) {
+        console.error('Error creating license:', JSON.stringify(licenseError))
+      } else {
+        console.log('License created for boleto payment:', newLicense.id, newLicense.code)
+      }
+    } else {
+      console.log('License already exists:', existingLicense.id)
+    }
+  }
+
+  // Atualizar data de expiração da licença se status é ACTIVE
   if (status === 'ACTIVE') {
     await supabase
       .from('licenses')
@@ -320,6 +431,13 @@ async function handleSubscriptionUpdated(supabase, subscription) {
 async function handleSubscriptionDeleted(supabase, subscription) {
   console.log('Processing customer.subscription.deleted:', subscription.id)
 
+  // Buscar subscription e dados do usuário antes de atualizar
+  const { data: existingSub } = await supabase
+    .from('subscriptions')
+    .select('*, users(name, email)')
+    .eq('stripe_subscription_id', subscription.id)
+    .single()
+
   const { error } = await supabase
     .from('subscriptions')
     .update({
@@ -332,21 +450,31 @@ async function handleSubscriptionDeleted(supabase, subscription) {
     console.error('Error updating subscription to canceled:', error)
   }
 
-  // Buscar subscription para atualizar licença
-  const { data: sub } = await supabase
-    .from('subscriptions')
-    .select('id')
-    .eq('stripe_subscription_id', subscription.id)
-    .single()
-
-  if (sub) {
+  if (existingSub) {
     // Marcar licença como expirada (a tabela licenses não tem campo status, apenas expire_date)
     await supabase
       .from('licenses')
       .update({
         expire_date: new Date().toISOString(),
       })
-      .eq('subscription_id', sub.id)
+      .eq('subscription_id', existingSub.id)
+
+    // Enviar email de cancelamento
+    if (existingSub.users?.email) {
+      try {
+        const formatDate = (dateString: string) => {
+          return new Date(dateString).toLocaleDateString('pt-BR')
+        }
+
+        await sendTransactionalEmail('SUBSCRIPTION_CANCELED', existingSub.users.email, {
+          name: existingSub.users.name,
+          expirationDate: formatDate(existingSub.current_period_end),
+          dashboardUrl: 'https://perotedev.com/dashboard/assinaturas',
+        })
+      } catch (emailError) {
+        console.error('Error sending cancellation email:', emailError)
+      }
+    }
   }
 
   console.log('Subscription deleted:', subscription.id)
@@ -425,6 +553,31 @@ async function handleInvoicePaid(supabase, invoice) {
     ? `Pagamento inicial - ${subscription.plans?.name || 'Plano'} (${subscription.billing_cycle === 'MONTHLY' ? 'Mensal' : 'Anual'})`
     : `Renovação - ${subscription.plans?.name || 'Plano'} (${subscription.billing_cycle === 'MONTHLY' ? 'Mensal' : 'Anual'})`
 
+  // Extrair método de pagamento detalhado
+  // O método pode estar em diferentes locais dependendo do tipo de pagamento
+  let paymentMethod = 'card' // default
+
+  // Tentar obter do charge
+  const chargePaymentMethodType = invoice.charge?.payment_method_details?.type
+  if (chargePaymentMethodType) {
+    paymentMethod = chargePaymentMethodType
+  }
+
+  // Ou do payment_intent expandido (se disponível)
+  const paymentIntentMethodType = invoice.payment_intent?.payment_method?.type ||
+    invoice.payment_intent?.payment_method_types?.[0]
+  if (paymentIntentMethodType) {
+    paymentMethod = paymentIntentMethodType
+  }
+
+  // Ou diretamente da collection_method
+  if (invoice.collection_method === 'send_invoice') {
+    // Provavelmente boleto ou transferência
+    paymentMethod = 'boleto'
+  }
+
+  console.log('Payment method detected:', paymentMethod)
+
   // Criar o registro de pagamento
   const { data: newPayment, error: paymentError } = await supabase
     .from('payments')
@@ -436,7 +589,7 @@ async function handleInvoicePaid(supabase, invoice) {
       amount: invoice.amount_paid / 100,
       currency: (invoice.currency || 'brl').toUpperCase(),
       status: 'SUCCEEDED',
-      payment_method: 'stripe',
+      payment_method: paymentMethod,
       description: description,
       paid_at: invoice.status_transitions?.paid_at
         ? stripeTimestampToISO(invoice.status_transitions.paid_at)
@@ -457,12 +610,106 @@ async function handleInvoicePaid(supabase, invoice) {
     console.log('Payment created:', newPayment.id, 'Amount:', invoice.amount_paid / 100)
   }
 
-  // Atualizar subscription para ACTIVE se necessário
+  // Atualizar subscription para ACTIVE se necessário (ex: boleto pago)
   if (subscription.status !== 'ACTIVE') {
+    console.log('Updating subscription status from', subscription.status, 'to ACTIVE')
     await supabase
       .from('subscriptions')
       .update({ status: 'ACTIVE' })
       .eq('id', subscription.id)
+  }
+
+  // Verificar se existe licença para esta assinatura
+  // Se não existir, criar (caso de boleto onde a licença não foi criada na subscription.created)
+  const { data: existingLicense } = await supabase
+    .from('licenses')
+    .select('id')
+    .eq('subscription_id', subscription.id)
+    .single()
+
+  if (!existingLicense) {
+    console.log('No license found for subscription, creating license (boleto payment confirmed)')
+
+    // Obter dados atualizados da subscription
+    const { data: subData } = await supabase
+      .from('subscriptions')
+      .select('*, plans(*)')
+      .eq('id', subscription.id)
+      .single()
+
+    if (subData) {
+      const licenseCode = generateLicenseCode()
+      console.log('Creating license for boleto payment:', licenseCode)
+
+      const { data: newLicense, error: licenseError } = await supabase
+        .from('licenses')
+        .insert({
+          code: licenseCode,
+          user_id: subData.user_id,
+          subscription_id: subData.id,
+          company: 'PDF Generator',
+          is_standalone: false,
+          is_used: false,
+          sold: true,
+          expire_date: subData.current_period_end,
+          plan_type: subData.billing_cycle,
+        })
+        .select()
+        .single()
+
+      if (licenseError) {
+        console.error('Error creating license for boleto payment:', JSON.stringify(licenseError))
+      } else {
+        console.log('License created for boleto payment:', newLicense.id, newLicense.code)
+      }
+    }
+  } else {
+    console.log('License already exists for subscription:', existingLicense.id)
+  }
+
+  // Enviar email de confirmação de compra (apenas para primeiro pagamento)
+  if (isFirstPayment) {
+    try {
+      // Buscar dados do usuário
+      const { data: userData } = await supabase
+        .from('users')
+        .select('name, email')
+        .eq('id', subscription.user_id)
+        .single()
+
+      // Buscar licença para incluir no email
+      const { data: licenseData } = await supabase
+        .from('licenses')
+        .select('code')
+        .eq('subscription_id', subscription.id)
+        .single()
+
+      if (userData) {
+        const formatCurrency = (amount: number) => {
+          return new Intl.NumberFormat('pt-BR', {
+            style: 'currency',
+            currency: 'BRL',
+          }).format(amount)
+        }
+
+        const formatDate = (dateString: string) => {
+          return new Date(dateString).toLocaleDateString('pt-BR')
+        }
+
+        await sendTransactionalEmail('PURCHASE_CONFIRMATION', userData.email, {
+          name: userData.name,
+          planName: subscription.plans?.name || 'PDF Generator',
+          amount: formatCurrency(invoice.amount_paid / 100),
+          billingCycle: subscription.billing_cycle,
+          nextPaymentDate: formatDate(subscription.current_period_end),
+          licenseCode: licenseData?.code || null,
+          dashboardUrl: 'https://perotedev.com/dashboard',
+        })
+      }
+    } catch (emailError) {
+      console.error('Error sending purchase confirmation email:', emailError)
+      // Não falhar o webhook por causa de erro no email
+    }
   }
 
   console.log('Invoice paid processed successfully')

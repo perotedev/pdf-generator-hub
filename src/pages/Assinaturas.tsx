@@ -297,8 +297,27 @@ const Assinaturas = () => {
         return "destructive";
       case "EXPIRED":
         return "outline";
+      case "PENDING_PAYMENT":
+        return "secondary";
       default:
         return "secondary";
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case "ACTIVE":
+        return "Ativa";
+      case "CANCELED":
+        return "Cancelada";
+      case "EXPIRED":
+        return "Expirada";
+      case "PENDING_PAYMENT":
+        return "Aguardando Pagamento";
+      case "PAST_DUE":
+        return "Pagamento Atrasado";
+      default:
+        return "Desconhecido";
     }
   };
 
@@ -315,13 +334,24 @@ const Assinaturas = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">
-          Minhas Assinaturas
-        </h1>
-        <p className="text-muted-foreground">
-          Gerencie suas assinaturas e licenças do PDF Generator
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">
+            Minhas Assinaturas
+          </h1>
+          <p className="text-muted-foreground">
+            Gerencie suas assinaturas e licenças do PDF Generator
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={fetchSubscriptions}
+          disabled={loading}
+        >
+          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+          Atualizar
+        </Button>
       </div>
 
       {/* Active Subscriptions Summary */}
@@ -414,9 +444,7 @@ const Assinaturas = () => {
                     </div>
                     <div className="flex items-center gap-3">
                       <Badge variant={getStatusVariant(subscription.status)}>
-                        {subscription.status === 'ACTIVE' ? 'Ativa' :
-                         subscription.status === 'CANCELED' ? 'Cancelada' :
-                         subscription.status === 'EXPIRED' ? 'Expirada' : 'Vencida'}
+                        {getStatusLabel(subscription.status)}
                       </Badge>
                     </div>
                   </div>
@@ -433,7 +461,9 @@ const Assinaturas = () => {
                         </p>
                       </div>
                       <div>
-                        <Label className="text-muted-foreground">Próxima Cobrança</Label>
+                        <Label className="text-muted-foreground">
+                          {subscription.cancel_at_period_end ? 'Expira em' : 'Próximo Pagamento'}
+                        </Label>
                         <p className="text-sm font-medium">
                           {formatDate(subscription.current_period_end)}
                         </p>
@@ -456,7 +486,41 @@ const Assinaturas = () => {
                       </div>
                     </div>
 
+                    {/* Pending Payment Notice (Boleto) */}
+                    {subscription.status === 'PENDING_PAYMENT' && (
+                      <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-900 dark:bg-blue-950">
+                        <div className="flex items-start gap-3">
+                          <CreditCard className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5" />
+                          <div>
+                            <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                              Aguardando confirmação do pagamento
+                            </p>
+                            <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                              Seu pagamento via boleto está sendo processado. A licença será liberada automaticamente após a confirmação do pagamento.
+                              Isso pode levar até 3 dias úteis.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     {/* License Information */}
+                    {subscription.status === 'ACTIVE' && !subscription.license && (
+                      <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-950">
+                        <div className="flex items-start gap-3">
+                          <RefreshCw className="h-5 w-5 text-amber-600 dark:text-amber-400 mt-0.5" />
+                          <div>
+                            <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                              Sua licença está sendo gerada
+                            </p>
+                            <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
+                              Em instantes, ela estará disponível. Clique em "Atualizar" para verificar.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     {subscription.license && (
                       <>
                         <div className="space-y-3 rounded-lg border bg-muted/30 p-4">

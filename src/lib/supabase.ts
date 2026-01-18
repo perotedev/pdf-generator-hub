@@ -96,7 +96,7 @@ export interface Subscription {
   plan_id: string
   stripe_subscription_id: string | null
   stripe_customer_id: string | null
-  status: 'ACTIVE' | 'CANCELED' | 'EXPIRED' | 'PAST_DUE'
+  status: 'ACTIVE' | 'CANCELED' | 'EXPIRED' | 'PAST_DUE' | 'PENDING_PAYMENT'
   billing_cycle: 'MONTHLY' | 'YEARLY'
   current_period_start: string
   current_period_end: string
@@ -786,6 +786,24 @@ export const dashboardApi = {
     if (!response.ok) {
       const error = await response.json()
       throw new Error(error.error || 'Failed to update nickname')
+    }
+
+    return response.json()
+  },
+
+  async syncStripeData(token: string) {
+    const response = await fetch(`${supabaseUrl}/functions/v1/sync-user-stripe-data`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'apikey': supabaseAnonKey,
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to sync Stripe data')
     }
 
     return response.json()

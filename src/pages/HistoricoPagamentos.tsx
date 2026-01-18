@@ -73,6 +73,32 @@ const HistoricoPagamentos = () => {
     return new Date(dateString).toLocaleDateString('pt-BR');
   };
 
+  const formatDateTime = (dateString: string) => {
+    return new Date(dateString).toLocaleString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  const formatPaymentMethod = (method: string | null) => {
+    if (!method) return 'Não especificado';
+
+    const methods: Record<string, string> = {
+      'stripe': 'Stripe',
+      'card': 'Cartão de Crédito',
+      'credit_card': 'Cartão de Crédito',
+      'debit_card': 'Cartão de Débito',
+      'boleto': 'Boleto Bancário',
+      'pix': 'PIX',
+      'bank_transfer': 'Transferência Bancária',
+    };
+
+    return methods[method.toLowerCase()] || method;
+  };
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -253,7 +279,7 @@ const HistoricoPagamentos = () => {
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 text-muted-foreground" />
-                      {formatDate(payment.created_at)}
+                      {formatDateTime(payment.created_at)}
                     </div>
                   </TableCell>
                   <TableCell>
@@ -263,7 +289,7 @@ const HistoricoPagamentos = () => {
                       </p>
                       {payment.paid_at && (
                         <p className="text-xs text-muted-foreground">
-                          Pago em: {formatDate(payment.paid_at)}
+                          Pago em: {formatDateTime(payment.paid_at)}
                         </p>
                       )}
                     </div>
@@ -271,7 +297,7 @@ const HistoricoPagamentos = () => {
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <CreditCard className="h-4 w-4 text-muted-foreground" />
-                      {payment.payment_method || 'N/A'}
+                      {formatPaymentMethod(payment.payment_method)}
                     </div>
                   </TableCell>
                   <TableCell className="font-semibold">
@@ -334,14 +360,14 @@ const HistoricoPagamentos = () => {
                   <label className="text-sm font-medium text-muted-foreground">
                     Data de Criação
                   </label>
-                  <p className="text-sm">{formatDate(selectedPayment.created_at)}</p>
+                  <p className="text-sm">{formatDateTime(selectedPayment.created_at)}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">
                     Data de Pagamento
                   </label>
                   <p className="text-sm">
-                    {selectedPayment.paid_at ? formatDate(selectedPayment.paid_at) : 'N/A'}
+                    {selectedPayment.paid_at ? formatDateTime(selectedPayment.paid_at) : 'N/A'}
                   </p>
                 </div>
                 <div>
@@ -362,7 +388,7 @@ const HistoricoPagamentos = () => {
                   <label className="text-sm font-medium text-muted-foreground">
                     Método de Pagamento
                   </label>
-                  <p className="text-sm">{selectedPayment.payment_method || 'Não especificado'}</p>
+                  <p className="text-sm">{formatPaymentMethod(selectedPayment.payment_method)}</p>
                 </div>
                 {selectedPayment.description && (
                   <div className="col-span-2">
