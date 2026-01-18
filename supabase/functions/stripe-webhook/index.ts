@@ -90,13 +90,13 @@ serve(async (req) => {
   }
 })
 
-// Gerar código de licença único
+// Gerar código de licença único no formato 99ABC-99ABC-99ABC-99ABC-99ABC
 function generateLicenseCode(): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
   const segments = []
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 5; i++) {
     let segment = ''
-    for (let j = 0; j < 4; j++) {
+    for (let j = 0; j < 5; j++) {
       segment += chars.charAt(Math.floor(Math.random() * chars.length))
     }
     segments.push(segment)
