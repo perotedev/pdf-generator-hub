@@ -55,6 +55,10 @@ const Assinaturas = () => {
   const [nicknameValue, setNicknameValue] = useState("");
   const [reactivateDialogOpen, setReactivateDialogOpen] = useState<string | null>(null);
   const [reactivatePlan, setReactivatePlan] = useState<'MONTHLY' | 'YEARLY'>('MONTHLY');
+  const [savingCancel, setSavingCancel] = useState(false);
+  const [savingDeactivate, setSavingDeactivate] = useState<string | null>(null);
+  const [savingNickname, setSavingNickname] = useState(false);
+  const [savingReactivate, setSavingReactivate] = useState(false);
 
   useEffect(() => {
     fetchSubscriptions();
@@ -122,6 +126,7 @@ const Assinaturas = () => {
   };
 
   const handleCancelRenewal = async (subId: string) => {
+    setSavingCancel(true);
     try {
       const token = await getValidAccessToken();
 
@@ -149,10 +154,13 @@ const Assinaturas = () => {
         description: error.message || "Tente novamente.",
         variant: "destructive",
       });
+    } finally {
+      setSavingCancel(false);
     }
   };
 
   const handleDeactivateLicense = async (licenseId: string) => {
+    setSavingDeactivate(licenseId);
     try {
       const token = await getValidAccessToken();
 
@@ -179,10 +187,13 @@ const Assinaturas = () => {
         description: error.message || "Tente novamente.",
         variant: "destructive",
       });
+    } finally {
+      setSavingDeactivate(null);
     }
   };
 
   const handleSaveNickname = async (licenseId: string) => {
+    setSavingNickname(true);
     try {
       const token = await getValidAccessToken();
 
@@ -210,10 +221,13 @@ const Assinaturas = () => {
         description: error.message || "Tente novamente.",
         variant: "destructive",
       });
+    } finally {
+      setSavingNickname(false);
     }
   };
 
   const handleReactivateSubscription = async (subId: string) => {
+    setSavingReactivate(true);
     try {
       const token = await getValidAccessToken();
 
@@ -251,6 +265,7 @@ const Assinaturas = () => {
         variant: "destructive",
       });
     } finally {
+      setSavingReactivate(false);
       setReactivateDialogOpen(null);
     }
   };
@@ -459,8 +474,13 @@ const Assinaturas = () => {
                                 <Button
                                   size="sm"
                                   onClick={() => handleSaveNickname(subscription.license!.id)}
+                                  disabled={savingNickname}
                                 >
-                                  <Check className="h-4 w-4" />
+                                  {savingNickname ? (
+                                    <RefreshCw className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <Check className="h-4 w-4" />
+                                  )}
                                 </Button>
                               </div>
                             ) : (
@@ -522,9 +542,19 @@ const Assinaturas = () => {
                                   variant="destructive"
                                   size="sm"
                                   onClick={() => handleDeactivateLicense(subscription.license!.id)}
+                                  disabled={savingDeactivate === subscription.license!.id}
                                 >
-                                  <Trash2 className="h-4 w-4 mr-2" />
-                                  Desvincular
+                                  {savingDeactivate === subscription.license!.id ? (
+                                    <>
+                                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                                      Desvinculando...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Trash2 className="h-4 w-4 mr-2" />
+                                      Desvincular
+                                    </>
+                                  )}
                                 </Button>
                               </div>
                             </div>
@@ -561,11 +591,19 @@ const Assinaturas = () => {
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                              <AlertDialogCancel>Voltar</AlertDialogCancel>
+                              <AlertDialogCancel disabled={savingCancel}>Voltar</AlertDialogCancel>
                               <AlertDialogAction
                                 onClick={() => handleCancelRenewal(subscription.id)}
+                                disabled={savingCancel}
                               >
-                                Confirmar Cancelamento
+                                {savingCancel ? (
+                                  <>
+                                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                                    Cancelando...
+                                  </>
+                                ) : (
+                                  "Confirmar Cancelamento"
+                                )}
                               </AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
@@ -610,11 +648,22 @@ const Assinaturas = () => {
                               <Button
                                 variant="outline"
                                 onClick={() => setReactivateDialogOpen(null)}
+                                disabled={savingReactivate}
                               >
                                 Cancelar
                               </Button>
-                              <Button onClick={() => handleReactivateSubscription(subscription.id)}>
-                                Continuar para Pagamento
+                              <Button
+                                onClick={() => handleReactivateSubscription(subscription.id)}
+                                disabled={savingReactivate}
+                              >
+                                {savingReactivate ? (
+                                  <>
+                                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                                    Processando...
+                                  </>
+                                ) : (
+                                  "Continuar para Pagamento"
+                                )}
                               </Button>
                             </DialogFooter>
                           </DialogContent>

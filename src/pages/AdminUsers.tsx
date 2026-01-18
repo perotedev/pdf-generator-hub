@@ -64,6 +64,8 @@ export default function AdminUsers() {
   const [deletingUser, setDeletingUser] = useState<SystemUser | null>(null);
   const [selectedUserDetails, setSelectedUserDetails] = useState<SystemUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [savingRole, setSavingRole] = useState(false);
+  const [savingDelete, setSavingDelete] = useState(false);
   const [users, setUsers] = useState<SystemUser[]>([]);
 
   useEffect(() => {
@@ -131,6 +133,7 @@ export default function AdminUsers() {
     if (!editingUser) return;
 
     try {
+      setSavingRole(true);
       const token = await getValidAccessToken();
 
       if (!token) {
@@ -140,6 +143,7 @@ export default function AdminUsers() {
 
       await userApi.updateUser(token, editingUser.id, {
         role: editingUser.role,
+        status: editingUser.status,
       });
 
       await fetchUsers();
@@ -153,6 +157,8 @@ export default function AdminUsers() {
       toast.error('Erro ao atualizar permissão', {
         description: error.message || 'Tente novamente.',
       });
+    } finally {
+      setSavingRole(false);
     }
   };
 
@@ -186,6 +192,7 @@ export default function AdminUsers() {
     if (!deletingUser) return;
 
     try {
+      setSavingDelete(true);
       const token = await getValidAccessToken();
 
       if (!token) {
@@ -205,6 +212,8 @@ export default function AdminUsers() {
       toast.error('Erro ao excluir usuário', {
         description: error.message || 'Tente novamente.',
       });
+    } finally {
+      setSavingDelete(false);
     }
   };
 
@@ -444,10 +453,19 @@ export default function AdminUsers() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingUser(null)}>
+            <Button variant="outline" onClick={() => setEditingUser(null)} disabled={savingRole}>
               Cancelar
             </Button>
-            <Button onClick={handleUpdateRole}>Salvar Alterações</Button>
+            <Button onClick={handleUpdateRole} disabled={savingRole}>
+              {savingRole ? (
+                <>
+                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                  Salvando...
+                </>
+              ) : (
+                'Salvar Alterações'
+              )}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -463,9 +481,16 @@ export default function AdminUsers() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteUser} className="bg-destructive hover:bg-destructive/90">
-              Excluir Usuário
+            <AlertDialogCancel disabled={savingDelete}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteUser} className="bg-destructive hover:bg-destructive/90" disabled={savingDelete}>
+              {savingDelete ? (
+                <>
+                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                  Excluindo...
+                </>
+              ) : (
+                'Excluir Usuário'
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

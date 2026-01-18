@@ -4,11 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { FileText } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/lib/supabase";
+import { authUtilsApi, supabase } from "@/lib/supabase";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -30,19 +30,12 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      await login(email, password);
+      // Fazer login via API
+      const result = await authUtilsApi.login(email, password);
 
-      // Verificar se o usuário tem status PENDING
-      const { data: { user } } = await supabase.auth.getUser();
-
-      if (user) {
-        const { data: userData } = await supabase
-          .from('users')
-          .select('status, name')
-          .eq('id', user.id)
-          .single();
-
-        if (userData?.status === 'PENDING') {
+      if (result.success && result.user) {
+        // Verificar se o usuário tem status PENDING
+        if (result.user.status === 'PENDING') {
           // Email não verificado, redirecionar para verificação
           toast({
             title: "Email não verificado",
@@ -50,21 +43,29 @@ const Login = () => {
             variant: "destructive",
           });
 
-          navigate(`/verificar-email?userId=${user.id}&email=${encodeURIComponent(email)}&name=${encodeURIComponent(userData.name || '')}`);
+          navigate(`/verificar-email?userId=${result.user.id}&email=${encodeURIComponent(email)}&name=${encodeURIComponent(result.user.name || '')}`);
           return;
         }
+
+        // Se passou, salvar a sessão no Supabase client para manter o usuário logado
+        if (result.session) {
+          await supabase.auth.setSession({
+            access_token: result.session.access_token,
+            refresh_token: result.session.refresh_token,
+          });
+        }
+
+        toast({
+          title: "Login realizado com sucesso!",
+          description: "Redirecionando para o dashboard...",
+        });
+
+        navigate("/dashboard");
       }
-
-      toast({
-        title: "Login realizado com sucesso!",
-        description: "Redirecionando para o dashboard...",
-      });
-
-      navigate("/dashboard");
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Erro ao fazer login",
-        description: "Verifique suas credenciais e tente novamente.",
+        description: error.message || "Verifique suas credenciais e tente novamente.",
         variant: "destructive",
       });
     } finally {
@@ -184,7 +185,14 @@ const Login = () => {
               />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Entrando..." : "Entrar"}
+              {isLoading ? (
+                <>
+                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                  Entrando...
+                </>
+              ) : (
+                "Entrar"
+              )}
             </Button>
           </form>
 

@@ -435,6 +435,158 @@ export const licenseApi = {
   },
 }
 
+// Funções auxiliares de autenticação (sem usar supabase client diretamente nas páginas)
+export const authUtilsApi = {
+  async checkEmailExists(email: string) {
+    const response = await fetch(`${supabaseUrl}/functions/v1/auth-utils?action=check-email`, {
+      method: 'POST',
+      headers: {
+        'apikey': supabaseAnonKey,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email }),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to check email')
+    }
+
+    return response.json()
+  },
+
+  async register(email: string, password: string, name: string) {
+    const response = await fetch(`${supabaseUrl}/functions/v1/auth-utils?action=register`, {
+      method: 'POST',
+      headers: {
+        'apikey': supabaseAnonKey,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password, name }),
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to register')
+    }
+
+    return data
+  },
+
+  async login(email: string, password: string) {
+    const response = await fetch(`${supabaseUrl}/functions/v1/auth-utils?action=login`, {
+      method: 'POST',
+      headers: {
+        'apikey': supabaseAnonKey,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password }),
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to login')
+    }
+
+    return data
+  },
+
+  async getUserStatus(userId: string) {
+    const response = await fetch(`${supabaseUrl}/functions/v1/auth-utils?action=get-user-status`, {
+      method: 'POST',
+      headers: {
+        'apikey': supabaseAnonKey,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ userId }),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to get user status')
+    }
+
+    return response.json()
+  },
+
+  async createOAuthUser(id: string, email: string, name: string) {
+    const response = await fetch(`${supabaseUrl}/functions/v1/auth-utils?action=create-oauth-user`, {
+      method: 'POST',
+      headers: {
+        'apikey': supabaseAnonKey,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ id, email, name }),
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to create OAuth user')
+    }
+
+    return data
+  },
+}
+
+// Funções para gerenciar planos (admin)
+export const plansManagementApi = {
+  async getAllPlans() {
+    const response = await fetch(`${supabaseUrl}/functions/v1/plans-management?action=all`, {
+      method: 'GET',
+      headers: {
+        'apikey': supabaseAnonKey,
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to fetch plans')
+    }
+
+    return response.json()
+  },
+
+  async getActivePlans() {
+    const response = await fetch(`${supabaseUrl}/functions/v1/plans-management`, {
+      method: 'GET',
+      headers: {
+        'apikey': supabaseAnonKey,
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to fetch plans')
+    }
+
+    return response.json()
+  },
+
+  async updatePlan(token: string, planId: string, updates: Partial<Plan>) {
+    const response = await fetch(`${supabaseUrl}/functions/v1/plans-management?planId=${planId}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'apikey': supabaseAnonKey,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(updates),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to update plan')
+    }
+
+    return response.json()
+  },
+}
+
 // Funções para checkout e pagamentos
 export const checkoutApi = {
   async createCheckoutSession(token: string, planId: string, successUrl: string, cancelUrl: string) {

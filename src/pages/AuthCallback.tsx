@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
+import { supabase, authUtilsApi } from '@/lib/supabase';
 import { RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -28,68 +28,43 @@ const AuthCallback = () => {
         if (session) {
           console.log('OAuth session established for:', session.user.email);
 
-          // Verificar se o usuário já existe na tabela users pelo ID (mesmo provider)
-          const { data: existingUserById } = await supabase
-            .from('users')
-            .select('id, status, email')
-            .eq('id', session.user.id)
-            .single();
+          // Usar API para criar/verificar usuário OAuth
+          try {
+            const result = await authUtilsApi.createOAuthUser(
+              session.user.id,
+              session.user.email!,
+              session.user.user_metadata.full_name || session.user.user_metadata.name || session.user.email!.split('@')[0]
+            );
 
-          if (existingUserById) {
-            // Usuário já existe com este ID, fazer login normalmente
-            navigate('/dashboard', { replace: true });
-            return;
-          }
+            if (result.exists || result.created) {
+              // Usuário existe ou foi criado, redirecionar para dashboard
+              navigate('/dashboard', { replace: true });
+              return;
+            }
+          } catch (apiError: any) {
+            console.error('Error with OAuth user:', apiError);
 
-          // Verificar se o email já existe na tabela users (pode ter sido criado via registro convencional)
-          const { data: existingUserByEmail } = await supabase
-            .from('users')
-            .select('id, email')
-            .eq('email', session.user.email!.toLowerCase())
-            .single();
-
-          if (existingUserByEmail) {
             // Email já existe com outro método de autenticação
-            // Fazer logout do OAuth e informar o usuário
-            await supabase.auth.signOut();
-
-            setError('Este email já está cadastrado com outro método de login. Por favor, faça login com email e senha.');
-
-            toast({
-              title: "Email já cadastrado",
-              description: "Este email já está cadastrado com outro método de login. Por favor, faça login com email e senha.",
-              variant: "destructive",
-            });
-
-            setTimeout(() => {
-              navigate('/login', { replace: true });
-            }, 3000);
-            return;
-          }
-
-          // Se não existe, criar com status ACTIVE (OAuth já validou o email)
-          const { error: insertError } = await supabase
-            .from('users')
-            .insert({
-              id: session.user.id,
-              email: session.user.email!.toLowerCase(),
-              name: session.user.user_metadata.full_name || session.user.user_metadata.name || session.user.email!.split('@')[0],
-              password_hash: 'oauth',
-              role: 'USER',
-              status: 'ACTIVE', // OAuth não precisa verificação
-            });
-
-          if (insertError) {
-            console.error('Error creating user in database:', insertError);
-            // Se der erro de constraint (email duplicado), informar usuário
-            if (insertError.code === '23505') {
+            if (apiError.message.includes('outro método')) {
               await supabase.auth.signOut();
-              setError('Este email já está cadastrado. Por favor, faça login com email e senha.');
+
+              setError('Este email já está cadastrado com outro método de login. Por favor, faça login com email e senha.');
+
+              toast({
+                title: "Email já cadastrado",
+                description: "Este email já está cadastrado com outro método de login. Por favor, faça login com email e senha.",
+                variant: "destructive",
+              });
+
               setTimeout(() => {
                 navigate('/login', { replace: true });
               }, 3000);
               return;
             }
+
+            // Outro erro, mas usuário pode já existir - tentar continuar
+            navigate('/dashboard', { replace: true });
+            return;
           }
 
           // Redireciona para o dashboard

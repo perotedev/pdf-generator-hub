@@ -8,7 +8,7 @@ import { Settings, DollarSign, Package, ArrowRight, RefreshCw, Shield, Save, Use
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase, db } from "@/lib/supabase";
+import { plansManagementApi, systemApi, getValidAccessToken, type Plan } from "@/lib/supabase";
 
 const Admin = () => {
   const { toast } = useToast();
@@ -16,6 +16,7 @@ const Admin = () => {
   const [loading, setLoading] = useState(true);
   const [editingPrices, setEditingPrices] = useState(false);
   const [savingSettings, setSavingSettings] = useState(false);
+  const [savingPrices, setSavingPrices] = useState(false);
 
   // Preços dos planos
   const [monthlyPrice, setMonthlyPrice] = useState("");
@@ -41,21 +42,14 @@ const Admin = () => {
     try {
       setLoading(true);
 
-      const { data: plans, error } = await supabase
-        .from('plans')
-        .select('*')
-        .order('billing_cycle');
+      const response = await plansManagementApi.getAllPlans();
+      const plans = response.plans || [];
 
-      if (error) {
-        console.error('Supabase error:', error);
-        throw error;
-      }
+      console.log('Plans fetched from API:', plans);
 
-      console.log('Plans fetched from database:', plans);
-
-      if (plans && plans.length > 0) {
-        const monthlyPlan = plans.find(p => p.billing_cycle === 'MONTHLY');
-        const annualPlan = plans.find(p => p.billing_cycle === 'YEARLY');
+      if (plans.length > 0) {
+        const monthlyPlan = plans.find((p: Plan) => p.billing_cycle === 'MONTHLY');
+        const annualPlan = plans.find((p: Plan) => p.billing_cycle === 'YEARLY');
 
         console.log('Monthly plan:', monthlyPlan);
         console.log('Annual plan:', annualPlan);
@@ -72,7 +66,7 @@ const Admin = () => {
           setAnnualPlanId(annualPlan.id);
         }
       } else {
-        console.warn('No plans found in database');
+        console.warn('No plans found');
         toast({
           title: "Nenhum plano encontrado",
           description: "Verifique se há planos cadastrados no banco de dados.",
@@ -92,10 +86,11 @@ const Admin = () => {
   };
 
   const handleSavePrices = async () => {
+    setSavingPrices(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const token = await getValidAccessToken();
 
-      if (!session?.access_token) {
+      if (!token) {
         toast({
           title: "Sessão expirada",
           description: "Por favor, faça login novamente.",
@@ -106,22 +101,12 @@ const Admin = () => {
 
       // Update monthly plan
       if (monthlyPlanId && monthlyPrice !== initialMonthlyPrice) {
-        const { error: monthlyError } = await supabase
-          .from('plans')
-          .update({ price: parseFloat(monthlyPrice) })
-          .eq('id', monthlyPlanId);
-
-        if (monthlyError) throw monthlyError;
+        await plansManagementApi.updatePlan(token, monthlyPlanId, { price: parseFloat(monthlyPrice) });
       }
 
       // Update annual plan
       if (annualPlanId && annualPrice !== initialAnnualPrice) {
-        const { error: annualError } = await supabase
-          .from('plans')
-          .update({ price: parseFloat(annualPrice) })
-          .eq('id', annualPlanId);
-
-        if (annualError) throw annualError;
+        await plansManagementApi.updatePlan(token, annualPlanId, { price: parseFloat(annualPrice) });
       }
 
       setInitialMonthlyPrice(monthlyPrice);
@@ -138,6 +123,8 @@ const Admin = () => {
         description: error.message || "Tente novamente.",
         variant: "destructive",
       });
+    } finally {
+      setSavingPrices(false);
     }
   };
 
@@ -149,9 +136,10 @@ const Admin = () => {
 
   const loadSystemSettings = async () => {
     try {
-      const settings = await db.systemSettings.getAll();
+      const response = await systemApi.getSettings();
+      const settings = response.settings || [];
 
-      settings.forEach((setting) => {
+      settings.forEach((setting: { key: string; value: string }) => {
         if (setting.key === "user_manual_url") setUserManualUrl(setting.value);
         if (setting.key === "system_documentation_url") setSystemDocUrl(setting.value);
         if (setting.key === "info_video_url") setInfoVideoUrl(setting.value);
@@ -166,10 +154,21 @@ const Admin = () => {
     setSavingSettings(true);
 
     try {
+      const token = await getValidAccessToken();
+
+      if (!token) {
+        toast({
+          title: "Sessão expirada",
+          description: "Por favor, faça login novamente.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       await Promise.all([
-        db.systemSettings.update("user_manual_url", userManualUrl),
-        db.systemSettings.update("system_documentation_url", systemDocUrl),
-        db.systemSettings.update("info_video_url", infoVideoUrl),
+        systemApi.updateSetting(token, "user_manual_url", userManualUrl),
+        systemApi.updateSetting(token, "system_documentation_url", systemDocUrl),
+        systemApi.updateSetting(token, "info_video_url", infoVideoUrl),
       ]);
 
       toast({
@@ -311,11 +310,18 @@ const Admin = () => {
               </Button>
             ) : (
               <div className="flex gap-2">
-                <Button onClick={handleCancelPriceEdit} variant="outline">
+                <Button onClick={handleCancelPriceEdit} variant="outline" disabled={savingPrices}>
                   Cancelar
                 </Button>
-                <Button onClick={handleSavePrices}>
-                  Salvar Alterações
+                <Button onClick={handleSavePrices} disabled={savingPrices}>
+                  {savingPrices ? (
+                    <>
+                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                      Salvando...
+                    </>
+                  ) : (
+                    "Salvar Alterações"
+                  )}
                 </Button>
               </div>
             )}

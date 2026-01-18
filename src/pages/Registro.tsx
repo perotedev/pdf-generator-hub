@@ -7,8 +7,9 @@ import { Separator } from "@/components/ui/separator";
 import { FileText, Eye, EyeOff, CheckCircle2, XCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { authApi, supabase, emailApi } from "@/lib/supabase";
+import { authUtilsApi, emailApi, supabase } from "@/lib/supabase";
 import { LINKS } from "@/lib/constants";
+import { RefreshCw } from "lucide-react";
 
 const Registro = () => {
   const navigate = useNavigate();
@@ -72,68 +73,13 @@ const Registro = () => {
     setIsLoading(true);
 
     try {
-      // Verificar se o email já existe na tabela users (pode ter sido criado via Google OAuth)
-      const { data: existingUser } = await supabase
-        .from('users')
-        .select('id, email')
-        .eq('email', email.toLowerCase())
-        .single();
+      // Registrar usuário via API
+      const result = await authUtilsApi.register(email, password, name);
 
-      if (existingUser) {
-        toast({
-          title: "Email já cadastrado",
-          description: "Este email já está em uso. Tente fazer login ou use outro email.",
-          variant: "destructive",
-        });
-        setIsLoading(false);
-        return;
-      }
-
-      // Criar usuário no Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name: name,
-          },
-        },
-      });
-
-      if (authError) {
-        // Verificar se é erro de email já existente no auth.users
-        if (authError.message.includes('already registered') || authError.message.includes('already exists')) {
-          toast({
-            title: "Email já cadastrado",
-            description: "Este email já está em uso. Tente fazer login ou recuperar sua senha.",
-            variant: "destructive",
-          });
-          setIsLoading(false);
-          return;
-        }
-        throw authError;
-      }
-
-      if (authData.user) {
-        // Criar registro na tabela public.users com status PENDING
-        const { error: dbError } = await supabase
-          .from('users')
-          .insert({
-            id: authData.user.id,
-            email: email,
-            name: name,
-            password_hash: 'hashed', // placeholder, a senha real está no auth.users
-            role: 'USER',
-            status: 'PENDING', // Requer verificação de email
-          });
-
-        if (dbError) {
-          console.error('Error creating user in database:', dbError);
-        }
-
+      if (result.success && result.user) {
         // Enviar email de verificação
         try {
-          await emailApi.sendVerificationEmail(authData.user.id, email, name);
+          await emailApi.sendVerificationEmail(result.user.id, email, name);
 
           toast({
             title: "Conta criada!",
@@ -141,7 +87,7 @@ const Registro = () => {
           });
 
           // Redirecionar para página de verificação
-          navigate(`/verificar-email?userId=${authData.user.id}&email=${encodeURIComponent(email)}&name=${encodeURIComponent(name)}`);
+          navigate(`/verificar-email?userId=${result.user.id}&email=${encodeURIComponent(email)}&name=${encodeURIComponent(name)}`);
         } catch (emailError) {
           console.error('Error sending verification email:', emailError);
 
@@ -152,7 +98,7 @@ const Registro = () => {
             variant: "destructive",
           });
 
-          navigate(`/verificar-email?userId=${authData.user.id}&email=${encodeURIComponent(email)}&name=${encodeURIComponent(name)}`);
+          navigate(`/verificar-email?userId=${result.user.id}&email=${encodeURIComponent(email)}&name=${encodeURIComponent(name)}`);
         }
       }
     } catch (error: any) {
@@ -343,7 +289,14 @@ const Registro = () => {
               )}
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Criando conta..." : "Criar conta"}
+              {isLoading ? (
+                <>
+                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                  Criando conta...
+                </>
+              ) : (
+                "Criar conta"
+              )}
             </Button>
           </form>
 

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Check, X, ArrowLeft, CreditCard, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase, type Plan as DbPlan } from "@/lib/supabase";
+import { plansManagementApi, type Plan as DbPlan } from "@/lib/supabase";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -50,15 +50,10 @@ const MudarPlano = () => {
     try {
       setLoading(true);
 
-      const { data: dbPlans, error } = await supabase
-        .from('plans')
-        .select('*')
-        .eq('is_active', true)
-        .order('billing_cycle');
+      const response = await plansManagementApi.getActivePlans();
+      const dbPlans = response.plans || [];
 
-      if (error) throw error;
-
-      if (dbPlans && dbPlans.length > 0) {
+      if (dbPlans.length > 0) {
         const monthlyPlan = dbPlans.find((p: DbPlan) => p.billing_cycle === 'MONTHLY');
         const yearlyPlan = dbPlans.find((p: DbPlan) => p.billing_cycle === 'YEARLY');
 

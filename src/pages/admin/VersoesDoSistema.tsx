@@ -23,6 +23,7 @@ const VersoesDoSistema = () => {
   const [versions, setVersions] = useState<SystemVersion[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingVersion, setEditingVersion] = useState<SystemVersion | null>(null);
 
@@ -173,6 +174,7 @@ const VersoesDoSistema = () => {
       return;
     }
 
+    setIsDeleting(id);
     try {
       const token = await getValidAccessToken();
 
@@ -197,6 +199,8 @@ const VersoesDoSistema = () => {
         description: error.message,
         variant: "destructive",
       });
+    } finally {
+      setIsDeleting(null);
     }
   };
 
@@ -281,8 +285,13 @@ const VersoesDoSistema = () => {
                           size="icon"
                           onClick={() => handleDelete(version.id)}
                           title="Excluir versão"
+                          disabled={isDeleting === version.id}
                         >
-                          <Trash2 className="h-4 w-4 text-destructive" />
+                          {isDeleting === version.id ? (
+                            <RefreshCw className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          )}
                         </Button>
                       </div>
                     </div>

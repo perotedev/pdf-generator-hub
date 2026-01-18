@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { emailApi, supabase } from "@/lib/supabase";
+import { emailApi, authApi } from "@/lib/supabase";
 import { Mail, RefreshCw } from "lucide-react";
 
 const VerificarEmail = () => {
@@ -76,14 +76,9 @@ const VerificarEmail = () => {
           description: "Sua conta foi ativada com sucesso.",
         });
 
-        // Fazer login automaticamente
-        const { data, error } = await supabase.auth.getUser();
-
-        if (!error && data.user) {
-          navigate("/dashboard");
-        } else {
-          navigate("/login");
-        }
+        // Redirecionar para login para que o usuário faça login
+        // (A sessão pode não estar ativa após verificação via API)
+        navigate("/login");
       }
     } catch (error: any) {
       toast({
