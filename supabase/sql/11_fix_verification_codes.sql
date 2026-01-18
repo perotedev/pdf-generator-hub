@@ -6,6 +6,9 @@ add column if not exists user_id uuid;
 alter table public.verification_codes
 alter column user_id set not null;
 
+alter table public.verification_codes
+add column if not exists verified_at timestamptz null;
+
 -- 2) FK -> public.users(id)
 do $$
 begin
