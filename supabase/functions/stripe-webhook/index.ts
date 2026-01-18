@@ -446,6 +446,11 @@ async function handleInvoicePaid(supabase, invoice) {
     .single()
 
   if (paymentError) {
+    // Se o erro for de duplicidade, ignorar (pagamento já foi processado por outro evento)
+    if (paymentError.code === '23505') {
+      console.log('Payment already exists (duplicate), skipping:', invoice.id)
+      return
+    }
     console.error('Error creating payment:', JSON.stringify(paymentError))
     throw new Error(`Failed to create payment: ${JSON.stringify(paymentError)}`)
   } else {
