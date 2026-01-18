@@ -29,9 +29,10 @@ serve(async (req) => {
     let event
 
     try {
-      event = stripe.webhooks.constructEvent(
+      // Usar constructEventAsync em vez de constructEvent para ambiente Deno
+      event = await stripe.webhooks.constructEventAsync(
         body,
-        signature,
+        signature!,
         Deno.env.get('STRIPE_WEBHOOK_SECRET') ?? ''
       )
     } catch (err) {
@@ -103,10 +104,20 @@ function generateLicenseCode(): string {
   return segments.join('-')
 }
 
+// Helper para converter timestamp do Stripe para ISO string
+function stripeTimestampToISO(timestamp: number | undefined | null): string {
+  if (!timestamp || typeof timestamp !== 'number') {
+    return new Date().toISOString()
+  }
+  return new Date(timestamp * 1000).toISOString()
+}
+
 // Quando uma nova subscription é criada no Stripe
 async function handleSubscriptionCreated(supabase, subscription) {
   console.log('Processing customer.subscription.created:', subscription.id)
-  console.log('Subscription metadata:', subscription.metadata)
+  console.log('Subscription metadata:', JSON.stringify(subscription.metadata))
+  console.log('Subscription current_period_start:', subscription.current_period_start)
+  console.log('Subscription current_period_end:', subscription.current_period_end)
 
   const userId = subscription.metadata?.user_id
   const planId = subscription.metadata?.plan_id
@@ -144,6 +155,19 @@ async function handleSubscriptionCreated(supabase, subscription) {
 
   console.log('Plan data:', planData.name, planData.billing_cycle)
 
+  // Obter timestamps - podem estar no objeto principal ou nos items
+  const periodStart = subscription.current_period_start ||
+    subscription.items?.data?.[0]?.current_period_start ||
+    subscription.start_date ||
+    Math.floor(Date.now() / 1000)
+
+  const periodEnd = subscription.current_period_end ||
+    subscription.items?.data?.[0]?.current_period_end ||
+    (periodStart + (planData.billing_cycle === 'YEARLY' ? 31536000 : 2592000)) // 1 ano ou 30 dias
+
+  console.log('Period start:', periodStart, '-> ', stripeTimestampToISO(periodStart))
+  console.log('Period end:', periodEnd, '-> ', stripeTimestampToISO(periodEnd))
+
   // Criar a subscription no banco
   const { data: newSubscription, error: subError } = await supabase
     .from('subscriptions')
@@ -154,8 +178,8 @@ async function handleSubscriptionCreated(supabase, subscription) {
       stripe_customer_id: customerId,
       status: subscription.status === 'active' ? 'ACTIVE' : 'PENDING',
       billing_cycle: planData.billing_cycle,
-      current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-      current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+      current_period_start: stripeTimestampToISO(periodStart),
+      current_period_end: stripeTimestampToISO(periodEnd),
       cancel_at_period_end: subscription.cancel_at_period_end || false,
     })
     .select()
@@ -178,7 +202,7 @@ async function handleSubscriptionCreated(supabase, subscription) {
       status: 'ACTIVE',
       is_active: true,
       activated_at: new Date().toISOString(),
-      expires_at: new Date(subscription.current_period_end * 1000).toISOString(),
+      expires_at: stripeTimestampToISO(periodEnd),
     })
     .select()
     .single()
@@ -218,14 +242,22 @@ async function handleSubscriptionUpdated(supabase, subscription) {
                  subscription.status === 'canceled' ? 'CANCELED' :
                  subscription.status === 'past_due' ? 'PAST_DUE' : 'EXPIRED'
 
+  // Obter timestamps com fallback
+  const periodStart = subscription.current_period_start ||
+    subscription.items?.data?.[0]?.current_period_start ||
+    subscription.start_date
+
+  const periodEnd = subscription.current_period_end ||
+    subscription.items?.data?.[0]?.current_period_end
+
   const { error: updateError } = await supabase
     .from('subscriptions')
     .update({
       status,
-      current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-      current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+      current_period_start: periodStart ? stripeTimestampToISO(periodStart) : existingSub.current_period_start,
+      current_period_end: periodEnd ? stripeTimestampToISO(periodEnd) : existingSub.current_period_end,
       cancel_at_period_end: subscription.cancel_at_period_end || false,
-      canceled_at: subscription.canceled_at ? new Date(subscription.canceled_at * 1000).toISOString() : null
+      canceled_at: subscription.canceled_at ? stripeTimestampToISO(subscription.canceled_at) : null
     })
     .eq('id', existingSub.id)
 
@@ -242,7 +274,7 @@ async function handleSubscriptionUpdated(supabase, subscription) {
       .update({
         status: 'ACTIVE',
         is_active: true,
-        expires_at: new Date(subscription.current_period_end * 1000).toISOString(),
+        expires_at: periodEnd ? stripeTimestampToISO(periodEnd) : existingSub.current_period_end,
       })
       .eq('subscription_id', existingSub.id)
   } else if (status === 'CANCELED' || status === 'EXPIRED') {
@@ -347,7 +379,7 @@ async function handleInvoicePaid(supabase, invoice) {
       payment_method: 'stripe',
       description: description,
       paid_at: invoice.status_transitions?.paid_at
-        ? new Date(invoice.status_transitions.paid_at * 1000).toISOString()
+        ? stripeTimestampToISO(invoice.status_transitions.paid_at)
         : new Date().toISOString()
     })
     .select()
