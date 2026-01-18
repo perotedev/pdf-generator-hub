@@ -358,23 +358,51 @@ async function handleInvoicePaid(supabase, invoice) {
   console.log('Invoice subscription:', invoice.subscription)
   console.log('Invoice amount_paid:', invoice.amount_paid)
 
-  if (!invoice.subscription) {
+  // Log full invoice structure for debugging
+  console.log('Invoice keys:', Object.keys(invoice).join(', '))
+  console.log('Invoice lines:', JSON.stringify(invoice.lines?.data?.[0]))
+
+  // Tentar obter subscription_id de diferentes locais possíveis
+  const subscriptionId = invoice.subscription ||
+    invoice.subscription_id ||
+    invoice.lines?.data?.[0]?.subscription ||
+    invoice.lines?.data?.[0]?.parent?.subscription_item_details?.subscription
+
+  console.log('Resolved subscription ID:', subscriptionId)
+
+  if (!subscriptionId) {
     console.log('Invoice has no subscription, skipping')
+    console.log('Full invoice object:', JSON.stringify(invoice))
     return
   }
 
-  // Buscar a subscription no banco
-  const { data: subscription, error: subError } = await supabase
-    .from('subscriptions')
-    .select('*, plans(*)')
-    .eq('stripe_subscription_id', invoice.subscription)
-    .single()
+  // Buscar a subscription no banco - tentar algumas vezes pois pode chegar antes do customer.subscription.created
+  let subscription = null
+  let attempts = 0
+  const maxAttempts = 3
 
-  if (subError || !subscription) {
-    console.error('Subscription not found for invoice:', invoice.subscription, JSON.stringify(subError))
-    // Se a subscription não existe ainda, pode ser que o evento chegou antes do customer.subscription.created
-    // Vamos tentar novamente mais tarde
-    throw new Error(`Subscription not found for invoice: ${invoice.subscription}`)
+  while (!subscription && attempts < maxAttempts) {
+    const { data: subData, error: subError } = await supabase
+      .from('subscriptions')
+      .select('*, plans(*)')
+      .eq('stripe_subscription_id', subscriptionId)
+      .single()
+
+    if (subData) {
+      subscription = subData
+      break
+    }
+
+    attempts++
+    if (attempts < maxAttempts) {
+      console.log(`Subscription not found, attempt ${attempts}/${maxAttempts}, waiting 2 seconds...`)
+      await new Promise(resolve => setTimeout(resolve, 2000))
+    }
+  }
+
+  if (!subscription) {
+    console.error('Subscription not found for invoice after retries:', subscriptionId)
+    throw new Error(`Subscription not found for invoice: ${subscriptionId}`)
   }
 
   console.log('Found subscription:', subscription.id, 'user_id:', subscription.user_id)
