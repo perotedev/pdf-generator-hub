@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, RefreshCw, CreditCard, ArrowLeft } from "lucide-react";
+import { Check, X, RefreshCw, CreditCard, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { plansApi, checkoutApi, type Plan } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 interface Feature {
   text: string;
   included: boolean;
+  isDisadvantage?: boolean;
 }
 
 // Função para processar features e substituir placeholders
@@ -240,8 +241,14 @@ const Checkout = () => {
                       key={index}
                       className="flex items-center gap-2 text-sm"
                     >
-                      <Check className="h-4 w-4 text-primary shrink-0" />
-                      <span>{feature.text}</span>
+                      {feature.isDisadvantage ? (
+                        <X className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      ) : (
+                        <Check className="h-4 w-4 shrink-0 text-primary" />
+                      )}
+                      <span className={`text-sm ${feature.isDisadvantage ? 'text-muted-foreground' : 'text-foreground'}`}>
+                        {feature.text}
+                      </span>
                     </li>
                   ))}
                 </ul>
