@@ -76,6 +76,16 @@ serve(async (req) => {
       throw new Error('Failed to update verification code')
     }
 
+    const { error: confirmAuthErr } =
+      await supabase.auth.admin.updateUserById(userId, {
+        email_confirm: true,
+      })
+
+    if (confirmAuthErr) {
+      console.error("Error confirming auth email:", confirmAuthErr)
+      throw new Error(`Failed to confirm email: ${confirmAuthErr.message}`)
+    }
+
     // Update user status to ACTIVE
     const { error: updateUserError } = await supabase
       .from('users')
