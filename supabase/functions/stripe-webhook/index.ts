@@ -43,6 +43,10 @@ serve(async (req) => {
 
     // Handle different event types
     switch (event.type) {
+      case 'checkout.session.completed':
+        await handleCheckoutSessionCompleted(supabase, stripe, event.data.object)
+        break
+
       case 'customer.subscription.created':
       case 'customer.subscription.updated':
         await handleSubscriptionUpdate(supabase, event.data.object)
@@ -80,6 +84,150 @@ serve(async (req) => {
     )
   }
 })
+
+async function handleCheckoutSessionCompleted(supabase, stripe, session) {
+  console.log('Processing checkout.session.completed:', session.id)
+
+  // Verificar se é uma sessão de subscription
+  if (session.mode !== 'subscription') {
+    console.log('Session is not a subscription, skipping')
+    return
+  }
+
+  const userId = session.metadata?.user_id
+  const planId = session.metadata?.plan_id
+  const subscriptionId = session.subscription
+  const customerId = session.customer
+
+  if (!userId || !planId || !subscriptionId) {
+    console.error('Missing metadata in checkout session:', { userId, planId, subscriptionId })
+    return
+  }
+
+  console.log('Checkout metadata:', { userId, planId, subscriptionId, customerId })
+
+  // Buscar detalhes da subscription no Stripe
+  const stripeSubscription = await stripe.subscriptions.retrieve(subscriptionId)
+  console.log('Stripe subscription:', stripeSubscription.id, stripeSubscription.status)
+
+  // Buscar dados do plano
+  const { data: planData, error: planError } = await supabase
+    .from('plans')
+    .select('*')
+    .eq('id', planId)
+    .single()
+
+  if (planError || !planData) {
+    console.error('Plan not found:', planId, planError)
+    return
+  }
+
+  console.log('Plan data:', planData.name, planData.billing_cycle)
+
+  // Verificar se já existe uma subscription para este stripe_subscription_id
+  const { data: existingSub } = await supabase
+    .from('subscriptions')
+    .select('id')
+    .eq('stripe_subscription_id', subscriptionId)
+    .single()
+
+  if (existingSub) {
+    console.log('Subscription already exists:', existingSub.id)
+    return
+  }
+
+  // Criar a subscription no banco
+  const { data: newSubscription, error: subError } = await supabase
+    .from('subscriptions')
+    .insert({
+      user_id: userId,
+      plan_id: planId,
+      stripe_subscription_id: subscriptionId,
+      stripe_customer_id: customerId,
+      status: 'ACTIVE',
+      billing_cycle: planData.billing_cycle,
+      current_period_start: new Date(stripeSubscription.current_period_start * 1000).toISOString(),
+      current_period_end: new Date(stripeSubscription.current_period_end * 1000).toISOString(),
+      cancel_at_period_end: false,
+    })
+    .select()
+    .single()
+
+  if (subError) {
+    console.error('Error creating subscription:', subError)
+    return
+  }
+
+  console.log('Subscription created:', newSubscription.id)
+
+  // Gerar código de licença único
+  const generateLicenseCode = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+    const segments = []
+    for (let i = 0; i < 4; i++) {
+      let segment = ''
+      for (let j = 0; j < 4; j++) {
+        segment += chars.charAt(Math.floor(Math.random() * chars.length))
+      }
+      segments.push(segment)
+    }
+    return segments.join('-')
+  }
+
+  // Criar a licença
+  const { data: newLicense, error: licenseError } = await supabase
+    .from('licenses')
+    .insert({
+      user_id: userId,
+      subscription_id: newSubscription.id,
+      license_key: generateLicenseCode(),
+      status: 'ACTIVE',
+      is_active: true,
+      activated_at: new Date().toISOString(),
+      expires_at: new Date(stripeSubscription.current_period_end * 1000).toISOString(),
+    })
+    .select()
+    .single()
+
+  if (licenseError) {
+    console.error('Error creating license:', licenseError)
+  } else {
+    console.log('License created:', newLicense.id, newLicense.license_key)
+  }
+
+  // Criar o registro de pagamento
+  const amountPaid = session.amount_total / 100 // Stripe usa centavos
+  const { data: newPayment, error: paymentError } = await supabase
+    .from('payments')
+    .insert({
+      user_id: userId,
+      subscription_id: newSubscription.id,
+      stripe_payment_intent_id: session.payment_intent,
+      amount: amountPaid,
+      currency: (session.currency || 'brl').toUpperCase(),
+      status: 'SUCCEEDED',
+      payment_method: 'stripe',
+      description: `Pagamento inicial - ${planData.name} (${planData.billing_cycle === 'MONTHLY' ? 'Mensal' : 'Anual'})`,
+      paid_at: new Date().toISOString(),
+    })
+    .select()
+    .single()
+
+  if (paymentError) {
+    console.error('Error creating payment:', paymentError)
+  } else {
+    console.log('Payment created:', newPayment.id, 'Amount:', amountPaid)
+  }
+
+  // Atualizar o usuário com o stripe_customer_id se não tiver
+  await supabase
+    .from('users')
+    .update({ stripe_customer_id: customerId })
+    .eq('id', userId)
+    .is('stripe_customer_id', null)
+
+  console.log('Checkout session completed successfully')
+}
 
 async function handleSubscriptionUpdate(supabase, subscription) {
   const { data: existingSub } = await supabase
