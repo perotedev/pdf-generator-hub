@@ -64,59 +64,91 @@ serve(async (req) => {
             )
           }
 
-          // Verificar se já existe na tabela users
-          const { data: existingUser } = await supabaseAdmin
+          const normalizedEmail = String(email).trim().toLowerCase()
+          const safeName = String(name).trim()
+
+          // 1) Verificar se já existe na tabela users (sem estourar quando não acha)
+          const { data: existingUser, error: existingErr } = await supabaseAdmin
             .from('users')
             .select('id, email')
-            .eq('email', email.toLowerCase())
-            .single()
+            .eq('email', normalizedEmail)
+            .maybeSingle()
+
+          if (existingErr) {
+            console.error('Existing user check error:', existingErr)
+            throw existingErr
+          }
 
           if (existingUser) {
             return new Response(
-              JSON.stringify({ error: 'Este email já está em uso. Tente fazer login ou use outro email.', code: 'EMAIL_EXISTS' }),
+              JSON.stringify({
+                error: 'Este email já está em uso. Tente fazer login ou use outro email.',
+                code: 'EMAIL_EXISTS'
+              }),
               { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 409 }
             )
           }
 
-          // Criar no Supabase Auth
-          const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-            email: email,
-            password: password,
-            email_confirm: false,
-            user_metadata: { name: name }
-          })
+          // 2) Criar no Supabase Auth
+          const { data: authData, error: authError } =
+            await supabaseAdmin.auth.admin.createUser({
+              email: normalizedEmail,
+              password,
+              email_confirm: false,
+              user_metadata: { name: safeName },
+            })
 
           if (authError) {
             console.error('Auth error:', authError)
-            if (authError.message.includes('already registered') || authError.message.includes('already exists')) {
+
+            // mensagens comuns quando já existe no Auth
+            const msg = (authError.message || '').toLowerCase()
+            if (msg.includes('already') || msg.includes('exists') || msg.includes('registered')) {
               return new Response(
-                JSON.stringify({ error: 'Este email já está cadastrado. Tente fazer login ou recuperar sua senha.', code: 'EMAIL_EXISTS' }),
+                JSON.stringify({
+                  error: 'Este email já está cadastrado. Tente fazer login ou recuperar sua senha.',
+                  code: 'EMAIL_EXISTS'
+                }),
                 { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 409 }
               )
             }
+
             throw authError
           }
 
-          if (!authData.user) {
-            throw new Error('Failed to create user')
+          const createdAuthUser = authData?.user
+          if (!createdAuthUser?.id) {
+            throw new Error('Failed to create user in auth')
           }
 
-          // Criar na tabela users
-          const { error: dbError } = await supabaseAdmin
+          // 3) Criar/garantir na tabela users (UPsert evita 23505 no users_pkey)
+          const { data: userRow, error: dbError } = await supabaseAdmin
             .from('users')
-            .insert({
-              id: authData.user.id,
-              email: email.toLowerCase(),
-              name: name,
-              password_hash: 'hashed',
-              role: 'USER',
-              status: 'PENDING',
-            })
+            .upsert(
+              {
+                id: createdAuthUser.id,
+                email: normalizedEmail,
+                name: safeName,
+                password_hash: 'hashed',
+                role: 'USER',
+                status: 'PENDING',
+              },
+              { onConflict: 'id' }
+            )
+            .select('id, email, name')
+            .single()
 
           if (dbError) {
             console.error('DB error:', dbError)
-            // Se falhar, deletar do auth
-            await supabaseAdmin.auth.admin.deleteUser(authData.user.id)
+
+            // Se falhou por um motivo diferente de duplicidade, tenta rollback do Auth
+            // (duplicidade no id não deve mais ocorrer por causa do upsert)
+            try {
+              await supabaseAdmin.auth.admin.deleteUser(createdAuthUser.id)
+            } catch (e) {
+              console.error('Rollback auth delete failed:', e)
+            }
+
             throw dbError
           }
 
@@ -124,9 +156,9 @@ serve(async (req) => {
             JSON.stringify({
               success: true,
               user: {
-                id: authData.user.id,
-                email: authData.user.email,
-                name: name,
+                id: userRow.id,
+                email: userRow.email,
+                name: userRow.name,
               }
             }),
             { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 201 }
