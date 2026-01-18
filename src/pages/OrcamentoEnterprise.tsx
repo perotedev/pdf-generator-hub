@@ -177,13 +177,13 @@ const OrcamentoEnterprise = () => {
                       Suporte Prioritário
                     </h3>
                     <p className="text-sm text-muted-foreground">
-                      Atendimento dedicado com SLA garantido
+                      Atendimento dedicado garantido
                     </p>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="border-border">
+              {/* <Card className="border-border">
                 <CardContent className="p-4 flex items-start gap-4">
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 shrink-0">
                     <Shield className="h-5 w-5 text-primary" />
@@ -213,7 +213,7 @@ const OrcamentoEnterprise = () => {
                     </p>
                   </div>
                 </CardContent>
-              </Card>
+              </Card> */}
             </div>
 
             {/* Pricing Info */}
@@ -225,15 +225,15 @@ const OrcamentoEnterprise = () => {
                 <ul className="space-y-2 text-sm text-muted-foreground">
                   <li className="flex justify-between">
                     <span>5-10 licenças</span>
-                    <span className="font-medium text-foreground">10% de desconto</span>
+                    <span className="font-medium text-foreground">5% de desconto</span>
                   </li>
                   <li className="flex justify-between">
                     <span>11-25 licenças</span>
-                    <span className="font-medium text-foreground">15% de desconto</span>
+                    <span className="font-medium text-foreground">7% de desconto</span>
                   </li>
                   <li className="flex justify-between">
                     <span>26-50 licenças</span>
-                    <span className="font-medium text-foreground">20% de desconto</span>
+                    <span className="font-medium text-foreground">10% de desconto</span>
                   </li>
                   <li className="flex justify-between">
                     <span>51+ licenças</span>
@@ -261,7 +261,7 @@ const OrcamentoEnterprise = () => {
                   <Label htmlFor="company_name">Nome da Empresa *</Label>
                   <Input
                     id="company_name"
-                    placeholder="Empresa Ltda."
+                    placeholder="Nome da Empresa"
                     value={formData.company_name}
                     onChange={(e) => handleChange("company_name", e.target.value)}
                     required
@@ -272,7 +272,7 @@ const OrcamentoEnterprise = () => {
                   <Label htmlFor="contact_name">Nome do Contato *</Label>
                   <Input
                     id="contact_name"
-                    placeholder="João Silva"
+                    placeholder="Nome do Contato"
                     value={formData.contact_name}
                     onChange={(e) => handleChange("contact_name", e.target.value)}
                     required
@@ -284,7 +284,7 @@ const OrcamentoEnterprise = () => {
                   <Input
                     id="email"
                     type="email"
-                    placeholder="joao@empresa.com.br"
+                    placeholder="seuemail@empresa.com.br"
                     value={formData.email}
                     onChange={(e) => handleChange("email", e.target.value)}
                     required
