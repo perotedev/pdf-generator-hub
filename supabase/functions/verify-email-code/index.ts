@@ -68,7 +68,7 @@ serve(async (req) => {
     // Mark code as verified
     const { error: updateCodeError } = await supabase
       .from('verification_codes')
-      .update({ verified_at: new Date().toISOString() })
+      .update({ verified_at: new Date().toISOString(), used: true })
       .eq('id', verificationCode.id)
 
     if (updateCodeError) {
