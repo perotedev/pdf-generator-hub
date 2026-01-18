@@ -304,10 +304,10 @@ const Checkout = () => {
                       <Check className="h-4 w-4 text-green-500" />
                       <span>Cartão de crédito</span>
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    {/* <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Check className="h-4 w-4 text-green-500" />
                       <span>PIX</span>
-                    </div>
+                    </div> */}
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Check className="h-4 w-4 text-green-500" />
                       <span>Boleto (plano anual)</span>
