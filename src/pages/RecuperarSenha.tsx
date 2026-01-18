@@ -97,7 +97,29 @@ const RecuperarSenha = () => {
       return;
     }
 
-    setStep("password");
+    setIsLoading(true);
+
+    try {
+      // Validar código antes de mostrar campos de senha
+      await emailApi.validatePasswordResetCode(code, email);
+
+      toast({
+        title: "Código verificado!",
+        description: "Agora defina sua nova senha.",
+      });
+
+      setStep("password");
+    } catch (error: any) {
+      toast({
+        title: "Código inválido",
+        description: error.message || "O código é inválido ou expirou. Solicite um novo código.",
+        variant: "destructive",
+      });
+      // Resetar código para o usuário tentar novamente
+      setCode("");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleResetPassword = async (e: React.FormEvent) => {

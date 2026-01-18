@@ -8,7 +8,8 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 interface RequestBody {
   code: string
   email: string
-  newPassword: string
+  newPassword?: string
+  validateOnly?: boolean
 }
 
 const corsHeaders = {
@@ -23,10 +24,15 @@ serve(async (req) => {
   }
 
   try {
-    const { code, email, newPassword }: RequestBody = await req.json()
+    const { code, email, newPassword, validateOnly }: RequestBody = await req.json()
 
-    if (!code || !email || !newPassword) {
-      throw new Error('Code, email and newPassword are required')
+    if (!code || !email) {
+      throw new Error('Code and email are required')
+    }
+
+    // Se não for apenas validação, a nova senha é obrigatória
+    if (!validateOnly && !newPassword) {
+      throw new Error('newPassword is required')
     }
 
     // Create Supabase client with service role
@@ -65,6 +71,14 @@ serve(async (req) => {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
+      )
+    }
+
+    // Se for apenas validação, retornar sucesso sem alterar nada
+    if (validateOnly) {
+      return new Response(
+        JSON.stringify({ success: true, message: 'Código válido', valid: true }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 

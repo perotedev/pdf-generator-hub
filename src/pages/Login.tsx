@@ -1,10 +1,10 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Eye, EyeOff } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -12,18 +12,47 @@ import { authUtilsApi, supabase } from "@/lib/supabase";
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
-  const { login, isAuthenticated } = useAuth();
+  const { isAuthenticated, setUserDirectly, loading: authLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Redirecionar se já estiver autenticado
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate("/dashboard", { replace: true });
+  // Capturar URL de destino (de location.state ou query params)
+  const getRedirectUrl = (): string => {
+    // Primeiro, verificar location.state.from (de ProtectedRoute)
+    const fromState = location.state?.from?.pathname;
+    if (fromState && fromState !== '/login' && fromState !== '/registro') {
+      return fromState;
     }
-  }, [isAuthenticated, navigate]);
+
+    // Segundo, verificar query param redirect
+    const redirectParam = searchParams.get('redirect');
+    if (redirectParam) {
+      return redirectParam;
+    }
+
+    // Verificar se há checkout pendente
+    const pendingCheckout = sessionStorage.getItem('pendingCheckoutPlan');
+    if (pendingCheckout) {
+      sessionStorage.removeItem('pendingCheckoutPlan');
+      return `/checkout?plan=${pendingCheckout}`;
+    }
+
+    // Default: dashboard
+    return '/dashboard';
+  };
+
+  // Redirecionar se já estiver autenticado (apenas após o carregamento inicial)
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      const redirectUrl = getRedirectUrl();
+      navigate(redirectUrl, { replace: true });
+    }
+  }, [isAuthenticated, authLoading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,10 +62,11 @@ const Login = () => {
       // Fazer login via API
       const result = await authUtilsApi.login(email, password);
 
+      console.log('Login result:', result);
+
       if (result.success && result.user) {
-        // Verificar se o usuário tem status PENDING
+        // Verificar se o usuário tem status PENDING (email não verificado)
         if (result.user.status === 'PENDING') {
-          // Email não verificado, redirecionar para verificação
           toast({
             title: "Email não verificado",
             description: "Verifique seu email para ativar sua conta.",
@@ -49,20 +79,40 @@ const Login = () => {
 
         // Se passou, salvar a sessão no Supabase client para manter o usuário logado
         if (result.session) {
-          await supabase.auth.setSession({
-            access_token: result.session.access_token,
-            refresh_token: result.session.refresh_token,
-          });
+          try {
+            await supabase.auth.setSession({
+              access_token: result.session.access_token,
+              refresh_token: result.session.refresh_token,
+            });
+          } catch (sessionError) {
+            console.error('Error setting session:', sessionError);
+          }
         }
+
+        // Atualizar o usuário diretamente no AuthContext
+        setUserDirectly({
+          id: result.user.id,
+          name: result.user.name,
+          email: result.user.email,
+          role: result.user.role || 'USER',
+        });
 
         toast({
           title: "Login realizado com sucesso!",
-          description: "Redirecionando para o dashboard...",
+          description: "Redirecionando...",
         });
 
-        navigate("/dashboard");
+        // Pequeno delay para garantir que o estado foi atualizado
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        // Redirecionar para destino pendente ou dashboard
+        const redirectUrl = getRedirectUrl();
+        navigate(redirectUrl, { replace: true });
+      } else {
+        throw new Error('Resposta inválida do servidor');
       }
     } catch (error: any) {
+      console.error('Login error:', error);
       toast({
         title: "Erro ao fazer login",
         description: error.message || "Verifique suas credenciais e tente novamente.",
@@ -77,6 +127,12 @@ const Login = () => {
     setIsLoading(true);
 
     try {
+      // Salvar URL de redirecionamento antes do OAuth
+      const redirectUrl = getRedirectUrl();
+      if (redirectUrl !== '/dashboard') {
+        sessionStorage.setItem('authRedirectUrl', redirectUrl);
+      }
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -87,9 +143,6 @@ const Login = () => {
       if (error) {
         throw error;
       }
-
-      // Não mostrar toast aqui, pois o usuário será redirecionado para o Google
-      // O toast será mostrado apenas se houver erro
     } catch (error) {
       toast({
         title: "Erro ao fazer login com Google",
@@ -100,14 +153,23 @@ const Login = () => {
     }
   };
 
+  // Mostrar loading enquanto verifica autenticação inicial
+  if (authLoading) {
+    return (
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
+        <RefreshCw className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-12">
       <Card className="w-full max-w-md border-border">
         <CardHeader className="text-center">
             <div className="mx-auto my-2">
-              <img 
-                src="/imgs/pdf_generator.png" 
-                alt="PDF Generator Logo" 
+              <img
+                src="/imgs/pdf_generator.png"
+                alt="PDF Generator Logo"
                 className="h-12 w-12"
               />
             </div>
@@ -174,15 +236,27 @@ const Login = () => {
                   Esqueceu a senha?
                 </Link>
               </div>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={isLoading}
-                required
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={isLoading}
+                  className="pr-10"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  disabled={isLoading}
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? (

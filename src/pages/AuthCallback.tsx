@@ -1,86 +1,142 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase, authUtilsApi } from '@/lib/supabase';
 import { RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 const AuthCallback = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { refreshUser, setUserDirectly } = useAuth();
   const [error, setError] = useState<string | null>(null);
+  const [status, setStatus] = useState<string>('Processando autenticação...');
+  const processedRef = useRef(false);
 
   useEffect(() => {
+    // Evitar processamento duplicado
+    if (processedRef.current) return;
+    processedRef.current = true;
+
     const handleCallback = async () => {
       try {
-        // O Supabase automaticamente troca o código OAuth por uma sessão
-        // quando detecta os parâmetros na URL (code, access_token, etc)
-        // Precisamos aguardar um pouco para a sessão ser estabelecida
-        await new Promise(resolve => setTimeout(resolve, 100));
+        setStatus('Verificando sessão...');
 
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        // Aguardar a detecção automática da sessão pelo Supabase
+        // O Supabase detecta os parâmetros na URL (code, access_token, etc)
+        let session = null;
+        let attempts = 0;
+        const maxAttempts = 10;
 
-        if (sessionError) {
-          console.error('Error getting session:', sessionError);
-          navigate('/login', { replace: true });
+        // Tentar obter a sessão com retry
+        while (!session && attempts < maxAttempts) {
+          const { data, error: sessionError } = await supabase.auth.getSession();
+
+          if (sessionError) {
+            console.error('Error getting session (attempt ' + (attempts + 1) + '):', sessionError);
+          }
+
+          if (data?.session) {
+            session = data.session;
+            break;
+          }
+
+          attempts++;
+          if (attempts < maxAttempts) {
+            await new Promise(resolve => setTimeout(resolve, 300));
+          }
+        }
+
+        if (!session) {
+          console.log('No session found after OAuth callback');
+          setError('Não foi possível estabelecer a sessão. Por favor, tente novamente.');
+          setTimeout(() => navigate('/login', { replace: true }), 3000);
           return;
         }
 
-        if (session) {
-          console.log('OAuth session established for:', session.user.email);
+        setStatus('Configurando sua conta...');
+        console.log('OAuth session established for:', session.user.email);
 
-          // Usar API para criar/verificar usuário OAuth
-          try {
-            const result = await authUtilsApi.createOAuthUser(
-              session.user.id,
-              session.user.email!,
-              session.user.user_metadata.full_name || session.user.user_metadata.name || session.user.email!.split('@')[0]
-            );
+        // Usar API para criar/verificar usuário OAuth
+        try {
+          const result = await authUtilsApi.createOAuthUser(
+            session.user.id,
+            session.user.email!,
+            session.user.user_metadata.full_name || session.user.user_metadata.name || session.user.email!.split('@')[0]
+          );
 
-            if (result.exists || result.created) {
-              // Usuário existe ou foi criado, redirecionar para dashboard
-              navigate('/dashboard', { replace: true });
-              return;
-            }
-          } catch (apiError: any) {
-            console.error('Error with OAuth user:', apiError);
+          if (result.exists || result.created) {
+            setStatus('Finalizando...');
 
-            // Email já existe com outro método de autenticação
-            if (apiError.message.includes('outro método')) {
-              await supabase.auth.signOut();
+            // Forçar refresh do usuário no AuthContext
+            await refreshUser();
 
-              setError('Este email já está cadastrado com outro método de login. Por favor, faça login com email e senha.');
-
-              toast({
-                title: "Email já cadastrado",
-                description: "Este email já está cadastrado com outro método de login. Por favor, faça login com email e senha.",
-                variant: "destructive",
-              });
-
-              setTimeout(() => {
-                navigate('/login', { replace: true });
-              }, 3000);
+            // Verificar se há URL de redirecionamento salva
+            const savedRedirectUrl = sessionStorage.getItem('authRedirectUrl');
+            if (savedRedirectUrl) {
+              sessionStorage.removeItem('authRedirectUrl');
+              navigate(savedRedirectUrl, { replace: true });
               return;
             }
 
-            // Outro erro, mas usuário pode já existir - tentar continuar
+            // Verificar checkout pendente
+            const pendingCheckout = sessionStorage.getItem('pendingCheckoutPlan');
+            if (pendingCheckout) {
+              sessionStorage.removeItem('pendingCheckoutPlan');
+              navigate(`/checkout?plan=${pendingCheckout}`, { replace: true });
+              return;
+            }
+
+            // Redirecionar para dashboard
             navigate('/dashboard', { replace: true });
             return;
           }
+        } catch (apiError: any) {
+          console.error('Error with OAuth user:', apiError);
 
-          // Redireciona para o dashboard
+          // Email já existe com outro método de autenticação
+          if (apiError.message?.includes('outro método') || apiError.message?.includes('already registered')) {
+            await supabase.auth.signOut();
+
+            setError('Este email já está cadastrado com outro método de login. Por favor, faça login com email e senha.');
+
+            toast({
+              title: "Email já cadastrado",
+              description: "Este email já está cadastrado com outro método de login. Por favor, faça login com email e senha.",
+              variant: "destructive",
+            });
+
+            setTimeout(() => {
+              navigate('/login', { replace: true });
+            }, 3000);
+            return;
+          }
+
+          // Outro erro, mas sessão existe - tentar continuar
+          console.log('API error but session exists, attempting to continue...');
+
+          // Forçar refresh do usuário no AuthContext
+          try {
+            await refreshUser();
+          } catch (refreshError) {
+            console.error('Error refreshing user:', refreshError);
+          }
+
           navigate('/dashboard', { replace: true });
-        } else {
-          console.log('No session found after OAuth callback');
-          navigate('/login', { replace: true });
+          return;
         }
+
+        // Fallback - redireciona para o dashboard
+        navigate('/dashboard', { replace: true });
       } catch (err) {
         console.error('Error in auth callback:', err);
-        navigate('/login', { replace: true });
+        setError('Ocorreu um erro durante a autenticação. Redirecionando para o login...');
+        setTimeout(() => navigate('/login', { replace: true }), 3000);
       }
     };
 
     handleCallback();
-  }, [navigate, toast]);
+  }, [navigate, toast, refreshUser, setUserDirectly]);
 
   if (error) {
     return (
@@ -99,7 +155,7 @@ const AuthCallback = () => {
     <div className="flex min-h-screen items-center justify-center">
       <div className="text-center">
         <RefreshCw className="h-8 w-8 animate-spin mx-auto text-primary" />
-        <p className="mt-4 text-muted-foreground">Processando autenticação...</p>
+        <p className="mt-4 text-muted-foreground">{status}</p>
       </div>
     </div>
   );

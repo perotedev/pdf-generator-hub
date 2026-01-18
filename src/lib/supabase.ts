@@ -7,7 +7,16 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables')
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Configurar cliente Supabase com persistência de sessão
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+    storageKey: 'pdf-generator-auth',
+    storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+  },
+})
 
 // Função helper para obter um token válido (faz refresh se necessário)
 export async function getValidAccessToken(): Promise<string | null> {
@@ -1219,6 +1228,24 @@ export const emailApi = {
     if (!response.ok) {
       const error = await response.json()
       throw new Error(error.error || 'Failed to verify password reset code')
+    }
+
+    return response.json()
+  },
+
+  async validatePasswordResetCode(code: string, email: string) {
+    const response = await fetch(`${supabaseUrl}/functions/v1/verify-password-reset-code`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': supabaseAnonKey,
+      },
+      body: JSON.stringify({ code, email, validateOnly: true }),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Código inválido ou expirado')
     }
 
     return response.json()

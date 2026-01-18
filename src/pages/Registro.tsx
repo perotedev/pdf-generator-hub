@@ -73,6 +73,45 @@ const Registro = () => {
     setIsLoading(true);
 
     try {
+      // Primeiro, verificar se o email já existe
+      try {
+        const emailCheck = await authUtilsApi.checkEmailExists(email);
+
+        // Se email existe e usuário está PENDING, redirecionar para verificação
+        if (emailCheck.exists && emailCheck.status === 'PENDING' && emailCheck.userId) {
+          toast({
+            title: "Email já cadastrado",
+            description: "Este email já possui uma conta pendente de verificação. Redirecionando...",
+          });
+
+          // Reenviar código de verificação
+          try {
+            await emailApi.sendVerificationEmail(emailCheck.userId, email, emailCheck.name || name);
+          } catch (e) {
+            console.error('Error resending verification email:', e);
+          }
+
+          navigate(`/verificar-email?userId=${emailCheck.userId}&email=${encodeURIComponent(email)}&name=${encodeURIComponent(emailCheck.name || name)}`);
+          return;
+        }
+
+        // Se email existe com outro status, mostrar erro
+        if (emailCheck.exists) {
+          toast({
+            title: "Email já cadastrado",
+            description: "Este email já possui uma conta. Faça login ou recupere sua senha.",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
+        }
+      } catch (checkError: any) {
+        // Se erro não for de email não encontrado, propagar
+        if (!checkError.message?.includes('not found') && !checkError.message?.includes('não encontrado')) {
+          console.error('Error checking email:', checkError);
+        }
+      }
+
       // Registrar usuário via API
       const result = await authUtilsApi.register(email, password, name);
 
@@ -102,11 +141,20 @@ const Registro = () => {
         }
       }
     } catch (error: any) {
-      toast({
-        title: "Erro ao criar conta",
-        description: error.message || "Tente novamente mais tarde.",
-        variant: "destructive",
-      });
+      // Verificar se é erro de email duplicado
+      if (error.message?.includes('já está cadastrado') || error.message?.includes('already exists')) {
+        toast({
+          title: "Email já cadastrado",
+          description: "Este email já possui uma conta. Faça login ou recupere sua senha.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erro ao criar conta",
+          description: error.message || "Tente novamente mais tarde.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
