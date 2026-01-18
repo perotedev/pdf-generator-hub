@@ -167,11 +167,34 @@ serve(async (req) => {
 
         // Login - retorna status do usuário
         case 'login': {
+          console.log('Login attempt - checking OAuth user')
           const { email, password } = body
 
           if (!email || !password) {
             return new Response(
               JSON.stringify({ error: 'Email and password are required' }),
+              { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+            )
+          }
+
+          // Verificar se o usuário existe e qual método de autenticação ele usa
+          const { data: existingUser } = await supabaseAdmin
+            .from('users')
+            .select('id, email, password_hash')
+            .eq('email', email.toLowerCase())
+            .single()
+
+          console.log('Existing user found:', existingUser)
+          console.log('Password hash:', existingUser?.password_hash)
+
+          // Se o usuário existe e foi criado via OAuth (password_hash é 'oauth' ou null/vazio), informar que deve usar Google
+          if (existingUser && (!existingUser.password_hash || existingUser.password_hash === 'oauth')) {
+            console.log('User is OAuth (no password), returning error')
+            return new Response(
+              JSON.stringify({
+                error: 'Este email está cadastrado com login do Google. Por favor, use o botão "Entrar com Google" para acessar sua conta.',
+                code: 'OAUTH_USER'
+              }),
               { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
             )
           }
