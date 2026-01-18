@@ -168,6 +168,27 @@ async function handleSubscriptionCreated(supabase, subscription) {
   console.log('Period start:', periodStart, '-> ', stripeTimestampToISO(periodStart))
   console.log('Period end:', periodEnd, '-> ', stripeTimestampToISO(periodEnd))
 
+  // Mapear status do Stripe para status válido no banco
+  // Valores válidos: ACTIVE, CANCELED, EXPIRED, PAST_DUE
+  const mapStripeStatus = (stripeStatus: string): string => {
+    switch (stripeStatus) {
+      case 'active':
+      case 'trialing':
+        return 'ACTIVE'
+      case 'canceled':
+        return 'CANCELED'
+      case 'past_due':
+      case 'unpaid':
+        return 'PAST_DUE'
+      case 'incomplete':
+      case 'incomplete_expired':
+      default:
+        // Para status incomplete, usamos ACTIVE pois a subscription foi criada
+        // e será atualizada quando o pagamento for confirmado
+        return 'ACTIVE'
+    }
+  }
+
   // Criar a subscription no banco
   const { data: newSubscription, error: subError } = await supabase
     .from('subscriptions')
@@ -176,7 +197,7 @@ async function handleSubscriptionCreated(supabase, subscription) {
       plan_id: planId,
       stripe_subscription_id: subscription.id,
       stripe_customer_id: customerId,
-      status: subscription.status === 'active' ? 'ACTIVE' : 'PENDING',
+      status: mapStripeStatus(subscription.status),
       billing_cycle: planData.billing_cycle,
       current_period_start: stripeTimestampToISO(periodStart),
       current_period_end: stripeTimestampToISO(periodEnd),
@@ -186,31 +207,48 @@ async function handleSubscriptionCreated(supabase, subscription) {
     .single()
 
   if (subError) {
-    console.error('Error creating subscription:', subError)
-    return
+    console.error('Error creating subscription:', JSON.stringify(subError))
+    throw new Error(`Failed to create subscription: ${JSON.stringify(subError)}`)
   }
 
   console.log('Subscription created:', newSubscription.id)
 
   // Criar a licença
+  // Campos da tabela licenses: code (NOT NULL), company (NOT NULL), is_standalone, subscription_id, user_id, expire_date, etc.
+  const licenseCode = generateLicenseCode()
+  console.log('Creating license with data:', JSON.stringify({
+    code: licenseCode,
+    user_id: userId,
+    subscription_id: newSubscription.id,
+    company: 'PDF Generator Hub',
+    is_standalone: false,
+    is_used: false,
+    sold: true,
+    expire_date: stripeTimestampToISO(periodEnd),
+    plan_type: planData.billing_cycle,
+  }))
+
   const { data: newLicense, error: licenseError } = await supabase
     .from('licenses')
     .insert({
+      code: licenseCode,
       user_id: userId,
       subscription_id: newSubscription.id,
-      license_key: generateLicenseCode(),
-      status: 'ACTIVE',
-      is_active: true,
-      activated_at: new Date().toISOString(),
-      expires_at: stripeTimestampToISO(periodEnd),
+      company: 'PDF Generator Hub',
+      is_standalone: false,
+      is_used: false,
+      sold: true,
+      expire_date: stripeTimestampToISO(periodEnd),
+      plan_type: planData.billing_cycle,
     })
     .select()
     .single()
 
   if (licenseError) {
-    console.error('Error creating license:', licenseError)
+    console.error('Error creating license:', JSON.stringify(licenseError))
+    // Não lançar erro aqui para não bloquear o fluxo principal
   } else {
-    console.log('License created:', newLicense.id, newLicense.license_key)
+    console.log('License created:', newLicense.id, newLicense.code)
   }
 
   // Atualizar o usuário com o stripe_customer_id se não tiver
@@ -272,17 +310,7 @@ async function handleSubscriptionUpdated(supabase, subscription) {
     await supabase
       .from('licenses')
       .update({
-        status: 'ACTIVE',
-        is_active: true,
-        expires_at: periodEnd ? stripeTimestampToISO(periodEnd) : existingSub.current_period_end,
-      })
-      .eq('subscription_id', existingSub.id)
-  } else if (status === 'CANCELED' || status === 'EXPIRED') {
-    await supabase
-      .from('licenses')
-      .update({
-        status: 'EXPIRED',
-        is_active: false,
+        expire_date: periodEnd ? stripeTimestampToISO(periodEnd) : existingSub.current_period_end,
       })
       .eq('subscription_id', existingSub.id)
   }
@@ -304,7 +332,7 @@ async function handleSubscriptionDeleted(supabase, subscription) {
     console.error('Error updating subscription to canceled:', error)
   }
 
-  // Desativar licença
+  // Buscar subscription para atualizar licença
   const { data: sub } = await supabase
     .from('subscriptions')
     .select('id')
@@ -312,11 +340,11 @@ async function handleSubscriptionDeleted(supabase, subscription) {
     .single()
 
   if (sub) {
+    // Marcar licença como expirada (a tabela licenses não tem campo status, apenas expire_date)
     await supabase
       .from('licenses')
       .update({
-        status: 'EXPIRED',
-        is_active: false,
+        expire_date: new Date().toISOString(),
       })
       .eq('subscription_id', sub.id)
   }
@@ -343,9 +371,13 @@ async function handleInvoicePaid(supabase, invoice) {
     .single()
 
   if (subError || !subscription) {
-    console.error('Subscription not found for invoice:', invoice.subscription, subError)
-    return
+    console.error('Subscription not found for invoice:', invoice.subscription, JSON.stringify(subError))
+    // Se a subscription não existe ainda, pode ser que o evento chegou antes do customer.subscription.created
+    // Vamos tentar novamente mais tarde
+    throw new Error(`Subscription not found for invoice: ${invoice.subscription}`)
   }
+
+  console.log('Found subscription:', subscription.id, 'user_id:', subscription.user_id)
 
   // Verificar se já existe um pagamento com este invoice_id
   const { data: existingPayment } = await supabase
@@ -386,7 +418,8 @@ async function handleInvoicePaid(supabase, invoice) {
     .single()
 
   if (paymentError) {
-    console.error('Error creating payment:', paymentError)
+    console.error('Error creating payment:', JSON.stringify(paymentError))
+    throw new Error(`Failed to create payment: ${JSON.stringify(paymentError)}`)
   } else {
     console.log('Payment created:', newPayment.id, 'Amount:', invoice.amount_paid / 100)
   }
@@ -398,15 +431,6 @@ async function handleInvoicePaid(supabase, invoice) {
       .update({ status: 'ACTIVE' })
       .eq('id', subscription.id)
   }
-
-  // Atualizar licença
-  await supabase
-    .from('licenses')
-    .update({
-      status: 'ACTIVE',
-      is_active: true,
-    })
-    .eq('subscription_id', subscription.id)
 
   console.log('Invoice paid processed successfully')
 }
