@@ -62,8 +62,13 @@ const AuthCallback = () => {
           const result = await authUtilsApi.createOAuthUser(
             session.user.id,
             session.user.email!,
-            session.user.user_metadata.full_name || session.user.user_metadata.name || session.user.email!.split('@')[0]
+            session.user.user_metadata.full_name || session.user.user_metadata.name || session.user.email!.split('@')[0],
+            session.access_token
           );
+
+          console.log('OAuth API result:', result);
+          console.log('result.user:', result.user);
+          console.log('result.user?.role:', result.user?.role);
 
           if (result.exists || result.created) {
             setStatus('Finalizando...');
@@ -75,6 +80,8 @@ const AuthCallback = () => {
               email: result.user?.email || session.user.email!,
               role: (result.user?.role || 'USER') as 'ADMIN' | 'MANAGER' | 'USER',
             };
+
+            console.log('userData being saved:', userData);
 
             // Preparar dados da sessão
             const sessionData = {

@@ -520,11 +520,12 @@ export const authUtilsApi = {
     return response.json()
   },
 
-  async createOAuthUser(id: string, email: string, name: string) {
+  async createOAuthUser(id: string, email: string, name: string, accessToken: string) {
     const response = await fetch(`${supabaseUrl}/functions/v1/auth-utils?action=create-oauth-user`, {
       method: 'POST',
       headers: {
         'apikey': supabaseAnonKey,
+        'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ id, email, name }),
