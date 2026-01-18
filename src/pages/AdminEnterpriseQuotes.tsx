@@ -560,7 +560,7 @@ const AdminEnterpriseQuotes = () => {
               {selectedQuote.message && (
                 <div>
                   <Label className="text-muted-foreground">Mensagem</Label>
-                  <p className="mt-1 p-3 bg-muted rounded-lg text-sm">
+                  <p className="mt-1 p-3 bg-slate-200 rounded-lg text-sm">
                     {selectedQuote.message}
                   </p>
                 </div>
@@ -580,7 +580,7 @@ const AdminEnterpriseQuotes = () => {
                   <Label className="text-muted-foreground">
                     Notas Administrativas
                   </Label>
-                  <p className="mt-1 p-3 bg-muted rounded-lg text-sm">
+                  <p className="mt-1 p-3 bg-slate-200 rounded-lg text-sm">
                     {selectedQuote.admin_notes}
                   </p>
                 </div>

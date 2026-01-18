@@ -13,6 +13,7 @@ import {
   Users,
   Key,
   PackageOpen,
+  TextQuote,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -80,6 +81,7 @@ const DashboardLayout = () => {
     { href: "/dashboard/admin", label: "Configurações", icon: Settings, requiresAdmin: true },
     { href: "/dashboard/admin/usuarios", label: "Gerenciar Usuários", icon: Users, requiresManager: true },
     { href: "/dashboard/admin/licencas", label: "Licenças Standalone", icon: Key, requiresAdmin: true },
+    { href: "/dashboard/admin/orcamentos", label: "Orçamentos", icon: TextQuote, requiresAdmin: true },
     { href: "/dashboard/admin/versoes", label: "Versões do Sistema", icon: PackageOpen, requiresAdmin: true },
   ];
 
