@@ -73,7 +73,7 @@ const getEmailWrapper = (title: string, content: string) => `
 // Templates de email por tipo
 const emailTemplates: Record<EmailType, (data: Record<string, any>) => { subject: string; html: string }> = {
   PURCHASE_CONFIRMATION: (data) => ({
-    subject: 'Confirmacao de Compra - PDF Generator',
+    subject: 'Confirmação de Compra - PDF Generator',
     html: getEmailWrapper('Confirmacao de Compra', `
       <h2 style="color: #333333; margin: 0 0 20px 0; font-size: 24px;">Obrigado pela sua compra, ${data.name}!</h2>
       <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
@@ -98,7 +98,7 @@ const emailTemplates: Record<EmailType, (data: Record<string, any>) => { subject
                 <td style="color: #333333; font-size: 14px; font-weight: bold; text-align: right;">${data.billingCycle === 'MONTHLY' ? 'Mensal' : 'Anual'}</td>
               </tr>
               <tr>
-                <td style="color: #666666; font-size: 14px; padding: 5px 0;">Proximo Pagamento:</td>
+                <td style="color: #666666; font-size: 14px; padding: 5px 0;">Próximo Pagamento:</td>
                 <td style="color: #333333; font-size: 14px; font-weight: bold; text-align: right;">${data.nextPaymentDate}</td>
               </tr>
             </table>
@@ -110,12 +110,12 @@ const emailTemplates: Record<EmailType, (data: Record<string, any>) => { subject
       <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #e8f5e9; border-radius: 8px; padding: 20px; margin: 20px 0;">
         <tr>
           <td align="center">
-            <h3 style="color: #2e7d32; margin: 0 0 10px 0; font-size: 16px;">Sua Licenca</h3>
+            <h3 style="color: #2e7d32; margin: 0 0 10px 0; font-size: 16px;">Sua Licença</h3>
             <div style="background-color: #ffffff; border: 2px dashed #2e7d32; border-radius: 8px; display: inline-block; padding: 15px 30px;">
               <span style="font-size: 20px; font-weight: bold; color: #2e7d32; letter-spacing: 4px;">${data.licenseCode}</span>
             </div>
             <p style="color: #666666; font-size: 12px; margin: 15px 0 0 0;">
-              Use este codigo para ativar o PDF Generator no seu computador
+              Use este código para ativar o PDF Generator no seu computador
             </p>
           </td>
         </tr>
@@ -134,7 +134,7 @@ const emailTemplates: Record<EmailType, (data: Record<string, any>) => { subject
       </table>
 
       <p style="color: #999999; font-size: 14px; line-height: 1.6; margin: 20px 0 0 0; text-align: center;">
-        Se tiver alguma duvida, entre em contato conosco!
+        Se tiver alguma dúvida, entre em contato conosco!
       </p>
     `)
   }),
@@ -144,7 +144,7 @@ const emailTemplates: Record<EmailType, (data: Record<string, any>) => { subject
     html: getEmailWrapper('Cancelamento de Assinatura', `
       <h2 style="color: #333333; margin: 0 0 20px 0; font-size: 24px;">Ola, ${data.name}</h2>
       <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-        Confirmamos o cancelamento da renovacao automatica da sua assinatura do <strong>PDF Generator</strong>.
+        Confirmamos o cancelamento da renovação automática da sua assinatura do <strong>PDF Generator</strong>.
       </p>
 
       <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #fff3e0; border-radius: 8px; padding: 20px; margin: 20px 0; border-left: 4px solid #ff9800;">
@@ -152,15 +152,15 @@ const emailTemplates: Record<EmailType, (data: Record<string, any>) => { subject
           <td>
             <h3 style="color: #e65100; margin: 0 0 10px 0; font-size: 16px;">Importante</h3>
             <p style="color: #666666; font-size: 14px; margin: 0;">
-              Sua assinatura permanecera ativa ate <strong>${data.expirationDate}</strong>.
-              Apos essa data, voce perdera o acesso aos recursos do PDF Generator.
+              Sua assinatura permanecerá ativa até <strong>${data.expirationDate}</strong>.
+              Após essa data, você perderá o acesso aos recursos do PDF Generator.
             </p>
           </td>
         </tr>
       </table>
 
       <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 20px 0;">
-        Sentiremos sua falta! Se mudar de ideia, voce pode reativar sua assinatura a qualquer momento antes da data de expiracao.
+        Sentiremos sua falta! Se mudar de ideia, você pode reativar sua assinatura a qualquer momento antes da data de expiração.
       </p>
 
       <table width="100%" cellpadding="0" cellspacing="0">
@@ -181,7 +181,7 @@ const emailTemplates: Record<EmailType, (data: Record<string, any>) => { subject
     html: getEmailWrapper('Dispositivo Desvinculado', `
       <h2 style="color: #333333; margin: 0 0 20px 0; font-size: 24px;">Ola, ${data.name}</h2>
       <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-        Um dispositivo foi desvinculado da sua licenca do <strong>PDF Generator</strong>.
+        Um dispositivo foi desvinculado da sua licença do <strong>PDF Generator</strong>.
       </p>
 
       <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0;">
@@ -191,7 +191,7 @@ const emailTemplates: Record<EmailType, (data: Record<string, any>) => { subject
             <table width="100%" cellpadding="5" cellspacing="0">
               <tr>
                 <td style="color: #666666; font-size: 14px; padding: 5px 0;">Dispositivo:</td>
-                <td style="color: #333333; font-size: 14px; font-weight: bold; text-align: right;">${data.deviceName || 'Nao identificado'}</td>
+                <td style="color: #333333; font-size: 14px; font-weight: bold; text-align: right;">${data.deviceName || 'Não identificado'}</td>
               </tr>
               <tr>
                 <td style="color: #666666; font-size: 14px; padding: 5px 0;">Data:</td>
@@ -203,15 +203,15 @@ const emailTemplates: Record<EmailType, (data: Record<string, any>) => { subject
       </table>
 
       <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 20px 0;">
-        Sua licenca agora esta disponivel para ativacao em outro dispositivo.
+        Sua licença agora está disponível para ativação em outro dispositivo.
       </p>
 
       <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #fff8e1; border-radius: 8px; padding: 20px; margin: 20px 0; border-left: 4px solid #ffc107;">
         <tr>
           <td>
             <p style="color: #666666; font-size: 14px; margin: 0;">
-              <strong>Nao foi voce?</strong> Se voce nao solicitou esta desvinculacao,
-              recomendamos alterar sua senha imediatamente por seguranca.
+              <strong>Não foi você?</strong> Se você não solicitou esta desvinculação,
+              recomendamos alterar sua senha imediatamente por segurança.
             </p>
           </td>
         </tr>
@@ -220,28 +220,28 @@ const emailTemplates: Record<EmailType, (data: Record<string, any>) => { subject
   }),
 
   ENTERPRISE_QUOTE_RECEIVED: (data) => ({
-    subject: 'Recebemos seu orcamento - PDF Generator',
+    subject: 'Recebemos seu Pedido de Orçamento - PDF Generator',
     html: getEmailWrapper('Orcamento Recebido', `
-      <h2 style="color: #333333; margin: 0 0 20px 0; font-size: 24px;">Ola, ${data.contactName}!</h2>
+      <h2 style="color: #333333; margin: 0 0 20px 0; font-size: 24px;">Olá, ${data.contactName}!</h2>
       <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-        Recebemos sua solicitacao de orcamento Enterprise para a <strong>${data.companyName}</strong>.
+        Recebemos sua solicitação de orçamento Enterprise para a <strong>${data.companyName}</strong>.
       </p>
 
       <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #e3f2fd; border-radius: 8px; padding: 20px; margin: 20px 0;">
         <tr>
           <td>
-            <h3 style="color: #1976d2; margin: 0 0 15px 0; font-size: 18px;">Resumo da Solicitacao</h3>
+            <h3 style="color: #1976d2; margin: 0 0 15px 0; font-size: 18px;">Resumo da Solicitação</h3>
             <table width="100%" cellpadding="5" cellspacing="0">
               <tr>
                 <td style="color: #666666; font-size: 14px; padding: 5px 0;">Empresa:</td>
                 <td style="color: #333333; font-size: 14px; font-weight: bold; text-align: right;">${data.companyName}</td>
               </tr>
               <tr>
-                <td style="color: #666666; font-size: 14px; padding: 5px 0;">Quantidade de Licencas:</td>
+                <td style="color: #666666; font-size: 14px; padding: 5px 0;">Quantidade de Licenças:</td>
                 <td style="color: #333333; font-size: 14px; font-weight: bold; text-align: right;">${data.licenseQuantity}</td>
               </tr>
               <tr>
-                <td style="color: #666666; font-size: 14px; padding: 5px 0;">Preferencia de Cobranca:</td>
+                <td style="color: #666666; font-size: 14px; padding: 5px 0;">Preferência de Cobrança:</td>
                 <td style="color: #333333; font-size: 14px; font-weight: bold; text-align: right;">${data.billingPreference === 'MONTHLY' ? 'Mensal' : data.billingPreference === 'YEARLY' ? 'Anual' : 'Personalizado'}</td>
               </tr>
             </table>
@@ -250,7 +250,7 @@ const emailTemplates: Record<EmailType, (data: Record<string, any>) => { subject
       </table>
 
       <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 20px 0;">
-        Nossa equipe comercial entrara em contato em ate <strong>24 horas uteis</strong> para discutir os detalhes e enviar uma proposta personalizada.
+        Nossa equipe comercial entrará em contato em até <strong>24 horas úteis</strong> para discutir os detalhes e enviar uma proposta personalizada.
       </p>
 
       <p style="color: #999999; font-size: 14px; line-height: 1.6; margin: 20px 0 0 0; text-align: center;">
@@ -260,11 +260,11 @@ const emailTemplates: Record<EmailType, (data: Record<string, any>) => { subject
   }),
 
   ENTERPRISE_QUOTE_CONTACTED: (data) => ({
-    subject: 'Atualizacao do seu orcamento - PDF Generator',
+    subject: 'Atualização do seu Orçamento - PDF Generator',
     html: getEmailWrapper('Atualizacao de Orcamento', `
-      <h2 style="color: #333333; margin: 0 0 20px 0; font-size: 24px;">Ola, ${data.contactName}!</h2>
+      <h2 style="color: #333333; margin: 0 0 20px 0; font-size: 24px;">Olá, ${data.contactName}!</h2>
       <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-        Temos novidades sobre sua solicitacao de orcamento Enterprise para a <strong>${data.companyName}</strong>.
+        Temos novidades sobre sua solicitação de orçamento Enterprise para a <strong>${data.companyName}</strong>.
       </p>
 
       ${data.quotedPrice ? `
@@ -274,7 +274,7 @@ const emailTemplates: Record<EmailType, (data: Record<string, any>) => { subject
             <h3 style="color: #2e7d32; margin: 0 0 10px 0; font-size: 16px;">Valor Proposto</h3>
             <span style="font-size: 28px; font-weight: bold; color: #2e7d32;">${data.quotedPrice}</span>
             <p style="color: #666666; font-size: 14px; margin: 10px 0 0 0;">
-              Para ${data.licenseQuantity} licencas (${data.billingPreference === 'MONTHLY' ? 'Mensal' : data.billingPreference === 'YEARLY' ? 'Anual' : 'Personalizado'})
+              Para ${data.licenseQuantity} licenças (${data.billingPreference === 'MONTHLY' ? 'Mensal' : data.billingPreference === 'YEARLY' ? 'Anual' : 'Personalizado'})
             </p>
           </td>
         </tr>
@@ -293,7 +293,7 @@ const emailTemplates: Record<EmailType, (data: Record<string, any>) => { subject
       ` : ''}
 
       <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 20px 0;">
-        Para dar continuidade, responda este email ou entre em contato conosco.
+        Para dar continuidade entre em contato conosco.
       </p>
     `)
   }),
@@ -301,15 +301,15 @@ const emailTemplates: Record<EmailType, (data: Record<string, any>) => { subject
   PAYMENT_REMINDER: (data) => ({
     subject: 'Lembrete de Pagamento - PDF Generator',
     html: getEmailWrapper('Lembrete de Pagamento', `
-      <h2 style="color: #333333; margin: 0 0 20px 0; font-size: 24px;">Ola, ${data.name}!</h2>
+      <h2 style="color: #333333; margin: 0 0 20px 0; font-size: 24px;">Olá, ${data.name}!</h2>
       <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-        Este e um lembrete amigavel sobre seu proximo pagamento do <strong>PDF Generator</strong>.
+        Este e um lembrete amigável sobre seu próximo pagamento do <strong>PDF Generator</strong>.
       </p>
 
       <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #fff3e0; border-radius: 8px; padding: 20px; margin: 20px 0; border-left: 4px solid #ff9800;">
         <tr>
           <td>
-            <h3 style="color: #e65100; margin: 0 0 15px 0; font-size: 18px;">Proximo Pagamento</h3>
+            <h3 style="color: #e65100; margin: 0 0 15px 0; font-size: 18px;">Próximo Pagamento</h3>
             <table width="100%" cellpadding="5" cellspacing="0">
               <tr>
                 <td style="color: #666666; font-size: 14px; padding: 5px 0;">Plano:</td>
@@ -329,7 +329,7 @@ const emailTemplates: Record<EmailType, (data: Record<string, any>) => { subject
       </table>
 
       <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 20px 0;">
-        Certifique-se de que seu metodo de pagamento esta atualizado para evitar interrupcoes no servico.
+        Certifique-se de que seu método de pagamento esta atualizado para evitar interrupções no serviço.
       </p>
 
       <table width="100%" cellpadding="0" cellspacing="0">
