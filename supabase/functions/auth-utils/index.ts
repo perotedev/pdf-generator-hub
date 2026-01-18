@@ -291,7 +291,7 @@ serve(async (req) => {
           // Verificar se já existe pelo ID
           const { data: existingUserById } = await supabaseAdmin
             .from('users')
-            .select('id, status, email')
+            .select('id, status, email, role')
             .eq('id', id)
             .single()
 
@@ -305,7 +305,7 @@ serve(async (req) => {
           // Verificar se email já existe
           const { data: existingUserByEmail } = await supabaseAdmin
             .from('users')
-            .select('id, email')
+            .select('id, email', 'role')
             .eq('email', email.toLowerCase())
             .single()
 
@@ -324,7 +324,7 @@ serve(async (req) => {
               email: email.toLowerCase(),
               name: name || email.split('@')[0],
               password_hash: 'oauth',
-              role: 'USER',
+              role: existingUserByEmail.role,
               status: 'ACTIVE',
             })
 
