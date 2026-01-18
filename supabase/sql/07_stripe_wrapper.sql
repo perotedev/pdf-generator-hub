@@ -291,3 +291,5 @@ grant select on public.payments_with_stripe to authenticated;
 
 -- Conceder execução da função de sincronização para authenticated users
 grant execute on function public.sync_stripe_subscription to authenticated;
+
+DROP FOREIGN TABLE IF EXISTS stripe_checkout_sessions CASCADE;
