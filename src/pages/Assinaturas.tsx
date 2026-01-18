@@ -448,9 +448,11 @@ const Assinaturas = () => {
                       </div>
                       <div>
                         <Label className="text-muted-foreground">Status do Pagamento</Label>
-                        <Badge variant="default">
-                          {subscription.status === 'ACTIVE' ? 'Em dia' : 'Pendente'}
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="default">
+                            {subscription.status === 'ACTIVE' ? 'Em dia' : 'Pendente'}
+                          </Badge>
+                        </div>
                       </div>
                     </div>
 
