@@ -6,7 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { systemApi, getValidAccessToken, type SystemVersion } from "@/lib/supabase";
+import { systemApi, type SystemVersion } from "@/lib/supabase";
+import { useAuth } from "@/contexts/AuthContext";
 import { Plus, RefreshCw, Save, Edit, Trash2, X } from "lucide-react";
 import {
   Dialog,
@@ -20,6 +21,7 @@ import ReactMarkdown from "react-markdown";
 
 const VersoesDoSistema = () => {
   const { toast } = useToast();
+  const { getAccessToken } = useAuth();
   const [versions, setVersions] = useState<SystemVersion[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -48,7 +50,7 @@ const VersoesDoSistema = () => {
   const loadVersions = async () => {
     setIsLoading(true);
     try {
-      const token = await getValidAccessToken();
+      const token = getAccessToken();
 
       if (!token) {
         toast({
@@ -115,7 +117,7 @@ const VersoesDoSistema = () => {
     setIsSaving(true);
 
     try {
-      const token = await getValidAccessToken();
+      const token = getAccessToken();
 
       if (!token) {
         toast({
@@ -176,7 +178,7 @@ const VersoesDoSistema = () => {
 
     setIsDeleting(id);
     try {
-      const token = await getValidAccessToken();
+      const token = getAccessToken();
 
       if (!token) {
         toast({

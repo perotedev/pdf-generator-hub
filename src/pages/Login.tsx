@@ -77,33 +77,28 @@ const Login = () => {
           return;
         }
 
-        // Se passou, salvar a sessão no Supabase client para manter o usuário logado
-        if (result.session) {
-          try {
-            await supabase.auth.setSession({
-              access_token: result.session.access_token,
-              refresh_token: result.session.refresh_token,
-            });
-          } catch (sessionError) {
-            console.error('Error setting session:', sessionError);
-          }
-        }
-
-        // Atualizar o usuário diretamente no AuthContext
-        setUserDirectly({
+        // Preparar dados do usuário
+        const userData = {
           id: result.user.id,
           name: result.user.name,
           email: result.user.email,
           role: result.user.role || 'USER',
-        });
+        };
+
+        // Preparar dados da sessão se disponíveis
+        const sessionData = result.session ? {
+          access_token: result.session.access_token,
+          refresh_token: result.session.refresh_token,
+          expires_at: result.session.expires_at,
+        } : undefined;
+
+        // Atualizar o usuário e sessão no AuthContext
+        setUserDirectly(userData, sessionData);
 
         toast({
           title: "Login realizado com sucesso!",
           description: "Redirecionando...",
         });
-
-        // Pequeno delay para garantir que o estado foi atualizado
-        await new Promise(resolve => setTimeout(resolve, 100));
 
         // Redirecionar para destino pendente ou dashboard
         const redirectUrl = getRedirectUrl();
@@ -155,6 +150,15 @@ const Login = () => {
 
   // Mostrar loading enquanto verifica autenticação inicial
   if (authLoading) {
+    return (
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
+        <RefreshCw className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Se já está autenticado, não renderizar o formulário (useEffect vai redirecionar)
+  if (isAuthenticated) {
     return (
       <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
         <RefreshCw className="h-8 w-8 animate-spin text-primary" />

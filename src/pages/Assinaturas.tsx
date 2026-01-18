@@ -33,7 +33,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useAuth } from "@/contexts/AuthContext";
-import { dashboardApi, checkoutApi, plansApi, getValidAccessToken, type Subscription, type License } from "@/lib/supabase";
+import { dashboardApi, checkoutApi, plansApi, type Subscription, type License } from "@/lib/supabase";
 
 interface SubscriptionWithDetails extends Subscription {
   plans?: {
@@ -47,7 +47,7 @@ interface SubscriptionWithDetails extends Subscription {
 const Assinaturas = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, getAccessToken } = useAuth();
   const [subscriptions, setSubscriptions] = useState<SubscriptionWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [cancelDialogOpen, setCancelDialogOpen] = useState<string | null>(null);
@@ -69,7 +69,7 @@ const Assinaturas = () => {
 
     try {
       setLoading(true);
-      const token = await getValidAccessToken();
+      const token = getAccessToken();
 
       if (!token) {
         toast({
@@ -128,7 +128,7 @@ const Assinaturas = () => {
   const handleCancelRenewal = async (subId: string) => {
     setSavingCancel(true);
     try {
-      const token = await getValidAccessToken();
+      const token = getAccessToken();
 
       if (!token) {
         toast({
@@ -162,7 +162,7 @@ const Assinaturas = () => {
   const handleDeactivateLicense = async (licenseId: string) => {
     setSavingDeactivate(licenseId);
     try {
-      const token = await getValidAccessToken();
+      const token = getAccessToken();
 
       if (!token) {
         toast({
@@ -195,7 +195,7 @@ const Assinaturas = () => {
   const handleSaveNickname = async (licenseId: string) => {
     setSavingNickname(true);
     try {
-      const token = await getValidAccessToken();
+      const token = getAccessToken();
 
       if (!token) {
         toast({
@@ -229,7 +229,7 @@ const Assinaturas = () => {
   const handleReactivateSubscription = async (subId: string) => {
     setSavingReactivate(true);
     try {
-      const token = await getValidAccessToken();
+      const token = getAccessToken();
 
       if (!token) {
         toast({

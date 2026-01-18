@@ -12,10 +12,10 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
-import { dashboardApi, getValidAccessToken, type Subscription, type License, type Payment } from "@/lib/supabase";
+import { dashboardApi, type Subscription, type License, type Payment } from "@/lib/supabase";
 
 const Dashboard = () => {
-  const { user } = useAuth();
+  const { user, getAccessToken } = useAuth();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [licenses, setLicenses] = useState<License[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -27,7 +27,7 @@ const Dashboard = () => {
 
       try {
         setLoading(true);
-        const token = await getValidAccessToken();
+        const token = getAccessToken();
 
         if (!token) {
           console.error('No valid token');

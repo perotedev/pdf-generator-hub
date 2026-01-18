@@ -26,10 +26,10 @@ import {
 import { Download, Calendar, CreditCard, FileText, DollarSign, Eye, RefreshCw } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { dashboardApi, getValidAccessToken, type Payment } from "@/lib/supabase";
+import { dashboardApi, type Payment } from "@/lib/supabase";
 
 const HistoricoPagamentos = () => {
-  const { user } = useAuth();
+  const { user, getAccessToken } = useAuth();
   const [filterYear, setFilterYear] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
@@ -46,7 +46,7 @@ const HistoricoPagamentos = () => {
 
     try {
       setLoading(true);
-      const token = await getValidAccessToken();
+      const token = getAccessToken();
 
       if (!token) {
         console.error('No valid token');

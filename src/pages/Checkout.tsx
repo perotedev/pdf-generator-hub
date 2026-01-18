@@ -5,14 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Check, RefreshCw, CreditCard, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { plansApi, checkoutApi, getValidAccessToken, type Plan } from "@/lib/supabase";
+import { plansApi, checkoutApi, type Plan } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 
 const Checkout = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, getAccessToken } = useAuth();
 
   const [plan, setPlan] = useState<Plan | null>(null);
   const [loading, setLoading] = useState(true);
@@ -69,7 +69,7 @@ const Checkout = () => {
 
     try {
       setProcessingPayment(true);
-      const token = await getValidAccessToken();
+      const token = getAccessToken();
 
       if (!token) {
         toast({

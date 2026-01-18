@@ -10,7 +10,7 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, requireAdmin = false, requireManager = false }: ProtectedRouteProps) {
-  const { isAuthenticated, isAdmin, canManageUsers, loading, sessionExpired } = useAuth();
+  const { isAuthenticated, isAdmin, canManageUsers, loading } = useAuth();
   const location = useLocation();
 
   // Mostrar loading enquanto verifica a sessão
@@ -25,8 +25,8 @@ export function ProtectedRoute({ children, requireAdmin = false, requireManager 
     );
   }
 
-  // Redirecionar para login se não autenticado ou sessão expirada
-  if (!isAuthenticated || sessionExpired) {
+  // Redirecionar para login se não autenticado
+  if (!isAuthenticated) {
     // Preservar a URL atual para redirecionar de volta após login
     return <Navigate to="/login" state={{ from: location }} replace />;
   }

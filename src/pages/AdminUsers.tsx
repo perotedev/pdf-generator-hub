@@ -47,7 +47,7 @@ import { Label } from '@/components/ui/label';
 import { Search, UserCog, Shield, Trash2, Laptop, Key, CreditCard, Receipt, Users2, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { UserRole, useAuth } from '@/contexts/AuthContext';
-import { userApi, dashboardApi, getValidAccessToken, type User as DbUser, type Subscription, type License, type Payment } from '@/lib/supabase';
+import { userApi, dashboardApi, type User as DbUser, type Subscription, type License, type Payment } from '@/lib/supabase';
 
 interface SystemUser extends DbUser {
   subscriptions?: (Subscription & { plans?: any })[];
@@ -56,7 +56,7 @@ interface SystemUser extends DbUser {
 }
 
 export default function AdminUsers() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, getAccessToken } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
@@ -75,7 +75,7 @@ export default function AdminUsers() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const token = await getValidAccessToken();
+      const token = getAccessToken();
 
       if (!token) {
         toast.error('Sessão expirada', {
@@ -134,7 +134,7 @@ export default function AdminUsers() {
 
     try {
       setSavingRole(true);
-      const token = await getValidAccessToken();
+      const token = getAccessToken();
 
       if (!token) {
         toast.error('Sessão expirada');
@@ -164,7 +164,7 @@ export default function AdminUsers() {
 
   const handleUpdateStatus = async (userId: string, newStatus: DbUser['status']) => {
     try {
-      const token = await getValidAccessToken();
+      const token = getAccessToken();
 
       if (!token) {
         toast.error('Sessão expirada');
@@ -193,7 +193,7 @@ export default function AdminUsers() {
 
     try {
       setSavingDelete(true);
-      const token = await getValidAccessToken();
+      const token = getAccessToken();
 
       if (!token) {
         toast.error('Sessão expirada');

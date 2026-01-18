@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 const AuthCallback = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { refreshUser, setUserDirectly } = useAuth();
+  const { setUserDirectly } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string>('Processando autenticação...');
   const processedRef = useRef(false);
@@ -68,8 +68,23 @@ const AuthCallback = () => {
           if (result.exists || result.created) {
             setStatus('Finalizando...');
 
-            // Forçar refresh do usuário no AuthContext
-            await refreshUser();
+            // Preparar dados do usuário
+            const userData = {
+              id: result.user?.id || session.user.id,
+              name: result.user?.name || session.user.user_metadata.full_name || session.user.user_metadata.name || session.user.email!.split('@')[0],
+              email: result.user?.email || session.user.email!,
+              role: result.user?.role || 'USER',
+            };
+
+            // Preparar dados da sessão
+            const sessionData = {
+              access_token: session.access_token,
+              refresh_token: session.refresh_token,
+              expires_at: session.expires_at || Math.floor(Date.now() / 1000) + 3600,
+            };
+
+            // Salvar no AuthContext e localStorage
+            setUserDirectly(userData, sessionData);
 
             // Verificar se há URL de redirecionamento salva
             const savedRedirectUrl = sessionStorage.getItem('authRedirectUrl');
@@ -115,12 +130,21 @@ const AuthCallback = () => {
           // Outro erro, mas sessão existe - tentar continuar
           console.log('API error but session exists, attempting to continue...');
 
-          // Forçar refresh do usuário no AuthContext
-          try {
-            await refreshUser();
-          } catch (refreshError) {
-            console.error('Error refreshing user:', refreshError);
-          }
+          // Salvar usuário do OAuth diretamente
+          const userData = {
+            id: session.user.id,
+            name: session.user.user_metadata.full_name || session.user.user_metadata.name || session.user.email!.split('@')[0],
+            email: session.user.email!,
+            role: 'USER' as const,
+          };
+
+          const sessionData = {
+            access_token: session.access_token,
+            refresh_token: session.refresh_token,
+            expires_at: session.expires_at || Math.floor(Date.now() / 1000) + 3600,
+          };
+
+          setUserDirectly(userData, sessionData);
 
           navigate('/dashboard', { replace: true });
           return;
@@ -136,7 +160,7 @@ const AuthCallback = () => {
     };
 
     handleCallback();
-  }, [navigate, toast, refreshUser, setUserDirectly]);
+  }, [navigate, toast, setUserDirectly]);
 
   if (error) {
     return (

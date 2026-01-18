@@ -8,11 +8,11 @@ import { Settings, DollarSign, Package, ArrowRight, RefreshCw, Shield, Save, Use
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { plansManagementApi, systemApi, getValidAccessToken, type Plan } from "@/lib/supabase";
+import { plansManagementApi, systemApi, type Plan } from "@/lib/supabase";
 
 const Admin = () => {
   const { toast } = useToast();
-  const { isAdmin } = useAuth();
+  const { isAdmin, getAccessToken } = useAuth();
   const [loading, setLoading] = useState(true);
   const [editingPrices, setEditingPrices] = useState(false);
   const [savingSettings, setSavingSettings] = useState(false);
@@ -88,7 +88,7 @@ const Admin = () => {
   const handleSavePrices = async () => {
     setSavingPrices(true);
     try {
-      const token = await getValidAccessToken();
+      const token = getAccessToken();
 
       if (!token) {
         toast({
@@ -154,7 +154,7 @@ const Admin = () => {
     setSavingSettings(true);
 
     try {
-      const token = await getValidAccessToken();
+      const token = getAccessToken();
 
       if (!token) {
         toast({

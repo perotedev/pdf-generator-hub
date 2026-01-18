@@ -33,10 +33,10 @@ import {
 import { Search, Key, Plus, Edit2, Trash2, Laptop, CheckCircle, XCircle, RefreshCw, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase, licenseApi, getValidAccessToken, type License } from '@/lib/supabase';
+import { supabase, licenseApi, type License } from '@/lib/supabase';
 
 export default function AdminLicenses() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, getAccessToken } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [licenses, setLicenses] = useState<License[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,7 +62,7 @@ export default function AdminLicenses() {
     try {
       setLoading(true);
 
-      const token = await getValidAccessToken();
+      const token = getAccessToken();
 
       if (!token) {
         toast.error('Sessão expirada', {
@@ -114,7 +114,7 @@ export default function AdminLicenses() {
   const handleCreateLicense = async () => {
     try {
       setSavingCreate(true);
-      const token = await getValidAccessToken();
+      const token = getAccessToken();
 
       if (!token) {
         toast.error('Sessão expirada');
@@ -163,7 +163,7 @@ export default function AdminLicenses() {
 
     try {
       setSavingEdit(true);
-      const token = await getValidAccessToken();
+      const token = getAccessToken();
 
       if (!token) {
         toast.error('Sessão expirada');
@@ -199,7 +199,7 @@ export default function AdminLicenses() {
 
     try {
       setSavingDelete(true);
-      const token = await getValidAccessToken();
+      const token = getAccessToken();
 
       if (!token) {
         toast.error('Sessão expirada');
@@ -227,7 +227,7 @@ export default function AdminLicenses() {
   const handleUnbindDevice = async (license: License) => {
     try {
       setUnbindingDevice(license.id);
-      const token = await getValidAccessToken();
+      const token = getAccessToken();
 
       if (!token) {
         toast.error('Sessão expirada');
