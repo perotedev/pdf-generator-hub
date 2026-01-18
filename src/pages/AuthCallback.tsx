@@ -73,7 +73,7 @@ const AuthCallback = () => {
               id: result.user?.id || session.user.id,
               name: result.user?.name || session.user.user_metadata.full_name || session.user.user_metadata.name || session.user.email!.split('@')[0],
               email: result.user?.email || session.user.email!,
-              role: result.user?.role || 'USER',
+              role: (result.user?.role || 'USER') as 'ADMIN' | 'MANAGER' | 'USER',
             };
 
             // Preparar dados da sessão

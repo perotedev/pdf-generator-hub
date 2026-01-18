@@ -118,6 +118,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => {
     setUser(null);
     clearStoredSession();
+    // Limpar todo o localStorage relacionado à autenticação
+    localStorage.removeItem('user');
+    localStorage.removeItem('pdf-generator-auth');
+    // Limpar sessionStorage
+    sessionStorage.removeItem('pendingCheckoutPlan');
+    sessionStorage.removeItem('authRedirectUrl');
   }, []);
 
   const updateUser = useCallback((updatedUser: User) => {

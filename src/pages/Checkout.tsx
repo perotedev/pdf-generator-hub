@@ -8,6 +8,29 @@ import { useAuth } from "@/contexts/AuthContext";
 import { plansApi, checkoutApi, type Plan } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 
+interface Feature {
+  text: string;
+  included: boolean;
+}
+
+// Função para processar features e substituir placeholders
+const processFeatures = (
+  features: { features: Feature[] } | Feature[] | null | undefined,
+  monthlySavings: string
+): Feature[] => {
+  if (!features) return [];
+
+  // Aceita tanto { features: [...] } quanto [...]
+  const featureList = Array.isArray(features) ? features : features.features;
+
+  if (!Array.isArray(featureList)) return [];
+
+  return featureList.map((feature) => ({
+    ...feature,
+    text: feature.text.replace('{monthlySavings}', monthlySavings),
+  }));
+};
+
 const Checkout = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -15,8 +38,10 @@ const Checkout = () => {
   const { user, isAuthenticated, getAccessToken } = useAuth();
 
   const [plan, setPlan] = useState<Plan | null>(null);
+  const [allPlans, setAllPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingPayment, setProcessingPayment] = useState(false);
+  const [monthlySavings, setMonthlySavings] = useState("0");
 
   const planId = searchParams.get("plan");
 
@@ -31,6 +56,8 @@ const Checkout = () => {
         setLoading(true);
         const response = await plansApi.getActivePlans();
         const plans = response.plans || response;
+        setAllPlans(plans);
+
         const selectedPlan = plans.find((p: Plan) => p.id === planId);
 
         if (!selectedPlan) {
@@ -41,6 +68,19 @@ const Checkout = () => {
           });
           navigate("/planos");
           return;
+        }
+
+        // Calcular economia do plano anual
+        const monthlyPlan = plans.find((p: Plan) => p.billing_cycle === 'MONTHLY');
+        const yearlyPlan = plans.find((p: Plan) => p.billing_cycle === 'YEARLY');
+
+        if (monthlyPlan && yearlyPlan) {
+          const monthlyEquivalent = yearlyPlan.price / 12;
+          const savings = (
+            ((monthlyPlan.price - monthlyEquivalent) / monthlyPlan.price) *
+            100
+          ).toFixed(0);
+          setMonthlySavings(savings);
         }
 
         setPlan(selectedPlan);
@@ -124,7 +164,8 @@ const Checkout = () => {
     return null;
   }
 
-  const features = plan.features?.features || plan.features || [];
+  // Processar features com monthlySavings
+  const features = processFeatures(plan.features, monthlySavings);
   const monthlyEquivalent =
     plan.billing_cycle === "MONTHLY" ? plan.price : plan.price / 12;
 
@@ -166,14 +207,22 @@ const Checkout = () => {
                   <span>{formatCurrency(monthlyEquivalent)}/mês</span>
                 </div>
                 {plan.billing_cycle === "YEARLY" && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">
-                      Total anual
-                    </span>
-                    <span className="font-semibold">
-                      {formatCurrency(plan.price)}
-                    </span>
-                  </div>
+                  <>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">
+                        Total anual
+                      </span>
+                      <span className="font-semibold">
+                        {formatCurrency(plan.price)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-green-600">
+                      <span>Economia</span>
+                      <span className="font-semibold">
+                        {monthlySavings}% por mês
+                      </span>
+                    </div>
+                  </>
                 )}
                 <div className="flex justify-between border-t pt-2">
                   <span className="font-semibold">Cobrado agora</span>
@@ -186,16 +235,15 @@ const Checkout = () => {
               <div className="pt-4 border-t">
                 <h4 className="font-semibold mb-3">Incluso no plano:</h4>
                 <ul className="space-y-2">
-                  {Array.isArray(features) &&
-                    features.map((feature: any, index: number) => (
-                      <li
-                        key={index}
-                        className="flex items-center gap-2 text-sm"
-                      >
-                        <Check className="h-4 w-4 text-primary shrink-0" />
-                        <span>{feature.text || feature}</span>
-                      </li>
-                    ))}
+                  {features.map((feature: Feature, index: number) => (
+                    <li
+                      key={index}
+                      className="flex items-center gap-2 text-sm"
+                    >
+                      <Check className="h-4 w-4 text-primary shrink-0" />
+                      <span>{feature.text}</span>
+                    </li>
+                  ))}
                 </ul>
               </div>
             </CardContent>

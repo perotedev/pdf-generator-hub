@@ -29,13 +29,15 @@ const Login = () => {
       return fromState;
     }
 
-    // Segundo, verificar query param redirect
+    // Segundo, verificar query param redirect (usado quando vem do checkout)
     const redirectParam = searchParams.get('redirect');
     if (redirectParam) {
+      // Limpar pendingCheckoutPlan se existir, pois o redirect já tem a informação
+      sessionStorage.removeItem('pendingCheckoutPlan');
       return redirectParam;
     }
 
-    // Verificar se há checkout pendente
+    // Terceiro, verificar se há checkout pendente (backup do fluxo de checkout)
     const pendingCheckout = sessionStorage.getItem('pendingCheckoutPlan');
     if (pendingCheckout) {
       sessionStorage.removeItem('pendingCheckoutPlan');
@@ -82,7 +84,7 @@ const Login = () => {
           id: result.user.id,
           name: result.user.name,
           email: result.user.email,
-          role: result.user.role || 'USER',
+          role: (result.user.role || 'USER') as 'ADMIN' | 'MANAGER' | 'USER',
         };
 
         // Preparar dados da sessão se disponíveis
