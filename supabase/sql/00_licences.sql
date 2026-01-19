@@ -15,3 +15,7 @@ create table public.licenses (
 ) TABLESPACE pg_default;
 
 create index IF not exists idx_licenses_code on public.licenses using btree (code) TABLESPACE pg_default;
+
+ALTER TABLE licenses
+ADD CONSTRAINT subscriptions_subscription_id_unique
+UNIQUE (subscription_id);
