@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
+import Stripe from 'https://esm.sh/stripe@14.21.0'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -208,6 +209,14 @@ serve(async (req) => {
             )
           }
 
+          // Buscar dados da assinatura e do usuário antes de atualizar para enviar o email
+          const { data: existingSub, error: fetchError } = await supabaseAdmin
+            .from('subscriptions')
+            .select('*, users(name, email)')
+            .eq('id', subscriptionId)
+            .eq('user_id', authUser.id)
+            .single()
+
           const { data, error } = await supabaseAdmin
             .from('subscriptions')
             .update({ cancel_at_period_end: true })
@@ -217,6 +226,30 @@ serve(async (req) => {
             .single()
 
           if (error) throw error
+
+          // Cancelar renovação no Stripe
+          if (existingSub.stripe_subscription_id) {
+            try {
+              const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY');
+              if (stripeSecretKey) {
+                const stripe = new Stripe(stripeSecretKey, {
+                  apiVersion: '2023-10-16',
+                });
+                
+                // Define para cancelar ao final do período no Stripe
+                await stripe.subscriptions.update(existingSub.stripe_subscription_id, {
+                  cancel_at_period_end: true,
+                });
+                console.log('Stripe subscription updated to cancel at period end:', existingSub.stripe_subscription_id);
+              } else {
+                console.error('STRIPE_SECRET_KEY not found');
+              }
+            } catch (stripeError) {
+              console.error('Error updating Stripe subscription:', stripeError);
+              // Você pode optar por lançar um erro aqui se quiser impedir o cancelamento local caso o Stripe falhe
+              // throw new Error(`Failed to update Stripe: ${stripeError.message}`);
+            }
+          }
 
           return new Response(
             JSON.stringify({ subscription: data, message: 'Renewal cancelled' }),

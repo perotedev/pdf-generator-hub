@@ -71,7 +71,7 @@ const Assinaturas = () => {
     if (success === 'true') {
       toast({
         title: "Pagamento processado!",
-        description: "Sua assinatura foi criada. Se você pagou via boleto, a licença será liberada após a confirmação do pagamento (até 3 dias úteis).",
+        description: "Sua assinatura foi criada. Sua licença será liberada em alguns instantes.",
       });
       // Remove success param from URL
       searchParams.delete('success');
