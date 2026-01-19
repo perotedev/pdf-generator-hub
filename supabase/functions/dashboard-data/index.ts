@@ -51,7 +51,10 @@ serve(async (req) => {
             .select('*, plans(*)')
             .eq('user_id', userId)
             .eq('status', 'ACTIVE')
-            .single()
+            .eq('cancel_at_period_end', false)
+            .order('created_at', { ascending: true }) // mais antigo primeiro
+            .limit(1)
+            .maybeSingle()
 
           if (error && error.code !== 'PGRST116') throw error
 
