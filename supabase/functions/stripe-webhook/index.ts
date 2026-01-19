@@ -168,7 +168,7 @@ async function handleSubscriptionCreated(supabase, subscription) {
     .from('subscriptions')
     .select('id')
     .eq('stripe_subscription_id', subscription.id)
-    .single()
+    .maybeSingle()
 
   if (existingSub) {
     console.log('Subscription already exists:', existingSub.id)
@@ -258,24 +258,17 @@ async function handleSubscriptionCreated(supabase, subscription) {
   if (isPendingPayment) {
     console.log('Payment pending (boleto/pix), license will be created when payment is confirmed')
   } else {
-    // Criar a licença
-    // Campos da tabela licenses: code (NOT NULL), company (NOT NULL), is_standalone, subscription_id, user_id, expire_date, etc.
-    const licenseCode = generateLicenseCode()
-    console.log('Creating license with data:', JSON.stringify({
-      code: licenseCode,
-      user_id: userId,
-      subscription_id: newSubscription.id,
-      company: 'PDF Generator',
-      is_standalone: false,
-      is_used: false,
-      sold: true,
-      expire_date: stripeTimestampToISO(periodEnd),
-      plan_type: planData.billing_cycle,
-    }))
-
-    const { data: newLicense, error: licenseError } = await supabase
+    // Verificar se já existe licença para esta assinatura antes de criar
+    const { data: existingLicense } = await supabase
       .from('licenses')
-      .insert({
+      .select('id')
+      .eq('subscription_id', newSubscription.id)
+      .maybeSingle()
+
+    if (!existingLicense) {
+      // Criar a licença
+      const licenseCode = generateLicenseCode()
+      console.log('Creating license with data:', JSON.stringify({
         code: licenseCode,
         user_id: userId,
         subscription_id: newSubscription.id,
@@ -285,15 +278,31 @@ async function handleSubscriptionCreated(supabase, subscription) {
         sold: true,
         expire_date: stripeTimestampToISO(periodEnd),
         plan_type: planData.billing_cycle,
-      })
-      .select()
-      .single()
+      }))
 
-    if (licenseError) {
-      console.error('Error creating license:', JSON.stringify(licenseError))
-      // Não lançar erro aqui para não bloquear o fluxo principal
+      const { data: newLicense, error: licenseError } = await supabase
+        .from('licenses')
+        .insert({
+          code: licenseCode,
+          user_id: userId,
+          subscription_id: newSubscription.id,
+          company: 'PDF Generator',
+          is_standalone: false,
+          is_used: false,
+          sold: true,
+          expire_date: stripeTimestampToISO(periodEnd),
+          plan_type: planData.billing_cycle,
+        })
+        .select()
+        .single()
+
+      if (licenseError) {
+        console.error('Error creating license:', JSON.stringify(licenseError))
+      } else {
+        console.log('License created:', newLicense.id, newLicense.code)
+      }
     } else {
-      console.log('License created:', newLicense.id, newLicense.code)
+      console.log('License already exists for subscription:', existingLicense.id)
     }
   }
 
@@ -316,7 +325,7 @@ async function handleSubscriptionUpdated(supabase, subscription) {
     .from('subscriptions')
     .select('*, plans(*)')
     .eq('stripe_subscription_id', subscription.id)
-    .single()
+    .maybeSingle()
 
   if (!existingSub) {
     console.log('Subscription not found in database:', subscription.id)
@@ -382,7 +391,7 @@ async function handleSubscriptionUpdated(supabase, subscription) {
       .from('licenses')
       .select('id')
       .eq('subscription_id', existingSub.id)
-      .single()
+      .maybeSingle()
 
     if (!existingLicense) {
       console.log('No license found, creating license for confirmed boleto payment')
@@ -436,7 +445,7 @@ async function handleSubscriptionDeleted(supabase, subscription) {
     .from('subscriptions')
     .select('*, users(name, email)')
     .eq('stripe_subscription_id', subscription.id)
-    .single()
+    .maybeSingle()
 
   const { error } = await supabase
     .from('subscriptions')
@@ -486,10 +495,6 @@ async function handleInvoicePaid(supabase, invoice) {
   console.log('Invoice subscription:', invoice.subscription)
   console.log('Invoice amount_paid:', invoice.amount_paid)
 
-  // Log full invoice structure for debugging
-  console.log('Invoice keys:', Object.keys(invoice).join(', '))
-  console.log('Invoice lines:', JSON.stringify(invoice.lines?.data?.[0]))
-
   // Tentar obter subscription_id de diferentes locais possíveis
   const subscriptionId = invoice.subscription ||
     invoice.subscription_id ||
@@ -500,7 +505,6 @@ async function handleInvoicePaid(supabase, invoice) {
 
   if (!subscriptionId) {
     console.log('Invoice has no subscription, skipping')
-    console.log('Full invoice object:', JSON.stringify(invoice))
     return
   }
 
@@ -510,11 +514,11 @@ async function handleInvoicePaid(supabase, invoice) {
   const maxAttempts = 3
 
   while (!subscription && attempts < maxAttempts) {
-    const { data: subData, error: subError } = await supabase
+    const { data: subData } = await supabase
       .from('subscriptions')
       .select('*, plans(*)')
       .eq('stripe_subscription_id', subscriptionId)
-      .single()
+      .maybeSingle()
 
     if (subData) {
       subscription = subData
@@ -540,7 +544,7 @@ async function handleInvoicePaid(supabase, invoice) {
     .from('payments')
     .select('id')
     .eq('stripe_invoice_id', invoice.id)
-    .single()
+    .maybeSingle()
 
   if (existingPayment) {
     console.log('Payment already exists for invoice:', invoice.id)
@@ -554,25 +558,19 @@ async function handleInvoicePaid(supabase, invoice) {
     : `Renovação - ${subscription.plans?.name || 'Plano'} (${subscription.billing_cycle === 'MONTHLY' ? 'Mensal' : 'Anual'})`
 
   // Extrair método de pagamento detalhado
-  // O método pode estar em diferentes locais dependendo do tipo de pagamento
   let paymentMethod = 'card' // default
-
-  // Tentar obter do charge
   const chargePaymentMethodType = invoice.charge?.payment_method_details?.type
   if (chargePaymentMethodType) {
     paymentMethod = chargePaymentMethodType
   }
 
-  // Ou do payment_intent expandido (se disponível)
   const paymentIntentMethodType = invoice.payment_intent?.payment_method?.type ||
     invoice.payment_intent?.payment_method_types?.[0]
   if (paymentIntentMethodType) {
     paymentMethod = paymentIntentMethodType
   }
 
-  // Ou diretamente da collection_method
   if (invoice.collection_method === 'send_invoice') {
-    // Provavelmente boleto ou transferência
     paymentMethod = 'boleto'
   }
 
@@ -599,20 +597,19 @@ async function handleInvoicePaid(supabase, invoice) {
     .single()
 
   if (paymentError) {
-    // Se o erro for de duplicidade, ignorar (pagamento já foi processado por outro evento)
     if (paymentError.code === '23505') {
       console.log('Payment already exists (duplicate), skipping:', invoice.id)
-      return
+    } else {
+      console.error('Error creating payment:', JSON.stringify(paymentError))
+      throw new Error(`Failed to create payment: ${JSON.stringify(paymentError)}`)
     }
-    console.error('Error creating payment:', JSON.stringify(paymentError))
-    throw new Error(`Failed to create payment: ${JSON.stringify(paymentError)}`)
   } else {
     console.log('Payment created:', newPayment.id, 'Amount:', invoice.amount_paid / 100)
   }
 
   // Atualizar subscription para ACTIVE se necessário (ex: boleto pago)
   if (subscription.status !== 'ACTIVE') {
-    console.log('Updating subscription status from', subscription.status, 'to ACTIVE')
+    console.log('Updating subscription status to ACTIVE')
     await supabase
       .from('subscriptions')
       .update({ status: 'ACTIVE' })
@@ -625,10 +622,10 @@ async function handleInvoicePaid(supabase, invoice) {
     .from('licenses')
     .select('id')
     .eq('subscription_id', subscription.id)
-    .single()
+    .maybeSingle()
 
   if (!existingLicense) {
-    console.log('No license found for subscription, creating license (boleto payment confirmed)')
+    console.log('No license found for subscription, creating license (payment confirmed)')
 
     // Obter dados atualizados da subscription
     const { data: subData } = await supabase
@@ -639,7 +636,7 @@ async function handleInvoicePaid(supabase, invoice) {
 
     if (subData) {
       const licenseCode = generateLicenseCode()
-      console.log('Creating license for boleto payment:', licenseCode)
+      console.log('Creating license for payment:', licenseCode)
 
       const { data: newLicense, error: licenseError } = await supabase
         .from('licenses')
@@ -658,9 +655,9 @@ async function handleInvoicePaid(supabase, invoice) {
         .single()
 
       if (licenseError) {
-        console.error('Error creating license for boleto payment:', JSON.stringify(licenseError))
+        console.error('Error creating license for payment:', JSON.stringify(licenseError))
       } else {
-        console.log('License created for boleto payment:', newLicense.id, newLicense.code)
+        console.log('License created for payment:', newLicense.id, newLicense.code)
       }
     }
   } else {
@@ -682,7 +679,7 @@ async function handleInvoicePaid(supabase, invoice) {
         .from('licenses')
         .select('code')
         .eq('subscription_id', subscription.id)
-        .single()
+        .maybeSingle()
 
       if (userData) {
         const formatCurrency = (amount: number) => {
@@ -708,7 +705,6 @@ async function handleInvoicePaid(supabase, invoice) {
       }
     } catch (emailError) {
       console.error('Error sending purchase confirmation email:', emailError)
-      // Não falhar o webhook por causa de erro no email
     }
   }
 
