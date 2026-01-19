@@ -233,12 +233,15 @@ const DashboardLayout = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-row-reverse sm:flex-row">
+              
+              {/* Avatar */}
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary">
                 <User className="h-5 w-5 text-primary-foreground" />
               </div>
-              {/* Mobile: primeiro nome + Administrador */}
-              <div className="sm:hidden">
+
+              {/* Mobile: primeiro nome + cargo */}
+              <div className="sm:hidden text-right">
                 <div className="text-sm font-medium text-foreground">
                   {user?.name?.split(' ')[0] || 'Usuário'}
                 </div>
@@ -253,7 +256,8 @@ const DashboardLayout = () => {
                   </div>
                 )}
               </div>
-              {/* Desktop: nome completo + Administrador */}
+
+              {/* Desktop: nome completo + cargo */}
               <div className="hidden sm:block">
                 <div className="text-sm font-medium text-foreground">
                   {user?.name || 'Usuário'}
@@ -269,6 +273,7 @@ const DashboardLayout = () => {
                   </div>
                 )}
               </div>
+
             </div>
           </div>
         </header>
