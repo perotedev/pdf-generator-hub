@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { CreditCard, Calendar, Check, Copy, RefreshCw, Key, Monitor, Trash2, Edit2, RotateCcw } from "lucide-react";
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -46,6 +46,7 @@ interface SubscriptionWithDetails extends Subscription {
 
 const Assinaturas = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { toast } = useToast();
   const { user, getAccessToken } = useAuth();
   const [subscriptions, setSubscriptions] = useState<SubscriptionWithDetails[]>([]);
@@ -63,6 +64,20 @@ const Assinaturas = () => {
   useEffect(() => {
     fetchSubscriptions();
   }, [user]);
+
+  // Handle success parameter from Stripe Checkout redirect
+  useEffect(() => {
+    const success = searchParams.get('success');
+    if (success === 'true') {
+      toast({
+        title: "Pagamento processado!",
+        description: "Sua assinatura foi criada. Se você pagou via boleto, a licença será liberada após a confirmação do pagamento (até 3 dias úteis).",
+      });
+      // Remove success param from URL
+      searchParams.delete('success');
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams, toast]);
 
   const fetchSubscriptions = async () => {
     if (!user) return;
@@ -496,8 +511,7 @@ const Assinaturas = () => {
                               Aguardando confirmação do pagamento
                             </p>
                             <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
-                              Seu pagamento via boleto está sendo processado. A licença será liberada automaticamente após a confirmação do pagamento.
-                              Isso pode levar até 3 dias úteis.
+                              Seu pagamento está sendo processado. A licença será liberada automaticamente após a confirmação do pagamento.
                             </p>
                           </div>
                         </div>

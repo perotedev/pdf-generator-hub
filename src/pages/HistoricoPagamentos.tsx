@@ -23,7 +23,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Download, Calendar, CreditCard, FileText, DollarSign, Eye, RefreshCw } from "lucide-react";
+import { Download, Calendar, CreditCard, FileText, DollarSign, Eye, RefreshCw, Barcode } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { dashboardApi, type Payment } from "@/lib/supabase";
@@ -83,15 +83,22 @@ const HistoricoPagamentos = () => {
     });
   };
 
+  const getPaymentMethodIcon = (method: string | null) => {
+    if (!method) return CreditCard;
+    const methodLower = method.toLowerCase();
+    if (methodLower === 'boleto') return Barcode;
+    return CreditCard;
+  };
+
   const formatPaymentMethod = (method: string | null) => {
     if (!method) return 'Não especificado';
 
     const methods: Record<string, string> = {
       'stripe': 'Stripe',
-      'card': 'Cartão de Crédito',
-      'credit_card': 'Cartão de Crédito',
-      'debit_card': 'Cartão de Débito',
-      'boleto': 'Boleto Bancário',
+      'card': 'Cartão',
+      'credit_card': 'Cartão',
+      'debit_card': 'Cartão',
+      'boleto': 'Boleto',
       'pix': 'PIX',
       'bank_transfer': 'Transferência Bancária',
     };
@@ -295,10 +302,15 @@ const HistoricoPagamentos = () => {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2">
-                      <CreditCard className="h-4 w-4 text-muted-foreground" />
-                      {formatPaymentMethod(payment.payment_method)}
-                    </div>
+                    {(() => {
+                      const PaymentIcon = getPaymentMethodIcon(payment.payment_method);
+                      return (
+                        <div className="flex items-center gap-2">
+                          <PaymentIcon className="h-4 w-4 text-muted-foreground" />
+                          {formatPaymentMethod(payment.payment_method)}
+                        </div>
+                      );
+                    })()}
                   </TableCell>
                   <TableCell className="font-semibold">
                     {formatCurrency(payment.amount)}

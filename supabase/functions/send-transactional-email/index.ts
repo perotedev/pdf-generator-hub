@@ -16,7 +16,6 @@ type EmailType =
   | 'SUBSCRIPTION_CANCELED'
   | 'DEVICE_UNLINKED'
   | 'ENTERPRISE_QUOTE_RECEIVED'
-  | 'ENTERPRISE_QUOTE_CONTACTED'
   | 'PAYMENT_REMINDER'
 
 interface RequestBody {
@@ -255,45 +254,6 @@ const emailTemplates: Record<EmailType, (data: Record<string, any>) => { subject
 
       <p style="color: #999999; font-size: 14px; line-height: 1.6; margin: 20px 0 0 0; text-align: center;">
         Agradecemos seu interesse no PDF Generator!
-      </p>
-    `)
-  }),
-
-  ENTERPRISE_QUOTE_CONTACTED: (data) => ({
-    subject: 'Atualização do seu Orçamento - PDF Generator',
-    html: getEmailWrapper('Atualizacao de Orcamento', `
-      <h2 style="color: #333333; margin: 0 0 20px 0; font-size: 24px;">Olá, ${data.contactName}!</h2>
-      <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-        Temos novidades sobre sua solicitação de orçamento Enterprise para a <strong>${data.companyName}</strong>.
-      </p>
-
-      ${data.quotedPrice ? `
-      <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #e8f5e9; border-radius: 8px; padding: 20px; margin: 20px 0;">
-        <tr>
-          <td align="center">
-            <h3 style="color: #2e7d32; margin: 0 0 10px 0; font-size: 16px;">Valor Proposto</h3>
-            <span style="font-size: 28px; font-weight: bold; color: #2e7d32;">${data.quotedPrice}</span>
-            <p style="color: #666666; font-size: 14px; margin: 10px 0 0 0;">
-              Para ${data.licenseQuantity} licenças (${data.billingPreference === 'MONTHLY' ? 'Mensal' : data.billingPreference === 'YEARLY' ? 'Anual' : 'Personalizado'})
-            </p>
-          </td>
-        </tr>
-      </table>
-      ` : ''}
-
-      ${data.adminNotes ? `
-      <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0;">
-        <tr>
-          <td>
-            <h3 style="color: #333333; margin: 0 0 10px 0; font-size: 16px;">Mensagem da equipe</h3>
-            <p style="color: #666666; font-size: 14px; margin: 0; white-space: pre-line;">${data.adminNotes}</p>
-          </td>
-        </tr>
-      </table>
-      ` : ''}
-
-      <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 20px 0;">
-        Para dar continuidade entre em contato conosco.
       </p>
     `)
   }),

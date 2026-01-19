@@ -237,6 +237,23 @@ const DashboardLayout = () => {
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary">
                 <User className="h-5 w-5 text-primary-foreground" />
               </div>
+              {/* Mobile: primeiro nome + Administrador */}
+              <div className="sm:hidden">
+                <div className="text-sm font-medium text-foreground">
+                  {user?.name?.split(' ')[0] || 'Usuário'}
+                </div>
+                {isAdmin && (
+                  <div className="text-xs text-muted-foreground">
+                    Administrador
+                  </div>
+                )}
+                {isManager && !isAdmin && (
+                  <div className="text-xs text-muted-foreground">
+                    Gerente
+                  </div>
+                )}
+              </div>
+              {/* Desktop: nome completo + Administrador */}
               <div className="hidden sm:block">
                 <div className="text-sm font-medium text-foreground">
                   {user?.name || 'Usuário'}
@@ -246,7 +263,7 @@ const DashboardLayout = () => {
                     Administrador
                   </div>
                 )}
-                {isManager && (
+                {isManager && !isAdmin && (
                   <div className="text-xs text-muted-foreground">
                     Gerente
                   </div>

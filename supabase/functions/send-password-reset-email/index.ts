@@ -42,6 +42,23 @@ serve(async (req) => {
       )
     }
 
+    // Check if user registered via Google OAuth (cannot reset password)
+    const { data: authUser } = await supabase.auth.admin.getUserById(userData.id)
+
+    if (authUser?.user?.app_metadata?.provider === 'google' ||
+        authUser?.user?.app_metadata?.providers?.includes('google')) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Esta conta foi criada usando o Google. Por favor, faça login com o Google.'
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      )
+    }
+
     // Generate 6-digit code
     const code = Math.floor(100000 + Math.random() * 900000).toString()
 

@@ -7,6 +7,7 @@ import {
   FileText,
   TrendingUp,
   RefreshCw,
+  Barcode,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -92,6 +93,19 @@ const Dashboard = () => {
     return `Há ${diffInDays} dia${diffInDays > 1 ? 's' : ''}`;
   };
 
+  const formatPaymentMethod = (method: string | null) => {
+    if (!method) return { label: 'Não especificado', icon: FileText };
+
+    const methodLower = method.toLowerCase();
+    if (methodLower === 'card' || methodLower === 'credit_card' || methodLower === 'debit_card') {
+      return { label: 'Cartão', icon: CreditCard };
+    }
+    if (methodLower === 'boleto') {
+      return { label: 'Boleto', icon: Barcode };
+    }
+    return { label: method, icon: FileText };
+  };
+
   const stats = [
     {
       title: "Status da Assinatura",
@@ -140,10 +154,13 @@ const Dashboard = () => {
       CANCELED: "Pagamento cancelado",
     };
 
+    const paymentMethodInfo = formatPaymentMethod(payment.payment_method);
+
     return {
       action: statusMap[payment.status] || payment.status,
-      description: `${payment.payment_method || 'Método de pagamento'} - ${formatCurrency(payment.amount)}`,
+      description: `${paymentMethodInfo.label} - ${formatCurrency(payment.amount)}`,
       time: getTimeAgo(payment.created_at),
+      icon: paymentMethodInfo.icon,
     };
   });
 
@@ -246,27 +263,30 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentActivity.map((activity, index) => (
-                <div
-                  key={index}
-                  className="flex items-start gap-3 pb-3 border-b border-border last:border-0 last:pb-0"
-                >
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                    <FileText className="h-4 w-4 text-primary" />
+              {recentActivity.map((activity, index) => {
+                const ActivityIcon = activity.icon;
+                return (
+                  <div
+                    key={index}
+                    className="flex items-start gap-3 pb-3 border-b border-border last:border-0 last:pb-0"
+                  >
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                      <ActivityIcon className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground">
+                        {activity.action}
+                      </p>
+                      <p className="text-sm text-muted-foreground truncate">
+                        {activity.description}
+                      </p>
+                    </div>
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">
+                      {activity.time}
+                    </span>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground">
-                      {activity.action}
-                    </p>
-                    <p className="text-sm text-muted-foreground truncate">
-                      {activity.description}
-                    </p>
-                  </div>
-                  <span className="text-xs text-muted-foreground whitespace-nowrap">
-                    {activity.time}
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </CardContent>
         </Card>
