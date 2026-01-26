@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import CapidocLogo from "@/components/CapidocLogo";
 
 const DashboardLayout = () => {
   const location = useLocation();
@@ -102,16 +103,8 @@ const DashboardLayout = () => {
     <div className="flex min-h-screen">
       {/* Sidebar Desktop */}
       <aside className="hidden lg:flex w-64 flex-col border-r border-border bg-card sticky top-0 h-screen">
-        <div className="flex h-16 items-center gap-2 border-b border-border px-6">
-          <img
-            src="/imgs/capidoc.png"
-            alt="Capidoc"
-            className="h-9 w-9"
-          />
-          <span className="text-lg font-bold">
-            <span style={{ color: "#FD8216" }}>CAPI</span>
-            <span style={{ color: "#1470BB" }}>DOC</span>
-          </span>
+        <div style={{transform: "scale(0.9)", marginLeft: "-10px"}} className="flex h-16 items-center border-b border-border px-6">
+          <CapidocLogo variant="full" linkTo={null} />
         </div>
 
         <nav className="flex-1 p-4 space-y-1">
@@ -161,17 +154,7 @@ const DashboardLayout = () => {
         }`}
       >
         <div className="flex h-16 items-center justify-between border-b border-border px-6">
-          <div className="flex h-16 items-center gap-2 border-b border-border">
-            <img
-              src="/imgs/capidoc.png"
-              alt="Capidoc"
-              className="h-7 w-7"
-            />
-            <span className="font-bold">
-              <span style={{ color: "#FD8216" }}>CAPI</span>
-              <span style={{ color: "#1470BB" }}>DOC</span>
-            </span>
-          </div>
+          <CapidocLogo variant="sidebar" size="sm" linkTo={null} />
           <button onClick={() => setSidebarOpen(false)}>
             <X className="h-6 w-6" />
           </button>

@@ -1,8 +1,9 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { FileText, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import CapidocLogo from "@/components/CapidocLogo";
 
 const PublicHeader = () => {
   const location = useLocation();
@@ -20,17 +21,7 @@ const PublicHeader = () => {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-card/80 backdrop-blur-sm">
       <div className="container flex h-16 items-center justify-between">
-        <Link to="/" className="flex items-center gap-2">
-          <img
-            src="/imgs/capidoc_horizontal.png"
-            alt="Capidoc"
-            className="h-12 w-auto"
-          />
-            {/* <span className="text-xl font-bold">
-            <span style={{ color: "#FD8216" }}>CAPI</span>
-            <span style={{ color: "#1470BB" }}>DOC</span>
-            </span> */}
-        </Link>
+        <CapidocLogo variant="horizontal"/>
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-6">

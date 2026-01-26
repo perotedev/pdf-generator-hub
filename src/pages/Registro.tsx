@@ -4,12 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { FileText, Eye, EyeOff, CheckCircle2, XCircle } from "lucide-react";
+import { Eye, EyeOff, CheckCircle2, XCircle, RefreshCw } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { authUtilsApi, emailApi, supabase } from "@/lib/supabase";
 import { LINKS } from "@/lib/constants";
-import { RefreshCw } from "lucide-react";
+import CapidocLogo from "@/components/CapidocLogo";
 
 const Registro = () => {
   const navigate = useNavigate();
@@ -192,11 +192,7 @@ const Registro = () => {
       <Card className="w-full max-w-md border-border">
         <CardHeader className="text-center">
             <div className="mx-auto my-2">
-              <img
-                src="/imgs/capidoc.png"
-                alt="Capidoc Logo"
-                className="h-12 w-12"
-              />
+              <CapidocLogo variant="icon" linkTo={null} />
             </div>
           <CardTitle className="text-2xl">Criar sua conta</CardTitle>
         </CardHeader>

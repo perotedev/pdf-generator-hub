@@ -9,6 +9,7 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { authUtilsApi, supabase } from "@/lib/supabase";
+import CapidocLogo from "@/components/CapidocLogo";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -173,11 +174,7 @@ const Login = () => {
       <Card className="w-full max-w-md border-border">
         <CardHeader className="text-center">
             <div className="mx-auto my-2">
-              <img
-                src="/imgs/capidoc.png"
-                alt="Capidoc Logo"
-                className="h-12 w-12"
-              />
+              <CapidocLogo variant="full" linkTo={null} />
             </div>
           <CardTitle className="text-2xl">Entrar na sua conta</CardTitle>
           <p className="text-sm text-muted-foreground">

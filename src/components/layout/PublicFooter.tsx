@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
-import { FileText } from "lucide-react";
 import { LINKS } from "@/lib/constants";
+import CapidocLogo from "@/components/CapidocLogo";
 
 const PublicFooter = () => {
   return (
@@ -8,18 +8,8 @@ const PublicFooter = () => {
       <div className="container py-12">
         <div className="grid gap-8 md:grid-cols-4">
           {/* Brand */}
-          <div className="space-y-4">
-            <Link to="/" className="flex items-center gap-2">
-              <img
-                src="/imgs/capidoc.png"
-                alt="Capidoc"
-                className="h-9 w-9"
-              />
-                <span className="text-xl font-bold">
-                <span style={{ color: "#FD8216" }}>CAPI</span>
-                <span style={{ color: "#1470BB" }}>DOC</span>
-                </span>
-            </Link>
+          <div className="space-y-2">
+            <CapidocLogo variant="horizontal" />
             <p className="text-sm text-muted-foreground">
               A solução completa para geração de PDFs profissionais de forma rápida e segura.
             </p>
