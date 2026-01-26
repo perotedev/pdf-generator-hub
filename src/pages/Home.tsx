@@ -41,7 +41,7 @@ const Home = () => {
       shortTitle: "Planilha",
       description: "Importe sua planilha Excel e defina quais colunas contêm os dados que serão usados nos documentos.",
       details: "O sistema detecta automaticamente as colunas da sua planilha. Basta nomear cada coluna para facilitar o mapeamento.",
-      image: "/art/planilha.png",
+      image: "/screenshots/perfil-planilha.png",
       color: "from-blue-500 to-blue-600",
     },
     {
@@ -51,7 +51,7 @@ const Home = () => {
       shortTitle: "Documento",
       description: "Clique diretamente no PDF para posicionar os campos. Vincule cada campo a uma coluna da planilha.",
       details: "Interface visual com mapeamento por clique. Personalize fontes, tamanhos e estilos de cada campo individualmente.",
-      image: "/art/documento.png",
+      image: "/screenshots/perfil-documento.png",
       color: "from-purple-500 to-purple-600",
     },
     {
@@ -61,7 +61,7 @@ const Home = () => {
       shortTitle: "Gerar",
       description: "Com um clique, o sistema processa todas as linhas da planilha e gera um PDF personalizado para cada registro.",
       details: "Processamento rápido e eficiente. Gere centenas de documentos em segundos, não em horas.",
-      image: "/art/pdf_lote.png",
+      image: "/screenshots/geracao-pdfs-lote.png",
       color: "from-green-500 to-green-600",
     },
     {
@@ -71,7 +71,7 @@ const Home = () => {
       shortTitle: "Resultados",
       description: "Todos os PDFs gerados ficam organizados e prontos para uso. Visualize, exporte ou compartilhe.",
       details: "Gerenciamento completo dos documentos gerados. Busca, filtros e organização inteligente.",
-      image: "/art/pdf_list.png",
+      image: "/screenshots/pdfs-gerados.png",
       color: "from-orange-500 to-orange-600",
     },
   ];
@@ -324,7 +324,7 @@ const Home = () => {
             {/* Right Side - Screenshot */}
             <div className="order-1 lg:order-2">
               <div
-                className="relative rounded-xl overflow-hidden border border-border shadow-2xl bg-card cursor-pointer group"
+                className="relative rounded overflow-hidden border border-border shadow-2xl bg-card cursor-pointer group"
                 onClick={() => setSelectedScreenshot({
                   image: workflowSteps[activeStep].image,
                   title: workflowSteps[activeStep].title,
