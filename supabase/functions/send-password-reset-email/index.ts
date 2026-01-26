@@ -89,9 +89,9 @@ serve(async (req) => {
         'Authorization': `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: 'PDF Generator <noreply@perotedev.com>',
+        from: 'Capidoc <noreply@perotedev.com>',
         to: [email],
-        subject: 'Recuperação de Senha - PDF Generator',
+        subject: 'Recuperação de Senha - Capidoc',
         html: `
           <!DOCTYPE html>
           <html>
@@ -108,7 +108,7 @@ serve(async (req) => {
                       <!-- Header -->
                       <tr>
                         <td style="background: linear-gradient(135deg, #FD8216 0%, #1470BB 100%); padding: 40px 20px; text-align: center;">
-                          <h1 style="color: #ffffff; margin: 0; font-size: 28px;">PDF Generator</h1>
+                          <h1 style="color: #ffffff; margin: 0; font-size: 28px;">Capidoc</h1>
                         </td>
                       </tr>
 
@@ -120,7 +120,7 @@ serve(async (req) => {
                             Olá, ${userData.name || 'usuário'}!
                           </p>
                           <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-                            Recebemos uma solicitação para redefinir a senha da sua conta no <strong>PDF Generator</strong>.
+                            Recebemos uma solicitação para redefinir a senha da sua conta no <strong>Capidoc</strong>.
                           </p>
                           <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
                             Utilize o código abaixo para criar uma nova senha:
@@ -155,7 +155,7 @@ serve(async (req) => {
                       <tr>
                         <td style="background-color: #f8f9fa; padding: 20px 30px; text-align: center; border-top: 1px solid #eeeeee;">
                           <p style="color: #999999; font-size: 12px; margin: 0;">
-                            © ${new Date().getFullYear()} PDF Generator. Todos os direitos reservados.<br>
+                            © ${new Date().getFullYear()} Capidoc. Todos os direitos reservados.<br>
                             <a href="https://perotedev.com" style="color: #1470BB; text-decoration: none;">PeroteDev</a>
                           </p>
                         </td>

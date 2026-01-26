@@ -59,9 +59,9 @@ serve(async (req) => {
         'Authorization': `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: 'PDF Generator <noreply@perotedev.com>',
+        from: 'Capidoc <noreply@perotedev.com>',
         to: [email],
-        subject: 'Verificação de Email - PDF Generator',
+        subject: 'Verificação de Email - Capidoc',
         html: `
           <!DOCTYPE html>
           <html>
@@ -78,7 +78,7 @@ serve(async (req) => {
                       <!-- Header -->
                       <tr>
                         <td style="background: linear-gradient(135deg, #FD8216 0%, #1470BB 100%); padding: 40px 20px; text-align: center;">
-                          <h1 style="color: #ffffff; margin: 0; font-size: 28px;">PDF Generator</h1>
+                          <h1 style="color: #ffffff; margin: 0; font-size: 28px;">Capidoc</h1>
                         </td>
                       </tr>
 
@@ -87,7 +87,7 @@ serve(async (req) => {
                         <td style="padding: 40px 30px;">
                           <h2 style="color: #333333; margin: 0 0 20px 0; font-size: 24px;">Olá, ${name}!</h2>
                           <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-                            Obrigado por se cadastrar no <strong>PDF Generator</strong>!
+                            Obrigado por se cadastrar no <strong>Capidoc</strong>!
                           </p>
                           <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
                             Para ativar sua conta, utilize o código de verificação abaixo:
@@ -111,7 +111,7 @@ serve(async (req) => {
                           <hr style="border: none; border-top: 1px solid #eeeeee; margin: 30px 0;">
 
                           <p style="color: #999999; font-size: 13px; line-height: 1.6; margin: 0;">
-                            Se você não criou uma conta no PDF Generator, por favor ignore este email.
+                            Se você não criou uma conta no Capidoc, por favor ignore este email.
                           </p>
                         </td>
                       </tr>
@@ -120,7 +120,7 @@ serve(async (req) => {
                       <tr>
                         <td style="background-color: #f8f9fa; padding: 20px 30px; text-align: center; border-top: 1px solid #eeeeee;">
                           <p style="color: #999999; font-size: 12px; margin: 0;">
-                            © ${new Date().getFullYear()} PDF Generator. Todos os direitos reservados.<br>
+                            © ${new Date().getFullYear()} Capidoc. Todos os direitos reservados.<br>
                             <a href="https://perotedev.com" style="color: #1470BB; text-decoration: none;">PeroteDev</a>
                           </p>
                         </td>

@@ -41,7 +41,7 @@ const getEmailWrapper = (title: string, content: string) => `
             <!-- Header -->
             <tr>
               <td style="background: linear-gradient(135deg, #FD8216 0%, #1470BB 100%); padding: 40px 20px; text-align: center;">
-                <h1 style="color: #ffffff; margin: 0; font-size: 28px;">PDF Generator</h1>
+                <h1 style="color: #ffffff; margin: 0; font-size: 28px;">Capidoc</h1>
               </td>
             </tr>
 
@@ -56,7 +56,7 @@ const getEmailWrapper = (title: string, content: string) => `
             <tr>
               <td style="background-color: #f8f9fa; padding: 20px 30px; text-align: center; border-top: 1px solid #eeeeee;">
                 <p style="color: #999999; font-size: 12px; margin: 0;">
-                  © ${new Date().getFullYear()} PDF Generator. Todos os direitos reservados.<br>
+                  © ${new Date().getFullYear()} Capidoc. Todos os direitos reservados.<br>
                   <a href="https://perotedev.com" style="color: #1470BB; text-decoration: none;">PeroteDev</a>
                 </p>
               </td>
@@ -72,11 +72,11 @@ const getEmailWrapper = (title: string, content: string) => `
 // Templates de email por tipo
 const emailTemplates: Record<EmailType, (data: Record<string, any>) => { subject: string; html: string }> = {
   PURCHASE_CONFIRMATION: (data) => ({
-    subject: 'Confirmação de Compra - PDF Generator',
+    subject: 'Confirmação de Compra - Capidoc',
     html: getEmailWrapper('Confirmacao de Compra', `
       <h2 style="color: #333333; margin: 0 0 20px 0; font-size: 24px;">Obrigado pela sua compra, ${data.name}!</h2>
       <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-        Sua assinatura do <strong>PDF Generator</strong> foi confirmada com sucesso!
+        Sua assinatura do <strong>Capidoc</strong> foi confirmada com sucesso!
       </p>
 
       <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0;">
@@ -114,7 +114,7 @@ const emailTemplates: Record<EmailType, (data: Record<string, any>) => { subject
               <span style="font-size: 20px; font-weight: bold; color: #2e7d32; letter-spacing: 4px;">${data.licenseCode}</span>
             </div>
             <p style="color: #666666; font-size: 12px; margin: 15px 0 0 0;">
-              Use este código para ativar o PDF Generator no seu computador
+              Use este código para ativar o Capidoc no seu computador
             </p>
           </td>
         </tr>
@@ -139,11 +139,11 @@ const emailTemplates: Record<EmailType, (data: Record<string, any>) => { subject
   }),
 
   SUBSCRIPTION_CANCELED: (data) => ({
-    subject: 'Cancelamento de Assinatura - PDF Generator',
+    subject: 'Cancelamento de Assinatura - Capidoc',
     html: getEmailWrapper('Cancelamento de Assinatura', `
       <h2 style="color: #333333; margin: 0 0 20px 0; font-size: 24px;">Ola, ${data.name}</h2>
       <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-        Confirmamos o cancelamento da renovação automática da sua assinatura do <strong>PDF Generator</strong>.
+        Confirmamos o cancelamento da renovação automática da sua assinatura do <strong>Capidoc</strong>.
       </p>
 
       <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #fff3e0; border-radius: 8px; padding: 20px; margin: 20px 0; border-left: 4px solid #ff9800;">
@@ -152,7 +152,7 @@ const emailTemplates: Record<EmailType, (data: Record<string, any>) => { subject
             <h3 style="color: #e65100; margin: 0 0 10px 0; font-size: 16px;">Importante</h3>
             <p style="color: #666666; font-size: 14px; margin: 0;">
               Sua assinatura permanecerá ativa até <strong>${data.expirationDate}</strong>.
-              Após essa data, você perderá o acesso aos recursos do PDF Generator.
+              Após essa data, você perderá o acesso aos recursos do Capidoc.
             </p>
           </td>
         </tr>
@@ -176,11 +176,11 @@ const emailTemplates: Record<EmailType, (data: Record<string, any>) => { subject
   }),
 
   DEVICE_UNLINKED: (data) => ({
-    subject: 'Dispositivo Desvinculado - PDF Generator',
+    subject: 'Dispositivo Desvinculado - Capidoc',
     html: getEmailWrapper('Dispositivo Desvinculado', `
       <h2 style="color: #333333; margin: 0 0 20px 0; font-size: 24px;">Ola, ${data.name}</h2>
       <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-        Um dispositivo foi desvinculado da sua licença do <strong>PDF Generator</strong>.
+        Um dispositivo foi desvinculado da sua licença do <strong>Capidoc</strong>.
       </p>
 
       <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0;">
@@ -219,7 +219,7 @@ const emailTemplates: Record<EmailType, (data: Record<string, any>) => { subject
   }),
 
   ENTERPRISE_QUOTE_RECEIVED: (data) => ({
-    subject: 'Recebemos seu Pedido de Orçamento - PDF Generator',
+    subject: 'Recebemos seu Pedido de Orçamento - Capidoc',
     html: getEmailWrapper('Orcamento Recebido', `
       <h2 style="color: #333333; margin: 0 0 20px 0; font-size: 24px;">Olá, ${data.contactName}!</h2>
       <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
@@ -253,17 +253,17 @@ const emailTemplates: Record<EmailType, (data: Record<string, any>) => { subject
       </p>
 
       <p style="color: #999999; font-size: 14px; line-height: 1.6; margin: 20px 0 0 0; text-align: center;">
-        Agradecemos seu interesse no PDF Generator!
+        Agradecemos seu interesse no Capidoc!
       </p>
     `)
   }),
 
   PAYMENT_REMINDER: (data) => ({
-    subject: 'Lembrete de Pagamento - PDF Generator',
+    subject: 'Lembrete de Pagamento - Capidoc',
     html: getEmailWrapper('Lembrete de Pagamento', `
       <h2 style="color: #333333; margin: 0 0 20px 0; font-size: 24px;">Olá, ${data.name}!</h2>
       <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-        Este e um lembrete amigável sobre seu próximo pagamento do <strong>PDF Generator</strong>.
+        Este e um lembrete amigável sobre seu próximo pagamento do <strong>Capidoc</strong>.
       </p>
 
       <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #fff3e0; border-radius: 8px; padding: 20px; margin: 20px 0; border-left: 4px solid #ff9800;">
@@ -336,7 +336,7 @@ serve(async (req) => {
         'Authorization': `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: 'PDF Generator <noreply@perotedev.com>',
+        from: 'Capidoc <noreply@perotedev.com>',
         to: [to],
         subject: subject,
         html: html,
