@@ -42,7 +42,7 @@ const Home = () => {
       description: "Importe sua planilha Excel e defina quais colunas contêm os dados que serão usados nos documentos.",
       details: "O sistema detecta automaticamente as colunas da sua planilha. Basta nomear cada coluna para facilitar o mapeamento.",
       image: "/screenshots/perfil-planilha.png",
-      color: "from-blue-500 to-blue-600",
+      color: "from-primary to-primary/80",
     },
     {
       step: 2,

@@ -99,7 +99,7 @@ const CapidocLogo = ({
             />
             <span className={`${sizes.sidebarText} font-bold`}>
               <span style={{ color: "#FD8216" }}>CAPI</span>
-              <span style={{ color: "#1470BB" }}>DOC</span>
+              <span style={{ color: "#026BFF" }}>DOC</span>
             </span>
           </div>
         );

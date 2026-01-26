@@ -503,14 +503,14 @@ const Assinaturas = () => {
 
                     {/* Pending Payment Notice (Boleto) */}
                     {subscription.status === 'PENDING_PAYMENT' && (
-                      <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-900 dark:bg-blue-950">
+                      <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 dark:border-primary/40 dark:bg-primary/10">
                         <div className="flex items-start gap-3">
-                          <CreditCard className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5" />
+                          <CreditCard className="h-5 w-5 text-primary mt-0.5" />
                           <div>
-                            <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                            <p className="text-sm font-medium text-primary">
                               Aguardando confirmação do pagamento
                             </p>
-                            <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                            <p className="text-sm text-primary/80 mt-1">
                               Seu pagamento está sendo processado. A licença será liberada automaticamente após a confirmação do pagamento.
                             </p>
                           </div>
