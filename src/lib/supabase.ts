@@ -13,7 +13,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
-    storageKey: 'pdf-generator-auth',
+    storageKey: 'capidoc-auth',
     storage: typeof window !== 'undefined' ? window.localStorage : undefined,
   },
 })

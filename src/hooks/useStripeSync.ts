@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { dashboardApi } from '@/lib/supabase';
 
-const SYNC_KEY = 'pdf-generator-last-stripe-sync';
+const SYNC_KEY = 'capidoc-last-stripe-sync';
 const SYNC_INTERVAL = 60 * 60 * 1000; // 1 hora em milissegundos
 
 interface SyncResult {

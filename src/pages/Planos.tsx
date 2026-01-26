@@ -91,7 +91,7 @@ const Planos = () => {
             description:
               plan.description ||
               (isMonthly
-                ? 'Assinatura mensal do PDF Generator'
+                ? 'Assinatura mensal do Capidoc'
                 : 'Assinatura anual com desconto'),
             monthlyPrice: Number(monthlyEquivalent.toFixed(2)),
             annualPrice: plan.price,
@@ -277,7 +277,7 @@ const Planos = () => {
                 <p className="mt-2 text-sm text-muted-foreground">
                   Após a confirmação do pagamento, você receberá imediatamente
                   sua chave de licença e o link para download do instalador
-                  do PDF Generator.
+                  do Capidoc.
                 </p>
               </CardContent>
             </Card>

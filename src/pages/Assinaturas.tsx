@@ -355,7 +355,7 @@ const Assinaturas = () => {
             Minhas Assinaturas
           </h1>
           <p className="text-muted-foreground">
-            Gerencie suas assinaturas e licenças do PDF Generator
+            Gerencie suas assinaturas e licenças do Capidoc
           </p>
         </div>
         <Button

@@ -133,7 +133,7 @@ const Downloads = () => {
         <div>
           <h1 className="text-2xl font-bold text-foreground">Downloads</h1>
           <p className="text-muted-foreground">
-            Baixe a versão mais recente do PDF Generator ou versões anteriores
+            Baixe a versão mais recente do Capidoc ou versões anteriores
           </p>
         </div>
         <Card>
@@ -150,7 +150,7 @@ const Downloads = () => {
       <div>
         <h1 className="text-2xl font-bold text-foreground">Downloads</h1>
         <p className="text-muted-foreground">
-          Baixe a versão mais recente do PDF Generator ou versões anteriores
+          Baixe a versão mais recente do Capidoc ou versões anteriores
         </p>
       </div>
 

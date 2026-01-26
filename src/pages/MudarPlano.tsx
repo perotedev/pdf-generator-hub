@@ -63,7 +63,7 @@ const MudarPlano = () => {
           formattedPlans.push({
             id: monthlyPlan.id,
             name: "Mensal",
-            description: monthlyPlan.description || "Assinatura mensal do PDF Generator",
+            description: monthlyPlan.description || "Assinatura mensal do Capidoc",
             monthlyPrice: monthlyPlan.price,
             annualPrice: monthlyPlan.price,
             features: [

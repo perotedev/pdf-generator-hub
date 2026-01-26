@@ -21,15 +21,15 @@ const PublicHeader = () => {
     <header className="sticky top-0 z-50 w-full border-b border-border bg-card/80 backdrop-blur-sm">
       <div className="container flex h-16 items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
-          <img 
-            src="/imgs/pdf_generator.png" 
-            alt="PDF Generator" 
-            className="h-9 w-9"
+          <img
+            src="/imgs/capidoc_horizontal.png"
+            alt="Capidoc"
+            className="h-12 w-auto"
           />
-            <span className="text-xl font-bold">
-            <span style={{ color: "#FD8216" }}>PDF</span>
-            <span style={{ color: "#1470BB" }}> GENERATOR</span>
-            </span>
+            {/* <span className="text-xl font-bold">
+            <span style={{ color: "#FD8216" }}>CAPI</span>
+            <span style={{ color: "#1470BB" }}>DOC</span>
+            </span> */}
         </Link>
 
         {/* Desktop Navigation */}

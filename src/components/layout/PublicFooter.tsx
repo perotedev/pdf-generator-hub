@@ -10,14 +10,14 @@ const PublicFooter = () => {
           {/* Brand */}
           <div className="space-y-4">
             <Link to="/" className="flex items-center gap-2">
-              <img 
-                src="/imgs/pdf_generator.png" 
-                alt="PDF Generator" 
+              <img
+                src="/imgs/capidoc.png"
+                alt="Capidoc"
                 className="h-9 w-9"
               />
                 <span className="text-xl font-bold">
-                <span style={{ color: "#FD8216" }}>PDF</span>
-                <span style={{ color: "#1470BB" }}> GENERATOR</span>
+                <span style={{ color: "#FD8216" }}>CAPI</span>
+                <span style={{ color: "#1470BB" }}>DOC</span>
                 </span>
             </Link>
             <p className="text-sm text-muted-foreground">
@@ -79,7 +79,7 @@ const PublicFooter = () => {
 
         <div className="mt-8 pt-8 border-t border-border">
           <p className="text-center text-sm text-muted-foreground">
-            © {new Date().getFullYear()} PDF Generator. Todos os direitos reservados.
+            © {new Date().getFullYear()} Capidoc. Todos os direitos reservados.
           </p>
         </div>
       </div>

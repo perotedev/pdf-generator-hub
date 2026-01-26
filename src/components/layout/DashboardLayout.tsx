@@ -103,14 +103,14 @@ const DashboardLayout = () => {
       {/* Sidebar Desktop */}
       <aside className="hidden lg:flex w-64 flex-col border-r border-border bg-card sticky top-0 h-screen">
         <div className="flex h-16 items-center gap-2 border-b border-border px-6">
-          <img 
-            src="/imgs/pdf_generator.png" 
-            alt="PDF Generator" 
+          <img
+            src="/imgs/capidoc.png"
+            alt="Capidoc"
             className="h-9 w-9"
           />
           <span className="text-lg font-bold">
-            <span style={{ color: "#FD8216" }}>PDF</span>
-            <span style={{ color: "#1470BB" }}> GENERATOR</span>
+            <span style={{ color: "#FD8216" }}>CAPI</span>
+            <span style={{ color: "#1470BB" }}>DOC</span>
           </span>
         </div>
 
@@ -162,14 +162,14 @@ const DashboardLayout = () => {
       >
         <div className="flex h-16 items-center justify-between border-b border-border px-6">
           <div className="flex h-16 items-center gap-2 border-b border-border">
-            <img 
-              src="/imgs/pdf_generator.png" 
-              alt="PDF Generator" 
+            <img
+              src="/imgs/capidoc.png"
+              alt="Capidoc"
               className="h-7 w-7"
             />
             <span className="font-bold">
-              <span style={{ color: "#FD8216" }}>PDF</span>
-              <span style={{ color: "#1470BB" }}> GENERATOR</span>
+              <span style={{ color: "#FD8216" }}>CAPI</span>
+              <span style={{ color: "#1470BB" }}>DOC</span>
             </span>
           </div>
           <button onClick={() => setSidebarOpen(false)}>

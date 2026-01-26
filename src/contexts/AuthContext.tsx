@@ -31,7 +31,7 @@ interface AuthContextType {
   loading: boolean;
 }
 
-const AUTH_STORAGE_KEY = 'pdf-generator-auth-session';
+const AUTH_STORAGE_KEY = 'capidoc-auth-session';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -120,7 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     clearStoredSession();
     // Limpar todo o localStorage relacionado à autenticação
     localStorage.removeItem('user');
-    localStorage.removeItem('pdf-generator-auth');
+    localStorage.removeItem('capidoc-auth');
     // Limpar sessionStorage
     sessionStorage.removeItem('pendingCheckoutPlan');
     sessionStorage.removeItem('authRedirectUrl');

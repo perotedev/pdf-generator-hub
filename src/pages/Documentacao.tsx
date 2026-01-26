@@ -1,16 +1,20 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Book,
+  Clock,
   FileSpreadsheet,
   FileText,
+  Filter,
   Settings,
   Zap,
   HelpCircle,
   ChevronRight,
   Download,
+  Info,
   Layers,
+  Search,
+  Upload,
 } from "lucide-react";
 
 const Documentacao = () => {
@@ -33,11 +37,11 @@ const Documentacao = () => {
 
   const content: Record<string, { title: string; content: React.ReactNode }> = {
     introducao: {
-      title: "Introdução ao PDF Generator v2.0",
+      title: "Introdução ao Capidoc",
       content: (
         <div className="space-y-6">
           <p className="text-muted-foreground">
-            O PDF Generator v2.0 é um sistema desktop projetado para eliminar tarefas manuais,
+            O Capidoc é um sistema desktop projetado para eliminar tarefas manuais,
             permitindo que você gere centenas de documentos personalizados a partir de uma planilha
             Excel e um modelo PDF.
           </p>
@@ -222,7 +226,7 @@ const Documentacao = () => {
                   </li>
                   <li className="flex items-start gap-2">
                     <ChevronRight className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                    Formato: Documentos/PDF_GENERATOR/ANO/MES/
+                    Formato: Documentos/Capidoc/ANO/MES/
                   </li>
                 </ul>
               </CardContent>
@@ -240,16 +244,11 @@ const Documentacao = () => {
             Você só precisa fazer isso uma vez por cada tipo de planilha.
           </p>
 
-          {/* Screenshot da tela de Perfil de Planilha */}
-          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent overflow-hidden">
-            <CardContent className="p-0">
-              <img
-                src="/screenshots/perfil-planilha.png"
-                alt="Interface de Perfil de Planilha do PDF Generator"
-                className="w-full h-auto object-cover"
-              />
-            </CardContent>
-          </Card>
+          <img
+            src="/prints/spreadsheet.png"
+            alt="Editor de Perfil de Planilha"
+            className="border shadow rounded-lg"
+          />
 
           <h3 className="text-lg font-semibold text-foreground">
             Configuração do Perfil
@@ -291,13 +290,6 @@ const Documentacao = () => {
                   <li className="flex items-start gap-2">
                     <ChevronRight className="h-4 w-4 text-primary shrink-0 mt-0.5" />
                     <div>
-                      <strong className="text-foreground">Coluna Original:</strong> O nome
-                      da coluna no Excel (ex: "customer_name")
-                    </div>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <ChevronRight className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                    <div>
                       <strong className="text-foreground">Nome Personalizado:</strong> Como
                       você quer chamá-la no sistema (ex: "Nome do Cliente")
                     </div>
@@ -326,9 +318,10 @@ const Documentacao = () => {
             </Card>
           </div>
 
-          <div className="rounded-lg border border-primary/30 bg-primary/5 p-4">
+          <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 flex items-start gap-3">
+            <Info className="h-5 w-5 text-primary mt-0.5" />
             <p className="text-sm text-foreground">
-              <strong>💡 Dica:</strong> Crie perfis diferentes para cada tipo de documento
+              <strong>Dica:</strong> crie perfis diferentes para cada tipo de documento
               que você trabalha (clientes, funcionários, produtos, etc.).
             </p>
           </div>
@@ -344,16 +337,11 @@ const Documentacao = () => {
             clique nos locais onde as informações da planilha devem ser inseridas.
           </p>
 
-          {/* Screenshot da tela de Perfil de Documento */}
-          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent overflow-hidden">
-            <CardContent className="p-0">
-              <img
-                src="/screenshots/perfil-documento.png"
-                alt="Interface de Perfil de Documento do PDF Generator mostrando editor visual"
-                className="w-full h-auto object-cover"
-              />
-            </CardContent>
-          </Card>
+          <img
+            src="/prints/document.png"
+            alt="Editor de Perfil de Documento"
+            className="border shadow rounded-lg"
+          />
 
           <h3 className="text-lg font-semibold text-foreground">
             Editor Visual de Template
@@ -375,7 +363,7 @@ const Documentacao = () => {
             <Card className="border-border">
               <CardContent className="p-4">
                 <h4 className="font-semibold text-foreground mb-2">
-                  2. Selecione a coluna
+                  2. Procure o campo da planilha desejado
                 </h4>
                 <p className="text-sm text-muted-foreground">
                   Escolha qual campo da planilha você quer inserir (baseado no perfil
@@ -387,10 +375,10 @@ const Documentacao = () => {
             <Card className="border-border">
               <CardContent className="p-4">
                 <h4 className="font-semibold text-foreground mb-2">
-                  3. Clique no PDF onde o texto deve aparecer
+                  3. Arraste para o PDF onde o texto deve aparecer
                 </h4>
                 <p className="text-sm text-muted-foreground">
-                  Simplesmente clique na posição exata do documento onde você quer que
+                  Simplesmente arraste até a posição exata do documento onde você quer que
                   aquela informação seja inserida.
                 </p>
               </CardContent>
@@ -411,11 +399,11 @@ const Documentacao = () => {
                   </li>
                   <li className="flex items-start gap-2">
                     <ChevronRight className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                    <strong className="text-foreground">Tamanho:</strong> Ajuste de 8 a 72 pontos
+                    <strong className="text-foreground">Tamanho:</strong> Ajuste de 8 a 86 pontos
                   </li>
                   <li className="flex items-start gap-2">
                     <ChevronRight className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                    <strong className="text-foreground">Formatação:</strong> Negrito, Itálico e Sublinhado
+                    <strong className="text-foreground">Formatação:</strong> Negrito, Itálico, Sublinhado e Caixa Alta
                   </li>
                   <li className="flex items-start gap-2">
                     <ChevronRight className="h-4 w-4 text-primary shrink-0 mt-0.5" />
@@ -437,9 +425,10 @@ const Documentacao = () => {
             </Card>
           </div>
 
-          <div className="rounded-lg border border-primary/30 bg-primary/5 p-4">
+          <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 flex items-start gap-3">
+            <Info className="h-5 w-5 text-primary mt-0.5" />
             <p className="text-sm text-foreground">
-              <strong>💡 Dica:</strong> Assuma o controle total da aparência do seu texto.
+              <strong>Dica:</strong> assuma o controle total da aparência do seu texto.
               Você pode aplicar estilos diferentes para cada campo no mesmo documento.
             </p>
           </div>
@@ -455,16 +444,11 @@ const Documentacao = () => {
             documentos é um processo instantâneo e automático.
           </p>
 
-          {/* Screenshot da tela de Geração em Lote */}
-          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent overflow-hidden">
-            <CardContent className="p-0">
-              <img
-                src="/screenshots/geracao-pdfs-lote.png"
-                alt="Interface de geração em lote de PDFs"
-                className="w-full h-auto object-cover"
-              />
-            </CardContent>
-          </Card>
+          <img
+            src="/prints/batch_pdf.png"
+            alt="Interface de geração em lote de PDFs"
+            className="border shadow rounded-lg"
+          />
 
           <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
             <CardHeader>
@@ -477,16 +461,7 @@ const Documentacao = () => {
               <div className="space-y-4">
                 <div>
                   <h4 className="font-semibold text-foreground mb-2">
-                    1. Selecione o Perfil de Planilha
-                  </h4>
-                  <p className="text-sm text-muted-foreground">
-                    Escolha qual perfil de planilha você quer usar.
-                  </p>
-                </div>
-
-                <div>
-                  <h4 className="font-semibold text-foreground mb-2">
-                    2. Selecione o Perfil de Documento
+                    1. Selecione o Perfil de Documento
                   </h4>
                   <p className="text-sm text-muted-foreground">
                     Escolha qual modelo de PDF será preenchido.
@@ -495,7 +470,16 @@ const Documentacao = () => {
 
                 <div>
                   <h4 className="font-semibold text-foreground mb-2">
-                    3. Clique em "Gerar PDFs"
+                    2. Selecione uma planilha
+                  </h4>
+                  <p className="text-sm text-muted-foreground">
+                    Escolha a planilha que você quer usar para gerar os PDFs.
+                  </p>
+                </div>
+
+                <div>
+                  <h4 className="font-semibold text-foreground mb-2">
+                    3. Clique em "Iniciar Geração"
                   </h4>
                   <p className="text-sm text-muted-foreground">
                     Pronto! O sistema processará todos os registros da planilha e gerará
@@ -515,10 +499,10 @@ const Documentacao = () => {
           <Card className="border-border">
             <CardContent className="p-4">
               <code className="text-sm text-foreground">
-                Documentos/PDF_GENERATOR/ANO/MÊS/
+                Documentos/Capidoc/ANO/MES/
               </code>
               <p className="text-sm text-muted-foreground mt-3">
-                Exemplo: Documentos/PDF_GENERATOR/2026/Janeiro/
+                Exemplo: Documentos/Capidoc/2026/Janeiro/
               </p>
               <p className="text-sm text-muted-foreground mt-2">
                 Diga adeus às pastas confusas. Seus documentos ficam organizados por ano
@@ -531,26 +515,24 @@ const Documentacao = () => {
             Gerenciamento de Documentos
           </h3>
           <p className="text-muted-foreground mb-4">
-            O PDF Generator oferece uma interface dedicada para visualizar e gerenciar
+            O Capidoc oferece uma interface dedicada para visualizar e gerenciar
             todos os documentos que você já criou:
           </p>
 
-          {/* Screenshot da tela de PDFs Gerados */}
-          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent overflow-hidden mb-4">
-            <CardContent className="p-0">
-              <img
-                src="/screenshots/pdfs-gerados.png"
-                alt="Tela de gerenciamento mostrando lista de PDFs gerados com filtros e ações"
-                className="w-full h-auto object-cover"
-              />
-            </CardContent>
-          </Card>
+          <div className="mb-4">
+            <img
+              src="/prints/pdf_lib.png"
+              alt="Biblioteca de PDFs gerados"
+              className="border shadow rounded-lg"
+            />
+          </div>
 
           <div className="grid gap-4 md:grid-cols-2">
             <Card className="border-border">
               <CardContent className="p-4">
                 <h4 className="font-semibold text-foreground mb-2 flex items-center gap-2">
-                  🔍 Busca Rápida
+                  <Search className="h-4 w-4 text-primary" />
+                  Busca Rápida
                 </h4>
                 <p className="text-sm text-muted-foreground">
                   Encontre qualquer documento por nome ou data.
@@ -560,7 +542,8 @@ const Documentacao = () => {
             <Card className="border-border">
               <CardContent className="p-4">
                 <h4 className="font-semibold text-foreground mb-2 flex items-center gap-2">
-                  📅 Filtros Inteligentes
+                  <Filter className="h-4 w-4 text-primary" />
+                  Filtros Inteligentes
                 </h4>
                 <p className="text-sm text-muted-foreground">
                   Filtre por ano e mês para localizar rapidamente.
@@ -570,7 +553,8 @@ const Documentacao = () => {
             <Card className="border-border">
               <CardContent className="p-4">
                 <h4 className="font-semibold text-foreground mb-2 flex items-center gap-2">
-                  👁️ Ações Rápidas
+                  <FileText className="h-4 w-4 text-primary" />
+                  Análises Rápidas
                 </h4>
                 <p className="text-sm text-muted-foreground">
                   Visualize, abra na pasta ou exclua com um clique.
@@ -580,7 +564,8 @@ const Documentacao = () => {
             <Card className="border-border">
               <CardContent className="p-4">
                 <h4 className="font-semibold text-foreground mb-2 flex items-center gap-2">
-                  📊 Histórico Completo
+                  <Clock className="h-4 w-4 text-primary" />
+                  Histórico Completo
                 </h4>
                 <p className="text-sm text-muted-foreground">
                   Veja data de criação e acesse tudo facilmente.
@@ -596,7 +581,7 @@ const Documentacao = () => {
       content: (
         <div className="space-y-6">
           <p className="text-muted-foreground">
-            Seus perfis de planilha e documento são o cérebro da sua automação. O PDF Generator
+            Seus perfis de planilha e documento são o cérebro da sua automação. O Capidoc
             permite que você os gerencie como ativos valiosos, garantindo segurança e facilitando
             a colaboração.
           </p>
@@ -637,7 +622,7 @@ const Documentacao = () => {
             <Card className="border-border">
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <Download className="h-5 w-5 text-primary" />
+                  <Upload className="h-5 w-5 text-primary" />
                   Importar Perfis (ZIP)
                 </CardTitle>
               </CardHeader>
@@ -664,9 +649,10 @@ const Documentacao = () => {
             </Card>
           </div>
 
-          <div className="rounded-lg border border-primary/30 bg-primary/5 p-4">
+          <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 flex items-start gap-3">
+            <Info className="h-5 w-5 text-primary mt-0.5" />
             <p className="text-sm text-foreground">
-              <strong>💡 Dica:</strong> Faça backups regulares dos seus perfis. Eles contêm
+              <strong>Dica:</strong> faça backups regulares dos seus perfis. Eles contêm
               todo o trabalho de configuração e são fáceis de restaurar em caso de necessidade.
             </p>
           </div>
@@ -699,7 +685,7 @@ const Documentacao = () => {
           </div>
 
           <p className="text-sm text-muted-foreground">
-            O PDF Generator se adapta às suas necessidades. Gere desde pequenos certificados
+            O Capidoc se adapta às suas necessidades. Gere desde pequenos certificados
             e etiquetas até grandes plantas de projeto e relatórios detalhados, tudo com a
             mesma ferramenta e a mesma facilidade.
           </p>
@@ -716,7 +702,7 @@ const Documentacao = () => {
                 Preciso de conexão com a internet para usar?
               </h4>
               <p className="text-sm text-muted-foreground">
-                O PDF Generator é um sistema desktop que funciona localmente no seu computador.
+                O Capidoc é um sistema desktop que funciona localmente no seu computador.
                 Você só precisa de internet para ativar e verificar a licença. Depois disso,
                 pode trabalhar offline normalmente.
               </p>
@@ -730,7 +716,7 @@ const Documentacao = () => {
               </h4>
               <p className="text-sm text-muted-foreground">
                 Não há limite! O sistema processa quantas linhas sua planilha tiver. Se você
-                tem 100, 1.000 ou 10.000 registros, o PDF Generator irá gerar todos os
+                tem 100, 1.000 ou 10.000 registros, o Capidoc irá gerar todos os
                 documentos automaticamente.
               </p>
             </CardContent>
@@ -756,15 +742,14 @@ const Documentacao = () => {
               </h4>
               <p className="text-sm text-muted-foreground mb-4">
                 Após adquirir seu plano, você receberá uma chave de licença por email. Na
-                primeira vez que abrir o PDF Generator, ele solicitará esta chave. Insira-a
+                primeira vez que abrir o Capidoc, ele solicitará esta chave. Insira-a
                 e clique em "Ativar". A licença ficará vinculada ao seu computador.
               </p>
-              {/* Screenshot do dialog de ativação */}
-              <div className="rounded-lg border border-border overflow-hidden">
+              <div className="mt-4">
                 <img
-                  src="/screenshots/ativacao-licenca.png"
-                  alt="Dialog de ativação de licença do PDF Generator"
-                  className="w-full h-auto object-cover"
+                  src="/prints/license.png"
+                  alt="Dialog de ativação de licença do Capidoc"
+                  className="border rounded-lg"
                 />
               </div>
             </CardContent>
@@ -777,9 +762,9 @@ const Documentacao = () => {
               </h4>
               <p className="text-sm text-muted-foreground">
                 Cada licença é vinculada a um computador específico. Se você precisa usar
-                em múltiplos computadores, você pode adquirir licenças adicionais ou usar
-                a função de desvincular dispositivo no painel de assinaturas para transferir
-                a licença.
+                em múltiplos computadores, você pode adquirir licenças adicionais, usar
+                a função de desvincular dispositivo no painel de assinaturas ou entrar em contato
+                com o suporte.
               </p>
             </CardContent>
           </Card>
@@ -790,7 +775,7 @@ const Documentacao = () => {
                 Meus dados ficam seguros?
               </h4>
               <p className="text-sm text-muted-foreground">
-                Sim! O PDF Generator processa tudo localmente no seu computador. Suas planilhas,
+                Sim! O Capidoc processa tudo localmente no seu computador. Suas planilhas,
                 PDFs e documentos gerados nunca saem da sua máquina. Apenas a validação da
                 licença é feita online.
               </p>
@@ -831,7 +816,7 @@ const Documentacao = () => {
       <div className="mb-8 px-4 lg:px-0">
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Documentação</h1>
         <p className="text-sm sm:text-base text-muted-foreground">
-          Aprenda a usar o PDF Generator e automatize a criação dos seus documentos.
+          Aprenda a usar o Capidoc e automatize a criação dos seus documentos.
         </p>
       </div>
 

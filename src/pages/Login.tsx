@@ -174,8 +174,8 @@ const Login = () => {
         <CardHeader className="text-center">
             <div className="mx-auto my-2">
               <img
-                src="/imgs/pdf_generator.png"
-                alt="PDF Generator Logo"
+                src="/imgs/capidoc.png"
+                alt="Capidoc Logo"
                 className="h-12 w-12"
               />
             </div>

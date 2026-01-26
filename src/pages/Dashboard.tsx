@@ -190,7 +190,7 @@ const Dashboard = () => {
         <Link to="/dashboard/downloads">
           <Button className="gap-2">
             <TrendingUp className="h-4 w-4" />
-            Baixar PDF Generator
+            Baixar Capidoc
           </Button>
         </Link>
       </div>

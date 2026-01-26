@@ -15,6 +15,6 @@ export const CONTACT = {
 // Informações da Empresa
 export const COMPANY = {
   name: 'PeroteDev',
-  fullName: 'PDF Generator Hub',
+  fullName: 'Capidoc',
   description: 'Plataforma completa para geração profissional de PDFs',
 } as const;

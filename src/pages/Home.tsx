@@ -413,7 +413,7 @@ const Home = () => {
               O que nossos clientes dizem
             </h2>
             <p className="text-muted-foreground">
-              Milhares de empresas confiam no PDF Generator para suas
+              Milhares de empresas confiam no Capidoc para suas
               necessidades de documentação.
             </p>
           </div>
