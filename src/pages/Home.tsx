@@ -195,7 +195,7 @@ const Home = () => {
       </section>
 
       {/* Sistema em Ação - Fluxo Interativo */}
-      <section className="py-20 bg-muted/30 overflow-hidden">
+      <section className="py-20 bg-gray/40 overflow-hidden">
         <div className="container">
           <div className="mx-auto mb-12 max-w-2xl text-center">
             <h2 className="mb-4 text-3xl font-bold text-foreground">
@@ -449,7 +449,7 @@ const Home = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-primary">
+      <section className="py-20 bg-primary/80">
         <div className="container">
           <div className="mx-auto max-w-2xl text-center">
             <h2 className="mb-4 text-3xl font-bold text-primary-foreground">
