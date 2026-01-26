@@ -192,7 +192,7 @@ const Registro = () => {
       <Card className="w-full max-w-md border-border">
         <CardHeader className="text-center">
             <div className="mx-auto my-2">
-              <CapidocLogo variant="icon" linkTo={null} />
+              <CapidocLogo variant="full" linkTo={null} />
             </div>
           <CardTitle className="text-2xl">Criar sua conta</CardTitle>
         </CardHeader>
