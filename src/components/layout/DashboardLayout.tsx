@@ -154,7 +154,7 @@ const DashboardLayout = () => {
         }`}
       >
         <div className="flex h-16 items-center justify-between border-b border-border px-6">
-          <CapidocLogo variant="sidebar" size="sm" linkTo={null} />
+          <CapidocLogo variant="full" size="sm" linkTo={null} />
           <button onClick={() => setSidebarOpen(false)}>
             <X className="h-6 w-6" />
           </button>
