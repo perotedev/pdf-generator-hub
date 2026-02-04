@@ -44,7 +44,7 @@ import {
   Trash2,
   Laptop,
   CheckCircle,
-  XCircle,
+  Circle,
   RefreshCw,
   Shield,
   FileText,
@@ -57,6 +57,7 @@ import {
   Mail,
   Calendar,
   DollarSign,
+  Copy,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
@@ -390,6 +391,21 @@ export default function AdminContracts() {
     }).format(value);
   };
 
+  const maskLicenseCode = (code: string) => {
+    const parts = code.split('-');
+    if (parts.length >= 5) {
+      return `${parts[0]}-${parts[1]}-****-****-${parts[4]}`;
+    }
+    return code;
+  };
+
+  const copyLicenseCode = (code: string) => {
+    navigator.clipboard.writeText(code);
+    toast.success('Código copiado!', {
+      description: 'O código da licença foi copiado para a área de transferência.',
+    });
+  };
+
   if (!canManage) {
     return (
       <Card className="border-border">
@@ -521,7 +537,7 @@ export default function AdminContracts() {
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-chart-2/10">
-                  <XCircle className="h-5 w-5 text-chart-2" />
+                  <Circle className="h-5 w-5 text-chart-2" />
                 </div>
                 <div>
                   <p className="text-2xl font-bold">
@@ -587,7 +603,18 @@ export default function AdminContracts() {
                   contractLicenses.map((license) => (
                     <TableRow key={license.id}>
                       <TableCell>
-                        <code className="text-xs font-mono">{license.code}</code>
+                        <div className="flex items-center gap-2">
+                          <code className="text-xs font-mono">{maskLicenseCode(license.code)}</code>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0"
+                            onClick={() => copyLicenseCode(license.code)}
+                            title="Copiar código"
+                          >
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                        </div>
                         <div className="flex gap-2 mt-2">
                           <Badge variant={license.is_used ? 'default' : 'secondary'}>
                             {license.is_used ? 'Ativa' : 'Disponível'}

@@ -24,17 +24,12 @@ import {
   Key,
   Laptop,
   CheckCircle,
-  XCircle,
+  Circle,
   RefreshCw,
   FileText,
   ChevronLeft,
-  Building2,
-  User,
-  Phone,
-  Mail,
-  Calendar,
-  DollarSign,
   Edit2,
+  Copy,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
@@ -177,11 +172,19 @@ export default function MeusContratos() {
     return new Date(dateString).toLocaleDateString('pt-BR');
   };
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(value);
+  const maskLicenseCode = (code: string) => {
+    const parts = code.split('-');
+    if (parts.length >= 5) {
+      return `${parts[0]}-${parts[1]}-****-****-${parts[4]}`;
+    }
+    return code;
+  };
+
+  const copyLicenseCode = (code: string) => {
+    navigator.clipboard.writeText(code);
+    toast.success('Código copiado!', {
+      description: 'O código da licença foi copiado para a área de transferência.',
+    });
   };
 
   if (loading) {
@@ -212,61 +215,8 @@ export default function MeusContratos() {
           </div>
         </div>
 
-        {/* Detalhes do Contrato */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Detalhes do Contrato</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              <div className="flex items-center gap-2">
-                <Building2 className="h-4 w-4 text-muted-foreground" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Empresa</p>
-                  <p className="font-medium">{selectedContract.company_name}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <User className="h-4 w-4 text-muted-foreground" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Representante</p>
-                  <p className="font-medium">{selectedContract.representative_name}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Mail className="h-4 w-4 text-muted-foreground" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Email</p>
-                  <p className="font-medium">{selectedContract.email}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Phone className="h-4 w-4 text-muted-foreground" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Telefone</p>
-                  <p className="font-medium">{selectedContract.phone}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Valor</p>
-                  <p className="font-medium">{formatCurrency(selectedContract.value)}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Data de Criacao</p>
-                  <p className="font-medium">{formatDate(selectedContract.created_at)}</p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Stats das Licencas */}
-        <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+        <div className="grid gap-4 grid-cols-3">
           <Card>
             <CardContent className="p-4 md:p-6">
               <div className="flex items-center gap-3 md:gap-4">
@@ -301,29 +251,13 @@ export default function MeusContratos() {
             <CardContent className="p-4 md:p-6">
               <div className="flex items-center gap-3 md:gap-4">
                 <div className="flex h-8 w-8 md:h-10 md:w-10 items-center justify-center rounded-lg bg-chart-2/10">
-                  <XCircle className="h-4 w-4 md:h-5 md:w-5 text-chart-2" />
+                  <Circle className="h-4 w-4 md:h-5 md:w-5 text-chart-2" />
                 </div>
                 <div>
                   <p className="text-xl md:text-2xl font-bold">
                     {contractLicenses.filter(l => !l.is_used).length}
                   </p>
                   <p className="text-xs md:text-sm text-muted-foreground">Disponiveis</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="col-span-2 md:col-span-1">
-            <CardContent className="p-4 md:p-6">
-              <div className="flex items-center gap-3 md:gap-4">
-                <div className="flex h-8 w-8 md:h-10 md:w-10 items-center justify-center rounded-lg bg-chart-3/10">
-                  <CheckCircle className="h-4 w-4 md:h-5 md:w-5 text-chart-3" />
-                </div>
-                <div>
-                  <p className="text-xl md:text-2xl font-bold">
-                    {contractLicenses.filter(l => l.sold).length}
-                  </p>
-                  <p className="text-xs md:text-sm text-muted-foreground">Vendidas</p>
                 </div>
               </div>
             </CardContent>
@@ -367,7 +301,18 @@ export default function MeusContratos() {
                   contractLicenses.map((license) => (
                     <TableRow key={license.id}>
                       <TableCell>
-                        <code className="text-xs font-mono">{license.code}</code>
+                        <div className="flex items-center gap-2">
+                          <code className="text-xs font-mono">{maskLicenseCode(license.code)}</code>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0"
+                            onClick={() => copyLicenseCode(license.code)}
+                            title="Copiar código"
+                          >
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                        </div>
                       </TableCell>
                       <TableCell>{license.client || '-'}</TableCell>
                       <TableCell className="text-center">
@@ -446,9 +391,20 @@ export default function MeusContratos() {
               <Card key={license.id}>
                 <CardContent className="p-4">
                   <div className="flex justify-between items-start mb-3">
-                    <code className="text-xs font-mono bg-muted px-2 py-1 rounded">
-                      {license.code}
-                    </code>
+                    <div className="flex items-center gap-2">
+                      <code className="text-xs font-mono bg-muted px-2 py-1 rounded">
+                        {maskLicenseCode(license.code)}
+                      </code>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0"
+                        onClick={() => copyLicenseCode(license.code)}
+                        title="Copiar código"
+                      >
+                        <Copy className="h-3 w-3" />
+                      </Button>
+                    </div>
                     <Badge variant={license.is_used ? 'default' : 'secondary'}>
                       {license.is_used ? 'Ativa' : 'Disponivel'}
                     </Badge>
@@ -587,7 +543,6 @@ export default function MeusContratos() {
                 <TableRow>
                   <TableHead>Numero</TableHead>
                   <TableHead>Empresa</TableHead>
-                  <TableHead>Valor</TableHead>
                   <TableHead>Data</TableHead>
                   <TableHead className="text-right">Acoes</TableHead>
                 </TableRow>
@@ -599,7 +554,6 @@ export default function MeusContratos() {
                       <code className="text-sm font-mono">{contract.contract_number}</code>
                     </TableCell>
                     <TableCell className="font-medium">{contract.company_name}</TableCell>
-                    <TableCell>{formatCurrency(contract.value)}</TableCell>
                     <TableCell className="text-sm">{formatDate(contract.created_at)}</TableCell>
                     <TableCell className="text-right">
                       <Button
@@ -630,10 +584,6 @@ export default function MeusContratos() {
                   <h3 className="font-semibold mb-2">{contract.company_name}</h3>
 
                   <div className="space-y-1 text-sm mb-4">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Valor:</span>
-                      <span className="font-medium">{formatCurrency(contract.value)}</span>
-                    </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Data:</span>
                       <span className="font-medium">{formatDate(contract.created_at)}</span>

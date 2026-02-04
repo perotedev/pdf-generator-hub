@@ -30,7 +30,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Search, Key, Plus, Edit2, Trash2, Laptop, CheckCircle, XCircle, RefreshCw, Shield } from 'lucide-react';
+import { Search, Key, Plus, Edit2, Trash2, Laptop, CheckCircle, Circle, RefreshCw, Shield, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase, licenseApi, type License } from '@/lib/supabase';
@@ -268,6 +268,21 @@ export default function AdminLicenses() {
     return new Date(dateString).toLocaleDateString('pt-BR');
   };
 
+  const maskLicenseCode = (code: string) => {
+    const parts = code.split('-');
+    if (parts.length >= 5) {
+      return `${parts[0]}-${parts[1]}-****-****-${parts[4]}`;
+    }
+    return code;
+  };
+
+  const copyLicenseCode = (code: string) => {
+    navigator.clipboard.writeText(code);
+    toast.success('Código copiado!', {
+      description: 'O código da licença foi copiado para a área de transferência.',
+    });
+  };
+
   if (!isAdmin) {
     return (
       <Card className="border-border">
@@ -344,7 +359,7 @@ export default function AdminLicenses() {
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-chart-2/10">
-                <XCircle className="h-5 w-5 text-chart-2" />
+                <Circle className="h-5 w-5 text-chart-2" />
               </div>
               <div>
                 <p className="text-2xl font-bold">
@@ -419,7 +434,18 @@ export default function AdminLicenses() {
               filteredLicenses.map((license) => (
                 <TableRow key={license.id}>
                   <TableCell>
-                    <code className="text-xs font-mono">{license.code}</code>
+                    <div className="flex items-center gap-2">
+                      <code className="text-xs font-mono">{maskLicenseCode(license.code)}</code>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0"
+                        onClick={() => copyLicenseCode(license.code)}
+                        title="Copiar código"
+                      >
+                        <Copy className="h-3 w-3" />
+                      </Button>
+                    </div>
                     <div className="flex gap-2 mt-2">
                       <Badge variant={license.is_used ? 'default' : 'secondary'}>
                         {license.is_used ? 'Ativa' : 'Disponível'}
