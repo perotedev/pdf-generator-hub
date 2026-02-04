@@ -25,6 +25,7 @@ interface AuthContextType {
   canManageUsers: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  logoutWithRedirect: () => void;
   updateUser: (user: User) => void;
   setUserDirectly: (user: User, session?: { access_token: string; refresh_token: string; expires_at: number }) => void;
   getAccessToken: () => string | null;
@@ -70,6 +71,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Função para limpar sessão e redirecionar
+  const clearSessionAndRedirect = useCallback(() => {
+    setUser(null);
+    clearStoredSession();
+    localStorage.removeItem('user');
+    localStorage.removeItem('capidoc-auth');
+    sessionStorage.removeItem('pendingCheckoutPlan');
+    sessionStorage.removeItem('authRedirectUrl');
+    // Redirecionar para login
+    window.location.href = '/login';
+  }, []);
+
   // Inicializar a partir do localStorage
   useEffect(() => {
     const initAuth = () => {
@@ -82,6 +95,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     initAuth();
   }, []);
+
+  // Verificar periodicamente se a sessão expirou (a cada 30 segundos)
+  useEffect(() => {
+    const checkSessionExpiry = () => {
+      const stored = localStorage.getItem(AUTH_STORAGE_KEY);
+      if (!stored) return;
+
+      try {
+        const session: AuthSession = JSON.parse(stored);
+        const now = Math.floor(Date.now() / 1000);
+
+        // Se o token expirou, fazer logout e redirecionar
+        if (session.expires_at && session.expires_at < now) {
+          clearSessionAndRedirect();
+        }
+      } catch {
+        // Sessão inválida, limpar
+        clearSessionAndRedirect();
+      }
+    };
+
+    // Verificar a cada 30 segundos
+    const interval = setInterval(checkSessionExpiry, 30000);
+
+    // Também verificar quando a janela ganha foco (caso o usuário tenha deixado a aba aberta)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        checkSessionExpiry();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [clearSessionAndRedirect]);
 
   // Função para obter o access token atual
   const getAccessToken = useCallback((): string | null => {
@@ -126,6 +177,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     sessionStorage.removeItem('authRedirectUrl');
   }, []);
 
+  // Logout com redirecionamento para a página de login
+  const logoutWithRedirect = useCallback(() => {
+    clearSessionAndRedirect();
+  }, [clearSessionAndRedirect]);
+
   const updateUser = useCallback((updatedUser: User) => {
     setUser(updatedUser);
 
@@ -145,6 +201,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     canManageUsers: user?.role === 'ADMIN' || user?.role === 'MANAGER',
     login,
     logout,
+    logoutWithRedirect,
     updateUser,
     setUserDirectly,
     getAccessToken,

@@ -14,6 +14,7 @@ import {
   Key,
   PackageOpen,
   TextQuote,
+  FileText,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -77,11 +78,13 @@ const DashboardLayout = () => {
   const allNavLinks = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, requiresPermission: false },
     { href: "/dashboard/assinaturas", label: "Minhas Assinaturas", icon: CreditCard, requiresPermission: false },
+    { href: "/dashboard/contratos", label: "Meus Contratos", icon: FileText, requiresPermission: false },
     { href: "/dashboard/pagamentos", label: "Pagamentos", icon: Receipt, requiresPermission: false },
     { href: "/dashboard/downloads", label: "Downloads", icon: Download, requiresPermission: false },
     { href: "/dashboard/admin", label: "Configurações", icon: Settings, requiresAdmin: true },
     { href: "/dashboard/admin/usuarios", label: "Gerenciar Usuários", icon: Users, requiresManager: true },
     { href: "/dashboard/admin/licencas", label: "Licenças Standalone", icon: Key, requiresAdmin: true },
+    { href: "/dashboard/admin/contratos", label: "Gerenciar Contratos", icon: FileText, requiresManager: true },
     { href: "/dashboard/admin/orcamentos", label: "Orçamentos", icon: TextQuote, requiresAdmin: true },
     { href: "/dashboard/admin/versoes", label: "Versões do Sistema", icon: PackageOpen, requiresAdmin: true },
   ];

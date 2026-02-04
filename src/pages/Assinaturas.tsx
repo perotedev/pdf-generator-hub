@@ -48,7 +48,7 @@ const Assinaturas = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { toast } = useToast();
-  const { user, getAccessToken } = useAuth();
+  const { user, getAccessToken, logoutWithRedirect } = useAuth();
   const [subscriptions, setSubscriptions] = useState<SubscriptionWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [cancelDialogOpen, setCancelDialogOpen] = useState<string | null>(null);
@@ -92,6 +92,7 @@ const Assinaturas = () => {
           description: "Por favor, faça login novamente.",
           variant: "destructive",
         });
+        logoutWithRedirect();
         return;
       }
 
@@ -151,6 +152,7 @@ const Assinaturas = () => {
           description: "Por favor, faça login novamente.",
           variant: "destructive",
         });
+        logoutWithRedirect();
         return;
       }
 
@@ -185,6 +187,7 @@ const Assinaturas = () => {
           description: "Por favor, faça login novamente.",
           variant: "destructive",
         });
+        logoutWithRedirect();
         return;
       }
 
@@ -218,6 +221,7 @@ const Assinaturas = () => {
           description: "Por favor, faça login novamente.",
           variant: "destructive",
         });
+        logoutWithRedirect();
         return;
       }
 
@@ -252,6 +256,7 @@ const Assinaturas = () => {
           description: "Por favor, faça login novamente.",
           variant: "destructive",
         });
+        logoutWithRedirect();
         return;
       }
 

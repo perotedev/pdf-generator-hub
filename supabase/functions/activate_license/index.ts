@@ -18,7 +18,7 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { code, type, device_id } = await req.json()
+    const { code, type, device_id, client } = await req.json()
 
     if (!code || !type || !device_id) {
       return new Response(
@@ -30,6 +30,7 @@ serve(async (req) => {
     const licenseCode = code.trim().toUpperCase()
     const deviceId = device_id.trim()
     const deviceType = type.trim().toLowerCase()
+    const clientName = client ? client.trim() : null
 
     // 1. Validate license code format (5 groups of 5 characters, separated by hyphens)
     const parts = licenseCode.split('-')
@@ -92,15 +93,22 @@ serve(async (req) => {
     }
 
     // 6. Activate the license
+    const updateData: Record<string, any> = {
+      is_used: true,
+      device_id: deviceId,
+      device_type: deviceType,
+      expire_date: expireDate,
+      activated_at: new Date().toISOString()
+    }
+
+    // Add client if provided
+    if (clientName) {
+      updateData.client = clientName
+    }
+
     const { data: updatedDoc, error: updateError } = await supabaseClient
       .from('licenses')
-      .update({
-        is_used: true,
-        device_id: deviceId,
-        device_type: deviceType,
-        expire_date: expireDate,
-        activated_at: new Date().toISOString()
-      })
+      .update(updateData)
       .eq('code', licenseCode)
       .eq('is_used', false)
       .select()

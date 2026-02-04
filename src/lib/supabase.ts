@@ -138,6 +138,24 @@ export interface License {
   plan_type: string | null
   is_standalone: boolean
   updated_at: string
+  contract_id: string | null
+}
+
+export interface Contract {
+  id: string
+  contract_number: string
+  company_name: string
+  representative_name: string
+  email: string
+  phone: string
+  value: number
+  quote_id: string | null
+  created_at: string
+  updated_at: string
+  enterprise_quotes?: {
+    company_name: string
+    contact_name: string
+  } | null
 }
 
 // Funções auxiliares para autenticação
@@ -438,6 +456,248 @@ export const licenseApi = {
         error = { error: errorText || `HTTP ${response.status}` }
       }
       throw new Error(error.error || error.message || 'Failed to delete license')
+    }
+
+    return response.json()
+  },
+}
+
+// Funções para gerenciamento de contratos
+export const contractApi = {
+  async getContracts(token: string) {
+    const response = await fetch(`${supabaseUrl}/functions/v1/contract-management`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'apikey': supabaseAnonKey,
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      let error
+      try {
+        error = JSON.parse(errorText)
+      } catch {
+        error = { error: errorText || `HTTP ${response.status}` }
+      }
+      throw new Error(error.error || error.message || 'Failed to fetch contracts')
+    }
+
+    return response.json()
+  },
+
+  async getContract(token: string, contractId: string) {
+    const response = await fetch(`${supabaseUrl}/functions/v1/contract-management?action=get&contractId=${contractId}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'apikey': supabaseAnonKey,
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      let error
+      try {
+        error = JSON.parse(errorText)
+      } catch {
+        error = { error: errorText || `HTTP ${response.status}` }
+      }
+      throw new Error(error.error || error.message || 'Failed to fetch contract')
+    }
+
+    return response.json()
+  },
+
+  async getContractLicenses(token: string, contractId: string) {
+    const response = await fetch(`${supabaseUrl}/functions/v1/contract-management?action=licenses&contractId=${contractId}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'apikey': supabaseAnonKey,
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      let error
+      try {
+        error = JSON.parse(errorText)
+      } catch {
+        error = { error: errorText || `HTTP ${response.status}` }
+      }
+      throw new Error(error.error || error.message || 'Failed to fetch contract licenses')
+    }
+
+    return response.json()
+  },
+
+  async createContract(token: string, data: {
+    company_name: string
+    representative_name: string
+    email: string
+    phone: string
+    value: number
+    quote_id?: string
+    license_quantity: number
+    plan_type?: string
+    expire_days?: number
+  }) {
+    const response = await fetch(`${supabaseUrl}/functions/v1/contract-management?action=create`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'apikey': supabaseAnonKey,
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      let error
+      try {
+        error = JSON.parse(errorText)
+      } catch {
+        error = { error: errorText || `HTTP ${response.status}` }
+      }
+      throw new Error(error.error || error.message || 'Failed to create contract')
+    }
+
+    return response.json()
+  },
+
+  async updateContract(token: string, contractId: string, data: Partial<Contract>) {
+    const response = await fetch(`${supabaseUrl}/functions/v1/contract-management?contractId=${contractId}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'apikey': supabaseAnonKey,
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      let error
+      try {
+        error = JSON.parse(errorText)
+      } catch {
+        error = { error: errorText || `HTTP ${response.status}` }
+      }
+      throw new Error(error.error || error.message || 'Failed to update contract')
+    }
+
+    return response.json()
+  },
+
+  async updateLicense(token: string, licenseId: string, data: { client?: string }) {
+    const response = await fetch(`${supabaseUrl}/functions/v1/contract-management?action=update-license&licenseId=${licenseId}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'apikey': supabaseAnonKey,
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      let error
+      try {
+        error = JSON.parse(errorText)
+      } catch {
+        error = { error: errorText || `HTTP ${response.status}` }
+      }
+      throw new Error(error.error || error.message || 'Failed to update license')
+    }
+
+    return response.json()
+  },
+
+  async adminUpdateLicense(token: string, licenseId: string, data: Partial<License>) {
+    const response = await fetch(`${supabaseUrl}/functions/v1/contract-management?action=admin-update-license&licenseId=${licenseId}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'apikey': supabaseAnonKey,
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      let error
+      try {
+        error = JSON.parse(errorText)
+      } catch {
+        error = { error: errorText || `HTTP ${response.status}` }
+      }
+      throw new Error(error.error || error.message || 'Failed to update license')
+    }
+
+    return response.json()
+  },
+
+  async unbindDevice(token: string, licenseId: string) {
+    const response = await fetch(`${supabaseUrl}/functions/v1/contract-management?action=unbind&licenseId=${licenseId}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'apikey': supabaseAnonKey,
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      let error
+      try {
+        error = JSON.parse(errorText)
+      } catch {
+        error = { error: errorText || `HTTP ${response.status}` }
+      }
+      throw new Error(error.error || error.message || 'Failed to unbind device')
+    }
+
+    return response.json()
+  },
+
+  async deleteContract(token: string, contractId: string) {
+    const response = await fetch(`${supabaseUrl}/functions/v1/contract-management?contractId=${contractId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'apikey': supabaseAnonKey,
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      let error
+      try {
+        error = JSON.parse(errorText)
+      } catch {
+        error = { error: errorText || `HTTP ${response.status}` }
+      }
+      throw new Error(error.error || error.message || 'Failed to delete contract')
     }
 
     return response.json()

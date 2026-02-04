@@ -36,7 +36,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase, licenseApi, type License } from '@/lib/supabase';
 
 export default function AdminLicenses() {
-  const { isAdmin, getAccessToken } = useAuth();
+  const { isAdmin, getAccessToken, logoutWithRedirect } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [licenses, setLicenses] = useState<License[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,6 +68,7 @@ export default function AdminLicenses() {
         toast.error('Sessão expirada', {
           description: 'Por favor, faça login novamente.',
         });
+        logoutWithRedirect();
         return;
       }
 
@@ -117,7 +118,10 @@ export default function AdminLicenses() {
       const token = getAccessToken();
 
       if (!token) {
-        toast.error('Sessão expirada');
+        toast.error('Sessão expirada', {
+          description: 'Por favor, faça login novamente.',
+        });
+        logoutWithRedirect();
         return;
       }
 
@@ -166,7 +170,10 @@ export default function AdminLicenses() {
       const token = getAccessToken();
 
       if (!token) {
-        toast.error('Sessão expirada');
+        toast.error('Sessão expirada', {
+          description: 'Por favor, faça login novamente.',
+        });
+        logoutWithRedirect();
         return;
       }
 
@@ -202,7 +209,10 @@ export default function AdminLicenses() {
       const token = getAccessToken();
 
       if (!token) {
-        toast.error('Sessão expirada');
+        toast.error('Sessão expirada', {
+          description: 'Por favor, faça login novamente.',
+        });
+        logoutWithRedirect();
         return;
       }
 
@@ -230,16 +240,14 @@ export default function AdminLicenses() {
       const token = getAccessToken();
 
       if (!token) {
-        toast.error('Sessão expirada');
+        toast.error('Sessão expirada', {
+          description: 'Por favor, faça login novamente.',
+        });
+        logoutWithRedirect();
         return;
       }
 
-      await licenseApi.updateLicense(token, license.id, {
-        is_used: false,
-        device_id: null,
-        device_type: null,
-        activated_at: null,
-      });
+      await licenseApi.unbindDevice(token, license.id);
 
       await fetchLicenses();
 

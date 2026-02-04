@@ -95,7 +95,8 @@ serve(async (req) => {
             { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
           )
         }
-        query = query.eq('is_standalone', true)
+        // Filtrar licenças standalone que NÃO pertencem a um contrato
+        query = query.eq('is_standalone', true).is('contract_id', null)
       } else {
         query = query.eq('user_id', currentUserId)
       }

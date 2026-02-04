@@ -28,6 +28,8 @@ import RecuperarSenha from "./pages/RecuperarSenha";
 import Checkout from "./pages/Checkout";
 import OrcamentoEnterprise from "./pages/OrcamentoEnterprise";
 import AdminEnterpriseQuotes from "./pages/AdminEnterpriseQuotes";
+import AdminContracts from "./pages/AdminContracts";
+import MeusContratos from "./pages/MeusContratos";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -73,6 +75,7 @@ const App = () => (
               <Route path="assinaturas/mudar-plano" element={<MudarPlano />} />
               <Route path="pagamentos" element={<HistoricoPagamentos />} />
               <Route path="downloads" element={<Downloads />} />
+              <Route path="contratos" element={<MeusContratos />} />
               <Route
                 path="admin"
                 element={
@@ -110,6 +113,14 @@ const App = () => (
                 element={
                   <ProtectedRoute requireAdmin>
                     <AdminEnterpriseQuotes />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="admin/contratos"
+                element={
+                  <ProtectedRoute requireManager>
+                    <AdminContracts />
                   </ProtectedRoute>
                 }
               />
