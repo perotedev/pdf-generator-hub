@@ -472,7 +472,9 @@ async function handleSubscriptionDeleted(supabase, subscription) {
     if (existingSub.users?.email) {
       try {
         const formatDate = (dateString: string) => {
-          return new Date(dateString).toLocaleDateString('pt-BR')
+          return new Date(dateString).toLocaleDateString('pt-BR', {
+            timeZone: 'America/Sao_Paulo',
+          })
         }
 
         await sendTransactionalEmail('SUBSCRIPTION_CANCELED', existingSub.users.email, {
@@ -690,7 +692,9 @@ async function handleInvoicePaid(supabase, invoice) {
         }
 
         const formatDate = (dateString: string) => {
-          return new Date(dateString).toLocaleDateString('pt-BR')
+          return new Date(dateString).toLocaleDateString('pt-BR', {
+            timeZone: 'America/Sao_Paulo',
+          })
         }
 
         await sendTransactionalEmail('PURCHASE_CONFIRMATION', userData.email, {
