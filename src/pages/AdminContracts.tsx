@@ -1029,13 +1029,20 @@ export default function AdminContracts() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="plan_type">Tipo de Plano</Label>
-                  <Input
-                    id="plan_type"
-                    placeholder="Ex: Profissional"
+                  <Label>Tipo de Plano</Label>
+                  <Select
                     value={newContract.plan_type}
-                    onChange={(e) => setNewContract({ ...newContract, plan_type: e.target.value })}
-                  />
+                    onValueChange={(value) => setNewContract({ ...newContract, plan_type: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="MONTHLY">Mensal</SelectItem>
+                      <SelectItem value="YEARLY">Anual</SelectItem>
+                      <SelectItem value="CUSTOM">Personalizado</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="expire_days">Validade (dias)</Label>
