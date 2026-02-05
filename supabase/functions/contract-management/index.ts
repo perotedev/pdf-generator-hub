@@ -384,7 +384,7 @@ serve(async (req) => {
       // Buscar a licença para verificar se pertence a um contrato
       const { data: license } = await supabase
         .from('licenses')
-        .select('contract_id, contracts(email)')
+        .select('contract_id, device_type, device_id, contracts(email, representative_name)')
         .eq('id', licenseId)
         .single()
 
@@ -465,7 +465,7 @@ serve(async (req) => {
       // Buscar a licença para verificar se pertence a um contrato
       const { data: license } = await supabase
         .from('licenses')
-        .select('contract_id, contracts(email)')
+        .select('contract_id, device_type, device_id, contracts(email, representative_name)')
         .eq('id', licenseId)
         .single()
 
@@ -506,6 +506,42 @@ serve(async (req) => {
         .single()
 
       if (error) throw error
+
+      // Enviar email de notificacao de desvinculacao para o email do contrato
+      if (license?.contracts?.email) {
+        try {
+          const supabaseUrl = Deno.env.get('SUPABASE_URL')
+          const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+          const deviceName = license.device_type || 'Dispositivo'
+          const recipientName = license.contracts.representative_name || license.contracts.email
+
+          await fetch(`${supabaseUrl}/functions/v1/send-transactional-email`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${supabaseServiceKey}`,
+            },
+            body: JSON.stringify({
+              type: 'DEVICE_UNLINKED',
+              to: license.contracts.email,
+              data: {
+                name: recipientName,
+                deviceName: deviceName,
+                unlinkedAt: new Date().toLocaleDateString('pt-BR', {
+                  day: '2-digit',
+                  month: '2-digit',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                }),
+              },
+            }),
+          })
+        } catch (emailError) {
+          console.error('Error sending contract device unlinked email:', emailError)
+          // Nao falhar por causa do email
+        }
+      }
 
       return new Response(
         JSON.stringify({ license: updatedLicense, message: 'Device unbound successfully' }),
