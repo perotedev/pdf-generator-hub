@@ -89,6 +89,9 @@ export default function AdminContracts() {
   const [unbindingDevice, setUnbindingDevice] = useState<string | null>(null);
   const [editingLicense, setEditingLicense] = useState<License | null>(null);
   const [savingLicense, setSavingLicense] = useState(false);
+  const [bulkExpireDialogOpen, setBulkExpireDialogOpen] = useState(false);
+  const [bulkExpireDate, setBulkExpireDate] = useState('');
+  const [savingBulkExpire, setSavingBulkExpire] = useState(false);
 
   const [newContract, setNewContract] = useState({
     company_name: '',
@@ -363,6 +366,43 @@ export default function AdminContracts() {
     }
   };
 
+  const handleBulkUpdateExpire = async () => {
+    if (!selectedContract) return;
+
+    try {
+      setSavingBulkExpire(true);
+      const token = getAccessToken();
+      if (!token) {
+        toast.error('Sessão expirada', {
+          description: 'Por favor, faça login novamente.',
+        });
+        logoutWithRedirect();
+        return;
+      }
+
+      await contractApi.bulkUpdateContractLicensesExpire(
+        token,
+        selectedContract.id,
+        bulkExpireDate
+      );
+
+      await fetchContractLicenses(selectedContract.id);
+
+      toast.success('Validade atualizada!', {
+        description: 'Todas as licenças do contrato foram atualizadas.',
+      });
+
+      setBulkExpireDialogOpen(false);
+      setBulkExpireDate('');
+    } catch (error: any) {
+      toast.error('Erro ao atualizar validade', {
+        description: error.message || 'Tente novamente.',
+      });
+    } finally {
+      setSavingBulkExpire(false);
+    }
+  };
+
   const handleQuoteSelect = (quoteId: string) => {
     const quote = quotes.find(q => q.id === quoteId);
     if (quote) {
@@ -579,8 +619,15 @@ export default function AdminContracts() {
 
         {/* Tabela de Licenças */}
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Licenças do Contrato</CardTitle>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setBulkExpireDialogOpen(true)}
+            >
+              Alterar validade
+            </Button>
           </CardHeader>
           {loadingLicenses ? (
             <CardContent>
@@ -713,39 +760,6 @@ export default function AdminContracts() {
                     placeholder="Nome para identificar a licença"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-plan">Tipo de Plano</Label>
-                  <Input
-                    id="edit-plan"
-                    value={editingLicense.plan_type || ''}
-                    onChange={(e) =>
-                      setEditingLicense({ ...editingLicense, plan_type: e.target.value })
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-expire">Data de Validade</Label>
-                  <Input
-                    id="edit-expire"
-                    type="date"
-                    value={editingLicense.expire_date?.split('T')[0] || ''}
-                    onChange={(e) =>
-                      setEditingLicense({ ...editingLicense, expire_date: e.target.value })
-                    }
-                  />
-                </div>
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="edit-sold"
-                    checked={editingLicense.sold}
-                    onChange={(e) =>
-                      setEditingLicense({ ...editingLicense, sold: e.target.checked })
-                    }
-                    className="rounded border-gray-300"
-                  />
-                  <Label htmlFor="edit-sold">Marcar como vendida</Label>
-                </div>
               </div>
             )}
             <DialogFooter>
@@ -760,6 +774,50 @@ export default function AdminContracts() {
                   </>
                 ) : (
                   'Salvar Alterações'
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={bulkExpireDialogOpen} onOpenChange={setBulkExpireDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Alterar validade das licenças</DialogTitle>
+              <DialogDescription>
+                Defina a nova data de validade para todas as licenças deste contrato.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="bulk-expire-date">Data de validade</Label>
+                <Input
+                  id="bulk-expire-date"
+                  type="date"
+                  value={bulkExpireDate}
+                  onChange={(e) => setBulkExpireDate(e.target.value)}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setBulkExpireDialogOpen(false)}
+                disabled={savingBulkExpire}
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleBulkUpdateExpire}
+                disabled={!bulkExpireDate || savingBulkExpire}
+              >
+                {savingBulkExpire ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    Salvando...
+                  </>
+                ) : (
+                  'Atualizar validade'
                 )}
               </Button>
             </DialogFooter>

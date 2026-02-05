@@ -653,6 +653,32 @@ export const contractApi = {
     return response.json()
   },
 
+  async bulkUpdateContractLicensesExpire(token: string, contractId: string, expire_date: string) {
+    const response = await fetch(`${supabaseUrl}/functions/v1/contract-management?action=bulk-update-expire&contractId=${contractId}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'apikey': supabaseAnonKey,
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ expire_date }),
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      let error
+      try {
+        error = JSON.parse(errorText)
+      } catch {
+        error = { error: errorText || `HTTP ${response.status}` }
+      }
+      throw new Error(error.error || error.message || 'Failed to update contract licenses expiration')
+    }
+
+    return response.json()
+  },
+
   async unbindDevice(token: string, licenseId: string) {
     const response = await fetch(`${supabaseUrl}/functions/v1/contract-management?action=unbind&licenseId=${licenseId}`, {
       method: 'POST',

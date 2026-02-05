@@ -488,6 +488,41 @@ serve(async (req) => {
       )
     }
 
+    // PUT: Atualizar validade de todas as licenças do contrato
+    if (req.method === 'PUT' && action === 'bulk-update-expire' && contractId) {
+      const adminOrManager = await isAdminOrManager(supabase, currentUserId)
+      if (!adminOrManager) {
+        return new Response(
+          JSON.stringify({ error: 'Only admins and managers can perform this action' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
+        )
+      }
+
+      const { expire_date } = await req.json()
+      if (!expire_date) {
+        return new Response(
+          JSON.stringify({ error: 'expire_date is required' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        )
+      }
+
+      const { data: updatedLicenses, error } = await supabase
+        .from('licenses')
+        .update({ expire_date })
+        .eq('contract_id', contractId)
+        .select('id')
+
+      if (error) throw error
+
+      return new Response(
+        JSON.stringify({
+          updated: updatedLicenses?.length || 0,
+          message: 'Licenses expiration updated successfully'
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+      )
+    }
+
     // POST: Desvincular dispositivo de licença do contrato
     if (req.method === 'POST' && action === 'unbind' && licenseId) {
       // Buscar a licença para verificar se pertence a um contrato
