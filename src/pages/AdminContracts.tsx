@@ -62,6 +62,7 @@ import {
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { contractApi, supabase, type Contract, type License } from '@/lib/supabase';
+import { formatLocalDate } from '@/lib/date';
 
 interface EnterpriseQuote {
   id: string;
@@ -421,7 +422,7 @@ export default function AdminContracts() {
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('pt-BR');
+    return formatLocalDate(dateString);
   };
 
   const formatCurrency = (value: number) => {

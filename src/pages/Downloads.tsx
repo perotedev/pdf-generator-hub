@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { systemApi, type SystemVersion } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
+import { formatLocalDate } from "@/lib/date";
 import ReactMarkdown from "react-markdown";
 
 const Downloads = () => {
@@ -179,7 +180,7 @@ const Downloads = () => {
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-muted-foreground" />
               <span className="text-muted-foreground">
-                {new Date(latestVersion.release_date).toLocaleDateString("pt-BR")}
+                {formatLocalDate(latestVersion.release_date)}
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -283,7 +284,7 @@ const Downloads = () => {
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <Calendar className="h-4 w-4" />
-                        {new Date(version.release_date).toLocaleDateString("pt-BR")}
+                        {formatLocalDate(version.release_date)}
                       </span>
                       <span className="flex items-center gap-1">
                         <HardDrive className="h-4 w-4" />

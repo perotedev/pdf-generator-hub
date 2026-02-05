@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
 import { dashboardApi, type Subscription, type License, type Payment } from "@/lib/supabase";
+import { formatLocalDate } from "@/lib/date";
 import { useStripeSync } from "@/hooks/useStripeSync";
 
 const Dashboard = () => {
@@ -70,8 +71,7 @@ const Dashboard = () => {
   const totalLicenses = licenses.length;
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('pt-BR');
+    return formatLocalDate(dateString);
   };
 
   const formatCurrency = (amount: number) => {

@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { formatLocalDate } from "@/lib/date";
 import { systemApi, type SystemVersion } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { Plus, RefreshCw, Save, Edit, Trash2, X } from "lucide-react";
@@ -302,7 +303,7 @@ const VersoesDoSistema = () => {
                     <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
                         <span className="font-medium">Data:</span>
-                        {new Date(version.release_date).toLocaleDateString('pt-BR')}
+                        {formatLocalDate(version.release_date)}
                       </div>
                       {version.file_size && (
                         <div className="flex items-center gap-1">

@@ -48,6 +48,7 @@ import { Search, UserCog, Shield, Trash2, Laptop, Key, CreditCard, Receipt, User
 import { toast } from 'sonner';
 import { UserRole, useAuth } from '@/contexts/AuthContext';
 import { userApi, dashboardApi, type User as DbUser, type Subscription, type License, type Payment } from '@/lib/supabase';
+import { formatLocalDate } from '@/lib/date';
 
 interface SystemUser extends DbUser {
   subscriptions?: (Subscription & { plans?: any })[];
@@ -218,7 +219,7 @@ export default function AdminUsers() {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR');
+    return formatLocalDate(dateString);
   };
 
   const formatDateTime = (dateString: string) => {

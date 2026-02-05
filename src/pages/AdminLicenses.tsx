@@ -34,6 +34,7 @@ import { Search, Key, Plus, Edit2, Trash2, Laptop, CheckCircle, Circle, RefreshC
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase, licenseApi, type License } from '@/lib/supabase';
+import { formatLocalDate } from '@/lib/date';
 
 export default function AdminLicenses() {
   const { isAdmin, getAccessToken, logoutWithRedirect } = useAuth();
@@ -265,7 +266,7 @@ export default function AdminLicenses() {
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('pt-BR');
+    return formatLocalDate(dateString);
   };
 
   const maskLicenseCode = (code: string) => {

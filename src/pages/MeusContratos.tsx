@@ -34,6 +34,7 @@ import {
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { contractApi, type Contract, type License } from '@/lib/supabase';
+import { formatLocalDate } from '@/lib/date';
 
 export default function MeusContratos() {
   const { getAccessToken, logoutWithRedirect } = useAuth();
@@ -169,7 +170,7 @@ export default function MeusContratos() {
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('pt-BR');
+    return formatLocalDate(dateString);
   };
 
   const maskLicenseCode = (code: string) => {

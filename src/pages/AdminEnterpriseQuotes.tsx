@@ -52,6 +52,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
+import { formatLocalDate } from "@/lib/date";
 
 interface EnterpriseQuote {
   id: string;
@@ -247,13 +248,7 @@ const AdminEnterpriseQuotes = () => {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("pt-BR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    return formatLocalDate(dateString);
   };
 
   const formatCurrency = (value: number | null) => {

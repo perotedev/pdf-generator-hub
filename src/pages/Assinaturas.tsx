@@ -34,6 +34,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useAuth } from "@/contexts/AuthContext";
 import { dashboardApi, checkoutApi, plansApi, type Subscription, type License } from "@/lib/supabase";
+import { formatLocalDate } from "@/lib/date";
 
 interface SubscriptionWithDetails extends Subscription {
   plans?: {
@@ -299,7 +300,7 @@ const Assinaturas = () => {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR');
+    return formatLocalDate(dateString);
   };
 
   const formatCurrency = (amount: number) => {

@@ -27,6 +27,7 @@ import { Download, Calendar, CreditCard, FileText, DollarSign, Eye, RefreshCw, B
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { dashboardApi, type Payment } from "@/lib/supabase";
+import { formatLocalDate } from "@/lib/date";
 
 const HistoricoPagamentos = () => {
   const { user, getAccessToken } = useAuth();
@@ -70,7 +71,7 @@ const HistoricoPagamentos = () => {
   });
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR');
+    return formatLocalDate(dateString);
   };
 
   const formatDateTime = (dateString: string) => {
