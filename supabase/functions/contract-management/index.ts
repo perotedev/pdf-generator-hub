@@ -412,7 +412,7 @@ serve(async (req) => {
       // Buscar a licença para verificar se pertence a um contrato
       const { data: license } = await supabase
         .from('licenses')
-        .select('contract_id, device_type, device_id, contracts(email, representative_name)')
+        .select('contract_id, device_type, device_id, client, contracts(email, representative_name)')
         .eq('id', licenseId)
         .single()
 
@@ -493,7 +493,7 @@ serve(async (req) => {
       // Buscar a licença para verificar se pertence a um contrato
       const { data: license } = await supabase
         .from('licenses')
-        .select('contract_id, device_type, device_id, contracts(email, representative_name)')
+        .select('contract_id, device_type, device_id, client, contracts(email, representative_name)')
         .eq('id', licenseId)
         .single()
 
@@ -540,7 +540,8 @@ serve(async (req) => {
         try {
           const supabaseUrl = Deno.env.get('SUPABASE_URL')
           const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-          const deviceName = license.device_type || 'Dispositivo'
+          const baseDeviceName = license.device_type || 'Dispositivo'
+          const deviceName = license.client ? `${baseDeviceName} - ${license.client}` : baseDeviceName
           const recipientName = license.contracts.representative_name || license.contracts.email
 
           await fetch(`${supabaseUrl}/functions/v1/send-transactional-email`, {

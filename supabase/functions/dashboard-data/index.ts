@@ -277,7 +277,8 @@ serve(async (req) => {
             .eq('id', licenseId)
             .single()
 
-          const deviceName = existingLicense?.device_type || 'Dispositivo'
+          const baseDeviceName = existingLicense?.device_type || 'Dispositivo'
+          const deviceName = existingLicense?.client ? `${baseDeviceName} - ${existingLicense.client}` : baseDeviceName
           const deviceId = existingLicense?.device_id
 
           const { data, error } = await supabaseAdmin
