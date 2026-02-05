@@ -435,17 +435,28 @@ export default function AdminContracts() {
   if (selectedContract) {
     return (
       <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" onClick={handleBackToList}>
-            <ChevronLeft className="h-4 w-4 mr-2" />
-            Voltar
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">
-              Contrato {selectedContract.contract_number}
-            </h1>
-            <p className="text-muted-foreground">{selectedContract.company_name}</p>
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" onClick={handleBackToList}>
+              <ChevronLeft className="h-4 w-4 mr-2" />
+              Voltar
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight">
+                Contrato {selectedContract.contract_number}
+              </h1>
+              <p className="text-muted-foreground">{selectedContract.company_name}</p>
+            </div>
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => fetchContractLicenses(selectedContract.id)}
+            disabled={loadingLicenses}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${loadingLicenses ? 'animate-spin' : ''}`} />
+            Atualizar
+          </Button>
         </div>
 
         {/* Detalhes do Contrato */}

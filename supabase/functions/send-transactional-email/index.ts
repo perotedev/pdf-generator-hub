@@ -15,6 +15,7 @@ type EmailType =
   | 'PURCHASE_CONFIRMATION'
   | 'SUBSCRIPTION_CANCELED'
   | 'DEVICE_UNLINKED'
+  | 'CONTRACT_LICENSES_READY'
   | 'ENTERPRISE_QUOTE_RECEIVED'
   | 'PAYMENT_REMINDER'
 
@@ -215,6 +216,53 @@ const emailTemplates: Record<EmailType, (data: Record<string, any>) => { subject
           </td>
         </tr>
       </table>
+    `)
+  }),
+
+  CONTRACT_LICENSES_READY: (data) => ({
+    subject: 'Licenças Disponíveis - Capidoc',
+    html: getEmailWrapper('Licenças Disponíveis', `
+      <h2 style="color: #333333; margin: 0 0 20px 0; font-size: 24px;">Ola, ${data.name}</h2>
+      <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+        Seu contrato foi criado e suas licenças já estão disponíveis para uso no <strong>Capidoc</strong>.
+      </p>
+
+      <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0;">
+        <tr>
+          <td>
+            <h3 style="color: #333333; margin: 0 0 15px 0; font-size: 18px;">Detalhes do Contrato</h3>
+            <table width="100%" cellpadding="5" cellspacing="0">
+              <tr>
+                <td style="color: #666666; font-size: 14px; padding: 5px 0;">Empresa:</td>
+                <td style="color: #333333; font-size: 14px; font-weight: bold; text-align: right;">${data.companyName}</td>
+              </tr>
+              <tr>
+                <td style="color: #666666; font-size: 14px; padding: 5px 0;">Contrato:</td>
+                <td style="color: #333333; font-size: 14px; font-weight: bold; text-align: right;">${data.contractNumber}</td>
+              </tr>
+              <tr>
+                <td style="color: #666666; font-size: 14px; padding: 5px 0;">Quantidade de Licencas:</td>
+                <td style="color: #333333; font-size: 14px; font-weight: bold; text-align: right;">${data.licenseCount}</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td align="center" style="padding: 20px 0;">
+            <a href="${data.loginUrl || 'https://capidoc.perotedev.com/login'}"
+               style="display: inline-block; background: linear-gradient(135deg, #FD8216 0%, #1470BB 100%); color: #ffffff; text-decoration: none; padding: 15px 40px; border-radius: 8px; font-weight: bold; font-size: 16px;">
+              Acessar o Capidoc
+            </a>
+          </td>
+        </tr>
+      </table>
+
+      <p style="color: #666666; font-size: 16px; line-height: 1.6; margin: 20px 0;">
+        Você já pode acessar suas licenças e iniciar o uso do sistema.
+      </p>
     `)
   }),
 

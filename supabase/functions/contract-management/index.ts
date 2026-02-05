@@ -333,6 +333,34 @@ serve(async (req) => {
         throw licensesError
       }
 
+      // Enviar email informando que as licencas ja estao disponiveis
+      try {
+        const supabaseUrl = Deno.env.get('SUPABASE_URL')
+        const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+
+        await fetch(`${supabaseUrl}/functions/v1/send-transactional-email`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${supabaseServiceKey}`,
+          },
+          body: JSON.stringify({
+            type: 'CONTRACT_LICENSES_READY',
+            to: contract.email,
+            data: {
+              name: contract.representative_name || contract.email,
+              companyName: contract.company_name,
+              contractNumber: contract.contract_number,
+              licenseCount: licenses.length,
+              loginUrl: 'https://capidoc.perotedev.com/login',
+            },
+          }),
+        })
+      } catch (emailError) {
+        console.error('Error sending contract licenses ready email:', emailError)
+        // Nao falhar por causa do email
+      }
+
       return new Response(
         JSON.stringify({
           contract,
