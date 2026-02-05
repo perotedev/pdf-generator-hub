@@ -85,7 +85,7 @@ export default function MeusContratos() {
       setContractLicenses(response.licenses || []);
     } catch (error: any) {
       console.error('Error fetching licenses:', error);
-      toast.error('Erro ao carregar licencas');
+      toast.error('Erro ao carregar licenças');
     } finally {
       setLoadingLicenses(false);
     }
@@ -156,10 +156,10 @@ export default function MeusContratos() {
         await fetchContractLicenses(selectedContract.id);
       }
 
-      toast.success('Apelido atualizado!');
+      toast.success('Nome do Dispositivo atualizado!');
       setEditingLicense(null);
     } catch (error: any) {
-      toast.error('Erro ao atualizar apelido', {
+      toast.error('Erro ao atualizar Nome do Dispositivo', {
         description: error.message || 'Tente novamente.',
       });
     } finally {
@@ -267,7 +267,7 @@ export default function MeusContratos() {
         {/* Licencas - Desktop Table */}
         <Card className="hidden md:block">
           <CardHeader>
-            <CardTitle>Licencas do Contrato</CardTitle>
+            <CardTitle>Licenças do Contrato</CardTitle>
           </CardHeader>
           {loadingLicenses ? (
             <CardContent>
@@ -279,12 +279,12 @@ export default function MeusContratos() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Codigo</TableHead>
-                  <TableHead>Apelido</TableHead>
+                  <TableHead>Código</TableHead>
+                  <TableHead>Nome do Dispositivo</TableHead>
                   <TableHead className="text-center">Status</TableHead>
                   <TableHead className="text-center">Dispositivo</TableHead>
                   <TableHead>Validade</TableHead>
-                  <TableHead className="text-right">Acoes</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -293,7 +293,7 @@ export default function MeusContratos() {
                     <TableCell colSpan={6} className="text-center py-10">
                       <Key className="mx-auto h-12 w-12 text-muted-foreground" />
                       <p className="mt-2 text-muted-foreground">
-                        Nenhuma licenca encontrada
+                        Nenhuma licença encontrada
                       </p>
                     </TableCell>
                   </TableRow>
@@ -356,7 +356,7 @@ export default function MeusContratos() {
                             variant="outline"
                             size="sm"
                             onClick={() => handleOpenEditNickname(license)}
-                            title="Editar apelido"
+                            title="Editar Nome do Dispositivo"
                           >
                             <Edit2 className="h-4 w-4" />
                           </Button>
@@ -372,7 +372,7 @@ export default function MeusContratos() {
 
         {/* Licencas - Mobile Cards */}
         <div className="md:hidden space-y-4">
-          <h2 className="text-lg font-semibold">Licencas do Contrato</h2>
+          <h2 className="text-lg font-semibold">Licenças do Contrato</h2>
           {loadingLicenses ? (
             <div className="flex items-center justify-center py-8">
               <RefreshCw className="h-6 w-6 animate-spin text-primary" />
@@ -382,7 +382,7 @@ export default function MeusContratos() {
               <CardContent className="py-10 text-center">
                 <Key className="mx-auto h-12 w-12 text-muted-foreground" />
                 <p className="mt-2 text-muted-foreground">
-                  Nenhuma licenca encontrada
+                  Nenhuma licença encontrada
                 </p>
               </CardContent>
             </Card>
@@ -413,7 +413,7 @@ export default function MeusContratos() {
                   <div className="space-y-2 text-sm">
                     {license.client && (
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Apelido:</span>
+                        <span className="text-muted-foreground">Nome do Dispositivo:</span>
                         <span className="font-medium">{license.client}</span>
                       </div>
                     )}
@@ -456,7 +456,7 @@ export default function MeusContratos() {
                       onClick={() => handleOpenEditNickname(license)}
                     >
                       <Edit2 className="h-4 w-4 mr-2" />
-                      Apelido
+                      Nome do Dispositivo
                     </Button>
                   </div>
                 </CardContent>
@@ -465,25 +465,25 @@ export default function MeusContratos() {
           )}
         </div>
 
-        {/* Dialog de Edicao de Apelido */}
+        {/* Dialog de Edicao de Nome do Dispositivo */}
         <Dialog open={!!editingLicense} onOpenChange={(open) => !open && setEditingLicense(null)}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Editar Apelido</DialogTitle>
+              <DialogTitle>Editar Nome do Dispositivo</DialogTitle>
               <DialogDescription>
-                Defina um nome para identificar esta licenca
+                Defina um nome para identificar o dispositivo onde a licença está instalada
               </DialogDescription>
             </DialogHeader>
             {editingLicense && (
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label>Codigo da Licenca</Label>
+                  <Label>Codigo da Licença</Label>
                   <code className="block text-sm font-mono p-2 bg-muted rounded">
                     {editingLicense.code}
                   </code>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="nickname">Apelido</Label>
+                  <Label htmlFor="nickname">Nome do Dispositivo</Label>
                   <Input
                     id="nickname"
                     value={nicknameValue}
@@ -520,7 +520,7 @@ export default function MeusContratos() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Meus Contratos</h1>
         <p className="text-muted-foreground">
-          Visualize seus contratos e gerencie suas licencas
+          Visualize seus contratos e gerencie suas licenças
         </p>
       </div>
 
@@ -530,7 +530,7 @@ export default function MeusContratos() {
             <FileText className="mx-auto h-12 w-12 text-muted-foreground" />
             <h3 className="mt-4 text-lg font-semibold">Nenhum contrato encontrado</h3>
             <p className="mt-2 text-sm text-muted-foreground">
-              Voce nao possui contratos vinculados ao seu email.
+              Voce não possui contratos vinculados ao seu email.
             </p>
           </CardContent>
         </Card>
@@ -544,7 +544,7 @@ export default function MeusContratos() {
                   <TableHead>Numero</TableHead>
                   <TableHead>Empresa</TableHead>
                   <TableHead>Data</TableHead>
-                  <TableHead className="text-right">Acoes</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -561,7 +561,7 @@ export default function MeusContratos() {
                         size="sm"
                         onClick={() => handleSelectContract(contract)}
                       >
-                        Ver Licencas
+                        Ver Licenças
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -595,7 +595,7 @@ export default function MeusContratos() {
                     className="w-full"
                     onClick={() => handleSelectContract(contract)}
                   >
-                    Ver Licencas
+                    Ver Licenças
                   </Button>
                 </CardContent>
               </Card>

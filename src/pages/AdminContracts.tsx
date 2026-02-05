@@ -582,7 +582,7 @@ export default function AdminContracts() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Código</TableHead>
-                  <TableHead>Apelido</TableHead>
+                  <TableHead>Nome do Dispositivo</TableHead>
                   <TableHead className="text-center">Plano</TableHead>
                   <TableHead className="text-center">OS</TableHead>
                   <TableHead>Validade</TableHead>
@@ -692,7 +692,7 @@ export default function AdminContracts() {
                   </code>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="edit-client">Apelido</Label>
+                  <Label htmlFor="edit-client">Nome do Dispositivo</Label>
                   <Input
                     id="edit-client"
                     value={editingLicense.client || ''}
