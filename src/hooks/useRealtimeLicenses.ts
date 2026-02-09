@@ -36,6 +36,8 @@ export function useRealtimeLicenses({
         supabase.removeChannel(channelRef.current)
         channelRef.current = null
       }
+      // Desconectar o websocket ao deslogar
+      supabase.realtime.disconnect()
       return
     }
 
@@ -46,7 +48,7 @@ export function useRealtimeLicenses({
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: 'UPDATE',
           schema: 'public',
           table: 'licenses',
           ...(filter ? { filter } : {}),
