@@ -33,7 +33,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useAuth } from "@/contexts/AuthContext";
-import { dashboardApi, checkoutApi, plansApi, type Subscription, type License } from "@/lib/supabase";
+import { dashboardApi, checkoutApi, plansApi, licenseApi, type Subscription, type License } from "@/lib/supabase";
 import { formatLocalDate } from "@/lib/date";
 import { useRealtimeLicenses } from "@/hooks/useRealtimeLicenses";
 
@@ -136,7 +136,35 @@ const Assinaturas = () => {
   // Realtime: atualiza automaticamente quando uma licença do usuário muda (ativação, desativação, etc.)
   // Filtro por user_id garante que só recebe eventos das licenças do próprio usuário
   useRealtimeLicenses({
-    onLicenseChange: fetchSubscriptions,
+    onLicenseChange: async (payload) => {
+      const licenseId = (payload.new as License | null)?.id || (payload.old as License | null)?.id;
+      if (!licenseId) return;
+
+      if (payload.eventType === 'DELETE') {
+        setSubscriptions((prev) =>
+          prev.map((sub) =>
+            sub.license?.id === licenseId ? { ...sub, license: null } : sub
+          )
+        );
+        return;
+      }
+
+      const token = getAccessToken();
+      if (!token) return;
+
+      try {
+        const { license } = await licenseApi.getLicenseById(token, licenseId);
+        if (!license?.subscription_id) return;
+
+        setSubscriptions((prev) =>
+          prev.map((sub) =>
+            sub.id === license.subscription_id ? { ...sub, license } : sub
+          )
+        );
+      } catch (error) {
+        console.error('Realtime license fetch error:', error);
+      }
+    },
     enabled: !!user,
     filter: user ? `user_id=eq.${user.id}` : undefined,
   });

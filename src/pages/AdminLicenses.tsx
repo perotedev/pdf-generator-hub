@@ -100,7 +100,37 @@ export default function AdminLicenses() {
 
   // Realtime: atualiza lista automaticamente quando uma licença standalone muda
   useRealtimeLicenses({
-    onLicenseChange: fetchLicenses,
+    onLicenseChange: async (payload) => {
+      const licenseId = (payload.new as License | null)?.id || (payload.old as License | null)?.id;
+      if (!licenseId) return;
+
+      if (payload.eventType === 'DELETE') {
+        setLicenses((prev) => prev.filter((item) => item.id !== licenseId));
+        return;
+      }
+
+      const token = getAccessToken();
+      if (!token) return;
+
+      try {
+        const { license } = await licenseApi.getLicenseById(token, licenseId);
+        if (!license || !license.is_standalone || license.contract_id) {
+          setLicenses((prev) => prev.filter((item) => item.id !== licenseId));
+          return;
+        }
+
+        setLicenses((prev) => {
+          const exists = prev.some((item) => item.id === license.id);
+          if (exists) {
+            return prev.map((item) => (item.id === license.id ? { ...item, ...license } : item));
+          }
+
+          return [license, ...prev];
+        });
+      } catch (error) {
+        console.error('Realtime license fetch error:', error);
+      }
+    },
     enabled: isAdmin,
     filter: 'is_standalone=eq.true',
   });

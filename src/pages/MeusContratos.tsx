@@ -33,7 +33,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
-import { contractApi, type Contract, type License } from '@/lib/supabase';
+import { contractApi, licenseApi, type Contract, type License } from '@/lib/supabase';
 import { formatLocalDate } from '@/lib/date';
 import { useRealtimeLicenses } from '@/hooks/useRealtimeLicenses';
 
@@ -95,9 +95,32 @@ export default function MeusContratos() {
 
   // Realtime: atualiza licenças automaticamente quando uma licença do contrato muda
   useRealtimeLicenses({
-    onLicenseChange: () => {
-      if (selectedContract) {
-        fetchContractLicenses(selectedContract.id);
+    onLicenseChange: async (payload) => {
+      const licenseId = (payload.new as License | null)?.id || (payload.old as License | null)?.id;
+      if (!licenseId || !selectedContract) return;
+
+      if (payload.eventType === 'DELETE') {
+        setContractLicenses((prev) => prev.filter((item) => item.id !== licenseId));
+        return;
+      }
+
+      const token = getAccessToken();
+      if (!token) return;
+
+      try {
+        const { license } = await licenseApi.getLicenseById(token, licenseId);
+        if (!license || license.contract_id !== selectedContract.id) return;
+
+        setContractLicenses((prev) => {
+          const exists = prev.some((item) => item.id === license.id);
+          if (exists) {
+            return prev.map((item) => (item.id === license.id ? { ...item, ...license } : item));
+          }
+
+          return [license, ...prev];
+        });
+      } catch (error) {
+        console.error('Realtime license fetch error:', error);
       }
     },
     enabled: !!selectedContract,

@@ -359,6 +359,31 @@ export const licenseApi = {
     return response.json()
   },
 
+  async getLicenseById(token: string, licenseId: string) {
+    const response = await fetch(`${supabaseUrl}/functions/v1/license-management?action=get&licenseId=${licenseId}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'apikey': supabaseAnonKey,
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      let error
+      try {
+        error = JSON.parse(errorText)
+      } catch {
+        error = { error: errorText || `HTTP ${response.status}` }
+      }
+      throw new Error(error.error || error.message || 'Failed to fetch license')
+    }
+
+    return response.json()
+  },
+
   async createLicense(token: string, data: { client?: string; company: string; plan_type?: string; expire_days?: number }) {
     const response = await fetch(`${supabaseUrl}/functions/v1/license-management?action=create`, {
       method: 'POST',

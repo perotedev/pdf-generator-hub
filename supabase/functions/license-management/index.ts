@@ -34,6 +34,17 @@ async function isAdmin(supabase, userId) {
   return user?.role === 'ADMIN'
 }
 
+// Função auxiliar para verificar se é admin ou manager
+async function isAdminOrManager(supabase, userId) {
+  const { data: user } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', userId)
+    .single()
+
+  return user?.role === 'ADMIN' || user?.role === 'MANAGER'
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -77,6 +88,50 @@ serve(async (req) => {
     const url = new URL(req.url)
     const action = url.searchParams.get('action')
     const licenseId = url.searchParams.get('licenseId')
+
+    // GET: Buscar licença individual
+    if (req.method === 'GET' && action === 'get' && licenseId) {
+      const { data: license, error } = await supabase
+        .from('licenses')
+        .select('*, contracts(email)')
+        .eq('id', licenseId)
+        .single()
+
+      if (error || !license) {
+        return new Response(
+          JSON.stringify({ error: 'License not found' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404 }
+        )
+      }
+
+      const adminOrManager = await isAdminOrManager(supabase, currentUserId)
+      if (!adminOrManager) {
+        const { data: currentUser } = await supabase
+          .from('users')
+          .select('email')
+          .eq('id', currentUserId)
+          .single()
+
+        const ownsLicense = license.user_id === currentUserId
+        const ownsContractLicense = license.contracts?.email && currentUser?.email
+          ? license.contracts.email === currentUser.email
+          : false
+
+        if (!ownsLicense && !ownsContractLicense) {
+          return new Response(
+            JSON.stringify({ error: 'Access denied' }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
+          )
+        }
+      }
+
+      const { contracts, ...licenseData } = license
+
+      return new Response(
+        JSON.stringify({ license: licenseData }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+      )
+    }
 
     // GET: Listar licenças
     if (req.method === 'GET') {

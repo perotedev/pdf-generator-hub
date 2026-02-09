@@ -1,9 +1,9 @@
 import { useEffect, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
-import type { RealtimeChannel } from '@supabase/supabase-js'
+import type { PostgresChangesPayload, RealtimeChannel } from '@supabase/supabase-js'
 
 interface UseRealtimeLicensesOptions {
-  onLicenseChange: () => void
+  onLicenseChange: (payload: PostgresChangesPayload<Record<string, any>>) => void
   enabled?: boolean
   filter?: string
 }
@@ -31,7 +31,13 @@ export function useRealtimeLicenses({
   }, [onLicenseChange])
 
   useEffect(() => {
-    if (!enabled) return
+    if (!enabled) {
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current)
+        channelRef.current = null
+      }
+      return
+    }
 
     const channelName = `licenses-realtime-${filter || 'all'}-${Date.now()}`
 
@@ -45,9 +51,9 @@ export function useRealtimeLicenses({
           table: 'licenses',
           ...(filter ? { filter } : {}),
         },
-        () => {
+        (payload) => {
           // Usar ref para sempre chamar o callback mais recente
-          callbackRef.current()
+          callbackRef.current(payload)
         }
       )
       .subscribe()
