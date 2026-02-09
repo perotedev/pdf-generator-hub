@@ -30,6 +30,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Search, Key, Plus, Edit2, Trash2, Laptop, CheckCircle, Circle, RefreshCw, Shield, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
@@ -545,13 +552,20 @@ export default function AdminLicenses() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="plan_type">Tipo de Plano (opcional)</Label>
-              <Input
-                id="plan_type"
-                placeholder="Ex: Profissional, Empresarial"
+              <Label htmlFor="plan_type">Tipo de Plano</Label>
+              <Select
                 value={newLicense.plan_type}
-                onChange={(e) => setNewLicense({ ...newLicense, plan_type: e.target.value })}
-              />
+                onValueChange={(value) => setNewLicense({ ...newLicense, plan_type: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o plano" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="YEARLY">YEARLY</SelectItem>
+                  <SelectItem value="MONTHLY">MONTHLY</SelectItem>
+                  <SelectItem value="CUSTOM">CUSTOM</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="expire_days">Validade (dias)</Label>
@@ -625,13 +639,21 @@ export default function AdminLicenses() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="edit-plan">Tipo de Plano</Label>
-                <Input
-                  id="edit-plan"
+                <Select
                   value={editingLicense.plan_type || ''}
-                  onChange={(e) =>
-                    setEditingLicense({ ...editingLicense, plan_type: e.target.value })
+                  onValueChange={(value) =>
+                    setEditingLicense({ ...editingLicense, plan_type: value })
                   }
-                />
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o plano" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="YEARLY">YEARLY</SelectItem>
+                    <SelectItem value="MONTHLY">MONTHLY</SelectItem>
+                    <SelectItem value="CUSTOM">CUSTOM</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="edit-expire">Data de Validade</Label>

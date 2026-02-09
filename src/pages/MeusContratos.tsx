@@ -203,22 +203,23 @@ export default function MeusContratos() {
   if (selectedContract) {
     return (
       <div className="space-y-6">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" onClick={handleBackToList}>
-              <ChevronLeft className="h-4 w-4 mr-2" />
-              Voltar
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <Button variant="ghost" size="sm" onClick={handleBackToList} className="shrink-0">
+              <ChevronLeft className="h-4 w-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Voltar</span>
             </Button>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight">
+            <div className="min-w-0">
+              <h1 className="text-lg sm:text-2xl font-bold tracking-tight truncate">
                 Contrato {selectedContract.contract_number}
               </h1>
-              <p className="text-muted-foreground">{selectedContract.company_name}</p>
+              <p className="text-sm sm:text-base text-muted-foreground truncate">{selectedContract.company_name}</p>
             </div>
           </div>
           <Button
             variant="outline"
             size="sm"
+            className="self-end sm:self-auto shrink-0"
             onClick={() => fetchContractLicenses(selectedContract.id)}
             disabled={loadingLicenses}
           >
@@ -228,48 +229,48 @@ export default function MeusContratos() {
         </div>
 
         {/* Stats das Licencas */}
-        <div className="grid gap-4 grid-cols-3">
+        <div className="grid gap-2 sm:gap-4 grid-cols-3">
           <Card>
-            <CardContent className="p-4 md:p-6">
-              <div className="flex items-center gap-3 md:gap-4">
+            <CardContent className="p-3 sm:p-4 md:p-6">
+              <div className="flex flex-col items-center gap-1 sm:flex-row sm:gap-3 md:gap-4">
                 <div className="flex h-8 w-8 md:h-10 md:w-10 items-center justify-center rounded-lg bg-primary/10">
                   <Key className="h-4 w-4 md:h-5 md:w-5 text-primary" />
                 </div>
-                <div>
-                  <p className="text-xl md:text-2xl font-bold">{contractLicenses.length}</p>
-                  <p className="text-xs md:text-sm text-muted-foreground">Total</p>
+                <div className="text-center sm:text-left">
+                  <p className="text-lg sm:text-xl md:text-2xl font-bold">{contractLicenses.length}</p>
+                  <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground">Total</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-4 md:p-6">
-              <div className="flex items-center gap-3 md:gap-4">
+            <CardContent className="p-3 sm:p-4 md:p-6">
+              <div className="flex flex-col items-center gap-1 sm:flex-row sm:gap-3 md:gap-4">
                 <div className="flex h-8 w-8 md:h-10 md:w-10 items-center justify-center rounded-lg bg-chart-1/10">
                   <CheckCircle className="h-4 w-4 md:h-5 md:w-5 text-chart-1" />
                 </div>
-                <div>
-                  <p className="text-xl md:text-2xl font-bold">
+                <div className="text-center sm:text-left">
+                  <p className="text-lg sm:text-xl md:text-2xl font-bold">
                     {contractLicenses.filter(l => l.is_used).length}
                   </p>
-                  <p className="text-xs md:text-sm text-muted-foreground">Ativas</p>
+                  <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground">Ativas</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-4 md:p-6">
-              <div className="flex items-center gap-3 md:gap-4">
+            <CardContent className="p-3 sm:p-4 md:p-6">
+              <div className="flex flex-col items-center gap-1 sm:flex-row sm:gap-3 md:gap-4">
                 <div className="flex h-8 w-8 md:h-10 md:w-10 items-center justify-center rounded-lg bg-chart-2/10">
                   <Circle className="h-4 w-4 md:h-5 md:w-5 text-chart-2" />
                 </div>
-                <div>
-                  <p className="text-xl md:text-2xl font-bold">
+                <div className="text-center sm:text-left">
+                  <p className="text-lg sm:text-xl md:text-2xl font-bold">
                     {contractLicenses.filter(l => !l.is_used).length}
                   </p>
-                  <p className="text-xs md:text-sm text-muted-foreground">Disponiveis</p>
+                  <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground">Disponíveis</p>
                 </div>
               </div>
             </CardContent>
@@ -383,8 +384,8 @@ export default function MeusContratos() {
         </Card>
 
         {/* Licencas - Mobile Cards */}
-        <div className="md:hidden space-y-4">
-          <h2 className="text-lg font-semibold">Licenças do Contrato</h2>
+        <div className="md:hidden space-y-3">
+          <h2 className="text-base sm:text-lg font-semibold">Licenças do Contrato</h2>
           {loadingLicenses ? (
             <div className="flex items-center justify-center py-8">
               <RefreshCw className="h-6 w-6 animate-spin text-primary" />
@@ -401,62 +402,62 @@ export default function MeusContratos() {
           ) : (
             contractLicenses.map((license) => (
               <Card key={license.id}>
-                <CardContent className="p-4">
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="flex items-center gap-2">
-                      <code className="text-xs font-mono bg-muted px-2 py-1 rounded">
+                <CardContent className="p-3 sm:p-4">
+                  <div className="flex flex-wrap justify-between items-start gap-2 mb-3">
+                    <div className="flex items-center gap-1">
+                      <code className="text-[10px] sm:text-xs font-mono bg-muted px-1.5 sm:px-2 py-1 rounded break-all">
                         {maskLicenseCode(license.code)}
                       </code>
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-6 w-6 p-0"
+                        className="h-6 w-6 p-0 shrink-0"
                         onClick={() => copyLicenseCode(license.code)}
                         title="Copiar código"
                       >
                         <Copy className="h-3 w-3" />
                       </Button>
                     </div>
-                    <Badge variant={license.is_used ? 'default' : 'secondary'}>
-                      {license.is_used ? 'Ativa' : 'Disponivel'}
+                    <Badge variant={license.is_used ? 'default' : 'secondary'} className="text-[10px] sm:text-xs shrink-0">
+                      {license.is_used ? 'Ativa' : 'Disponível'}
                     </Badge>
                   </div>
 
-                  <div className="space-y-2 text-sm">
+                  <div className="space-y-1.5 text-xs sm:text-sm">
                     {license.client && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Nome do Dispositivo:</span>
-                        <span className="font-medium">{license.client}</span>
+                      <div className="flex justify-between gap-2">
+                        <span className="text-muted-foreground shrink-0">Dispositivo:</span>
+                        <span className="font-medium text-right truncate">{license.client}</span>
                       </div>
                     )}
                     {license.is_used && license.device_id && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Dispositivo:</span>
+                      <div className="flex justify-between gap-2">
+                        <span className="text-muted-foreground shrink-0">Sistema:</span>
                         <span className="font-medium flex items-center gap-1">
-                          <Laptop className="h-3 w-3" />
+                          <Laptop className="h-3 w-3 shrink-0" />
                           {license.device_type}
                         </span>
                       </div>
                     )}
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Validade:</span>
+                    <div className="flex justify-between gap-2">
+                      <span className="text-muted-foreground shrink-0">Validade:</span>
                       <span className="font-medium">{formatDate(license.expire_date)}</span>
                     </div>
                   </div>
 
-                  <div className="flex gap-2 mt-4">
+                  <div className="flex gap-2 mt-3">
                     {license.is_used && license.device_id && (
                       <Button
                         variant="outline"
                         size="sm"
-                        className="flex-1"
+                        className="flex-1 text-xs h-8"
                         onClick={() => handleUnbindDevice(license)}
                         disabled={unbindingDevice === license.id}
                       >
                         {unbindingDevice === license.id ? (
-                          <RefreshCw className="h-4 w-4 animate-spin mr-2" />
+                          <RefreshCw className="h-3 w-3 animate-spin mr-1" />
                         ) : (
-                          <Laptop className="h-4 w-4 mr-2" />
+                          <Laptop className="h-3 w-3 mr-1" />
                         )}
                         Desvincular
                       </Button>
@@ -464,11 +465,11 @@ export default function MeusContratos() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="flex-1"
+                      className="flex-1 text-xs h-8"
                       onClick={() => handleOpenEditNickname(license)}
                     >
-                      <Edit2 className="h-4 w-4 mr-2" />
-                      Nome do Dispositivo
+                      <Edit2 className="h-3 w-3 mr-1" />
+                      Renomear
                     </Button>
                   </div>
                 </CardContent>
