@@ -42,6 +42,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase, licenseApi, type License } from '@/lib/supabase';
 import { formatLocalDate } from '@/lib/date';
+import { useRealtimeLicenses } from '@/hooks/useRealtimeLicenses';
 
 export default function AdminLicenses() {
   const { isAdmin, getAccessToken, logoutWithRedirect } = useAuth();
@@ -61,10 +62,6 @@ export default function AdminLicenses() {
     plan_type: '',
     expire_days: '183',
   });
-
-  useEffect(() => {
-    fetchLicenses();
-  }, []);
 
   const fetchLicenses = async () => {
     try {
@@ -96,6 +93,17 @@ export default function AdminLicenses() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchLicenses();
+  }, []);
+
+  // Realtime: atualiza lista automaticamente quando uma licença standalone muda
+  useRealtimeLicenses({
+    onLicenseChange: fetchLicenses,
+    enabled: isAdmin,
+    filter: 'is_standalone=eq.true',
+  });
 
   const filteredLicenses = licenses.filter(
     (license) =>

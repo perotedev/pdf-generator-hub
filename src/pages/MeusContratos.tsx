@@ -35,6 +35,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { contractApi, type Contract, type License } from '@/lib/supabase';
 import { formatLocalDate } from '@/lib/date';
+import { useRealtimeLicenses } from '@/hooks/useRealtimeLicenses';
 
 export default function MeusContratos() {
   const { getAccessToken, logoutWithRedirect } = useAuth();
@@ -47,10 +48,6 @@ export default function MeusContratos() {
   const [editingLicense, setEditingLicense] = useState<License | null>(null);
   const [savingLicense, setSavingLicense] = useState(false);
   const [nicknameValue, setNicknameValue] = useState('');
-
-  useEffect(() => {
-    fetchContracts();
-  }, []);
 
   const fetchContracts = async () => {
     try {
@@ -91,6 +88,21 @@ export default function MeusContratos() {
       setLoadingLicenses(false);
     }
   };
+
+  useEffect(() => {
+    fetchContracts();
+  }, []);
+
+  // Realtime: atualiza licenças automaticamente quando uma licença do contrato muda
+  useRealtimeLicenses({
+    onLicenseChange: () => {
+      if (selectedContract) {
+        fetchContractLicenses(selectedContract.id);
+      }
+    },
+    enabled: !!selectedContract,
+    filter: selectedContract ? `contract_id=eq.${selectedContract.id}` : undefined,
+  });
 
   const handleSelectContract = (contract: Contract) => {
     setSelectedContract(contract);

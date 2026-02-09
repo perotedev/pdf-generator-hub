@@ -35,6 +35,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useAuth } from "@/contexts/AuthContext";
 import { dashboardApi, checkoutApi, plansApi, type Subscription, type License } from "@/lib/supabase";
 import { formatLocalDate } from "@/lib/date";
+import { useRealtimeLicenses } from "@/hooks/useRealtimeLicenses";
 
 interface SubscriptionWithDetails extends Subscription {
   plans?: {
@@ -61,10 +62,6 @@ const Assinaturas = () => {
   const [savingDeactivate, setSavingDeactivate] = useState<string | null>(null);
   const [savingNickname, setSavingNickname] = useState(false);
   const [savingReactivate, setSavingReactivate] = useState(false);
-
-  useEffect(() => {
-    fetchSubscriptions();
-  }, [user]);
 
   // Handle success parameter from Stripe Checkout redirect
   useEffect(() => {
@@ -131,6 +128,18 @@ const Assinaturas = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchSubscriptions();
+  }, [user]);
+
+  // Realtime: atualiza automaticamente quando uma licença do usuário muda (ativação, desativação, etc.)
+  // Filtro por user_id garante que só recebe eventos das licenças do próprio usuário
+  useRealtimeLicenses({
+    onLicenseChange: fetchSubscriptions,
+    enabled: !!user,
+    filter: user ? `user_id=eq.${user.id}` : undefined,
+  });
 
   const activeSubscriptions = subscriptions.filter((sub) => sub.status === "ACTIVE");
 

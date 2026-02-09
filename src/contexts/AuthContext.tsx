@@ -85,15 +85,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Inicializar a partir do localStorage
   useEffect(() => {
-    const initAuth = () => {
-      const session = getStoredSession();
-      if (session?.user) {
-        setUser(session.user);
-      }
-      setLoading(false);
-    };
-
-    initAuth();
+    const session = getStoredSession();
+    if (session?.user) {
+      setUser(session.user);
+    }
+    setLoading(false);
   }, []);
 
   // Verificar periodicamente se a sessão expirou (a cada 30 segundos)
