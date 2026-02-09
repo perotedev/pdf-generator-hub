@@ -336,12 +336,12 @@ const Home = () => {
 
                 {/* Screenshot */}
                 <div className="relative overflow-hidden">
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-transparent to-black/10"></div>
+                <div className="absolute inset-0 "></div>
 
                   <img
                     src={workflowSteps[activeStep].image}
                     alt={workflowSteps[activeStep].title}
-                    className="h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    className="h-full object-cover transition-transform duration-500"
                   />
 
                   {/* Hover Overlay */}
